@@ -1,0 +1,26 @@
+# Where the car is parked, as one entity the map card can show.
+# Goes in config/templates/ (your configuration.yaml already loads that folder with
+# template: !include_dir_merge_list templates/). Reload: Developer tools → YAML → Template entities.
+#
+# It reads the coordinates your automation already saves in input_text.car_parked_latitude
+# and input_text.car_parked_longitude. When those aren't valid numbers the sensor is
+# unavailable, so the map and the navigate button hide themselves instead of showing a
+# map of the ocean at 0,0.
+- sensor:
+    - name: Car parked spot
+      unique_id: car_parked_spot
+      icon: lucide:car
+      availability: >
+        {{ states('input_text.car_parked_latitude') | is_number
+           and states('input_text.car_parked_longitude') | is_number
+           and not (states('input_text.car_parked_latitude') | float == 0
+                    and states('input_text.car_parked_longitude') | float == 0) }}
+      state: >
+        {% set place = states('input_text.parking_elsewhere_location') %}
+        {{ place if place not in ['', 'unknown', 'unavailable'] else 'Parked' }}
+      attributes:
+        latitude: "{{ states('input_text.car_parked_latitude') | float(0) }}"
+        longitude: "{{ states('input_text.car_parked_longitude') | float(0) }}"
+        # walking directions; opens the Google Maps app on phones
+        navigate_url: >-
+          https://www.google.com/maps/dir/?api=1&travelmode=walking&destination={{ states('input_text.car_parked_latitude') }},{{ states('input_text.car_parked_longitude') }}
