@@ -1,6 +1,6 @@
 # Cranberry Canvas for Home Assistant
 
-Eight dashboard cards and a matching theme in a warm, calm palette: cranberry, canvas,
+Nine dashboard cards and a matching theme in a warm, calm palette: cranberry, canvas,
 olive and quail, with brick only when something needs you. Every card has a visual editor.
 
 | Card | Type |
@@ -13,6 +13,7 @@ olive and quail, with brick only when something needs you. Every card has a visu
 | Washing machine (localthings): time left, phase, done | `custom:cranberry-washer-card` |
 | Waste collection (Afvalwijzer): which bin goes out next | `custom:cranberry-waste-card` |
 | Car: where it is parked, with a map | `custom:cranberry-car-card` |
+| Thermostat: the card's colour, the setpoint and one sentence; every mode, heat/cool, presets, fan, swing | `custom:cranberry-thermostat-card` |
 
 ## Install
 
@@ -61,6 +62,12 @@ entity: light.living_room
 icon: lucide:sofa
 temperature: sensor.living_room_temperature
 popup: '#living-room'
+```
+
+```yaml
+type: custom:cranberry-thermostat-card
+entity: climate.living_room
+modes: [heat, auto, off]   # optional, default: all the thermostat has
 ```
 
 ```yaml

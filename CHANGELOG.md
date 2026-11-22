@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.18.0 (2026-11-22)
+
+- New: Cranberry thermostat card (`custom:cranberry-thermostat-card`). The whole card's colour
+  says what the thermostat is doing (olive heating, slate cooling, dark resting, ochre drying),
+  the setpoint is large with −/+, and one sentence says where the room is and what happens next,
+  including "warm in about … minutes" worked out from the current run in the recorder.
+- Heat/cool stacks "Heat below" and "Cool above", each with its own −/+, kept at least 1° apart.
+- Every HVAC mode the thermostat has, presets, fan speed, swing and target humidity, only when
+  supported. Dry sets the humidity to dry to; fan only sets the fan speed.
+
 ## 2.17.0 (2026-11-22)
 
 - Home card: the lights are now a chip ("3 · Lights on in Living room and Bedroom").

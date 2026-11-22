@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.17.0';
+  const VERSION = '2.18.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -1113,7 +1113,7 @@
  */
 (() => {
   // Use Lucide icons when the Lucide icons integration is installed, otherwise Home Assistant's own.
-  const LUCIDE = { vacation: 'plane', car: 'car', pin: 'map-pin', nav: 'navigation', home: 'house', radiator: 'heater', thermometer: 'thermometer', evening: 'sunset', night: 'moon', walk: 'footprints', people: 'users', washer: 'washing-machine', alert: 'triangle-alert', check: 'check', 'chevron-right': 'chevron-right', info: 'info', lock: 'lock', 'lock-open': 'lock-open', shield: 'shield-check', 'shield-off': 'shield-off', play: 'play', pause: 'pause', stop: 'square', 'skip-next': 'skip-forward', 'skip-previous': 'skip-back', bulb: 'lightbulb' };
+  const LUCIDE = { vacation: 'plane', car: 'car', pin: 'map-pin', nav: 'navigation', plus: 'plus', minus: 'minus', chev: 'chevron-down', home: 'house', radiator: 'heater', thermometer: 'thermometer', evening: 'sunset', night: 'moon', walk: 'footprints', people: 'users', washer: 'washing-machine', alert: 'triangle-alert', check: 'check', 'chevron-right': 'chevron-right', info: 'info', lock: 'lock', 'lock-open': 'lock-open', shield: 'shield-check', 'shield-off': 'shield-off', play: 'play', pause: 'pause', stop: 'square', 'skip-next': 'skip-forward', 'skip-previous': 'skip-back', bulb: 'lightbulb' };
   const ccIcon = (name, fallback) => (window.customIcons && window.customIcons.lucide && LUCIDE[name] ? 'lucide:' + LUCIDE[name] : fallback);
   const { morph, MOTION } = window.CranberryMorph;
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -1740,6 +1740,290 @@
   const BIN_FILL = 'M7.4 10h9.2l-.7 10H8.1z';
   const binSvg = (col, size) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true"><path d="${BIN_PATH}" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:${col}"></path><path d="${BIN_FILL}" style="fill:${col}"></path></svg>`;
 
+  // ---------------------------------------------------------------- thermostat
+  // The statement card: the whole card's colour says what the thermostat is doing, the big
+  // number is what you set, and one sentence says where the room is and what happens next.
+  // Heat/cool stacks its two setpoints. Preset, fan and swing only show when supported.
+  const CLIMATE = { TARGET: 1, RANGE: 2, HUMIDITY: 4, FAN: 8, PRESET: 16, SWING: 32 };
+  const THERMO_BG = { heating: '#514718', cooling: '#40606A', drying: '#7A5418', fan: '#545C5F', idle: '#2B2220', off: '#3A3634', na: '#3A3634' };
+  const HVAC_NAMES = { off: 'Off', heat: 'Heat', cool: 'Cool', heat_cool: 'Heat/cool', auto: 'Auto', dry: 'Dry', fan_only: 'Fan' };
+  class CranberryThermostatCard extends CranberryBase {
+    static get styles() {
+      return `
+      ha-card { position: relative; color: #F2ECE0; padding: 16px 16px 12px 20px; display: flex; flex-direction: column; gap: 6px; transition: background-color .4s ease; }
+      .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; }
+      .room { font-size: 14px; font-weight: 600; opacity: .85; text-align: left; }
+      .chip { height: 32px; border-radius: var(--cc-r-chip, 8px); padding: 0 8px 0 10px; background: rgba(242,236,224,.14); display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; }
+      .chip[aria-expanded="true"] { background: rgba(242,236,224,.28); }
+      .chip small { font-size: 12px; font-weight: 600; opacity: .75; }
+      .chip ha-icon { --mdc-icon-size: 14px; }
+      .one { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; min-height: 122px; }
+      .one .lbl, .row .lbl { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .72; min-height: 16px; display: block; }
+      .big { font-family: Fraunces, Georgia, serif; font-variation-settings: 'SOFT' 100; font-weight: 400; line-height: .95; letter-spacing: -.05em; margin-left: -4px; white-space: nowrap; }
+      .steps { display: flex; flex-direction: column; gap: 6px; padding-bottom: 8px; }
+      .step { width: 52px; height: 52px; border-radius: 16px; background: rgba(242,236,224,.16); display: flex; align-items: center; justify-content: center; }
+      .step ha-icon { --mdc-icon-size: 24px; }
+      .rows { display: flex; flex-direction: column; gap: 2px; padding-top: 2px; }
+      .row { display: flex; align-items: center; gap: 8px; transition: opacity .3s ease; }
+      .row .v { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+      .row .big { font-size: 64px; line-height: 1; margin-left: -3px; }
+      .row .step { width: 48px; height: 48px; border-radius: 14px; }
+      .say { margin: 6px 0 0; font-size: 20px; font-weight: 500; line-height: 1.3; max-width: 340px; }
+      .meta { font-size: 13px; font-weight: 500; opacity: .75; }
+      .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+      .chips .chip { height: 34px; border-radius: 10px; }
+      .modes { display: flex; flex-wrap: wrap; column-gap: 16px; margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(242,236,224,.2); }
+      .mode { height: 38px; font-size: 15px; font-weight: 700; opacity: .6; border-bottom: 2px solid transparent; }
+      .mode[aria-pressed="true"] { opacity: 1; border-bottom-color: #F2ECE0; }
+      .menu { position: absolute; left: 12px; right: 12px; z-index: 2; box-sizing: border-box; border-radius: 16px; background: #F2ECE0; color: #231C1A; box-shadow: 0 12px 32px rgba(0,0,0,.28); padding: 6px; display: flex; flex-direction: column; max-height: 300px; overflow-y: auto; animation: cc-in .2s ease both; }
+      .menu .t { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #545C5F; padding: 8px 10px 4px; }
+      .opt { height: 40px; border-radius: 10px; padding: 0 10px; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 500; text-align: left; }
+      .opt[aria-selected="true"] { background: rgba(35,28,26,.08); font-weight: 700; }
+      .opt ha-icon { --mdc-icon-size: 16px; }
+      button:focus-visible { outline-color: #F2ECE0; }
+      .menu button:focus-visible { outline-color: #231C1A; }
+      @media (prefers-reduced-motion: reduce) { ha-card, .row { transition: none; } .menu { animation: none; } }
+    `;
+    }
+    getGridOptions() { return { columns: 12, rows: 'auto', min_columns: 6 }; }
+    _update() {
+      super._update();
+      if (!this._escWired && this.shadowRoot.firstChild) {
+        this._escWired = true;
+        this.shadowRoot.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && this._menu) { this._menu = null; this._last = ''; this._update(); } });
+      }
+    }
+    connectedCallback() { this._tick = setInterval(() => this._history(), 10 * 60000); this._history(); }
+    disconnectedCallback() { clearInterval(this._tick); clearTimeout(this._tt); }
+    set hass(h) { const first = !this._hass; this._hass = h; if (first) this._history(); this._update(); }
+    _a() { const st = this.st(this._config.entity); return st ? st.attributes : {}; }
+    _lang() { return (this._hass.locale && this._hass.locale.language) || this._hass.language || 'en'; }
+    _deg(t) { return (Math.round(Number(t) * 10) / 10).toLocaleString(this._lang()) + '°'; }
+    _attr(st, key, value) {
+      if (value == null) return '';
+      if (this._hass.formatEntityAttributeValue) { try { return this._hass.formatEntityAttributeValue(st, key, value); } catch (e) { /* fall through */ } }
+      const s = String(value).replace(/_/g, ' ');
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    // How fast the room warmed (or cooled) in the current run, from the recorder, for "warm in about … minutes".
+    async _history() {
+      const c = this._config, h = this._hass;
+      if (!c || !h || c.show_eta === false || !h.callWS || this._histBusy) return;
+      if (this._histAt && Date.now() - this._histAt < 9 * 60000) return;
+      this._histBusy = true;
+      try {
+        const start = new Date(Date.now() - 3 * 3600000).toISOString();
+        const res = await h.callWS({ type: 'history/history_during_period', start_time: start, entity_ids: [c.entity], minimal_response: false, no_attributes: false, significant_changes_only: false });
+        const rows = (res && res[c.entity]) || [];
+        const pts = rows.map((r) => ({ t: (r.lu || r.lc || 0) * 1000 || Date.parse(r.last_updated || r.last_changed), cur: Number((r.a || r.attributes || {}).current_temperature), act: (r.a || r.attributes || {}).hvac_action })).filter((p) => p.t && !isNaN(p.cur));
+        this._rate = null;
+        // walk back from the newest point while the action stays the same: that is the current run
+        if (pts.length > 1) {
+          const last = pts[pts.length - 1];
+          let i = pts.length - 1;
+          while (i > 0 && pts[i - 1].act === last.act) i--;
+          const first = pts[i], mins = (last.t - first.t) / 60000, d = last.cur - first.cur;
+          if ((last.act === 'heating' || last.act === 'cooling') && mins >= 10 && Math.abs(d) >= 0.2) this._rate = { act: last.act, perMin: Math.abs(d) / mins };
+        }
+        this._histAt = Date.now();
+      } catch (e) { this._rate = null; this._histAt = Date.now(); }
+      this._histBusy = false;
+      this._last = ''; this._update();
+    }
+    _eta(action, from, to) {
+      const r = this._rate;
+      if (this._config.show_eta === false || !r || r.act !== action || !(r.perMin > 0)) return null;
+      const m = Math.round(Math.abs(to - from) / r.perMin);
+      if (m < 1 || m > 600) return null;
+      return m < 90 ? m + ' minutes' : (Math.round(m / 30) / 2).toLocaleString(this._lang()) + ' hours';
+    }
+
+    model() {
+      const c = this._config, st = this.st(c.entity);
+      const na = !st || st.state === 'unavailable' || st.state === 'unknown';
+      const a = st ? st.attributes : {};
+      const f = Number(a.supported_features) || 0;
+      const mode = na ? 'off' : st.state;
+      const p = this._pending || {};
+      const cur = a.current_temperature != null ? Number(a.current_temperature) : null;
+      const target = p.temperature != null ? p.temperature : (a.temperature != null ? Number(a.temperature) : null);
+      const low = p.target_temp_low != null ? p.target_temp_low : (a.target_temp_low != null ? Number(a.target_temp_low) : null);
+      const high = p.target_temp_high != null ? p.target_temp_high : (a.target_temp_high != null ? Number(a.target_temp_high) : null);
+      const dual = !na && target == null && low != null && high != null && mode !== 'off';
+      const hum = a.current_humidity != null ? Math.round(Number(a.current_humidity)) : null;
+      const humT = p.humidity != null ? p.humidity : (a.humidity != null ? Math.round(Number(a.humidity)) : null);
+      const deg = (t) => this._deg(t);
+
+      // what it is doing: the device says so in hvac_action; otherwise work it out
+      let action = a.hvac_action;
+      if (na) action = 'na';
+      else if (mode === 'off') action = 'off';
+      else if (!action || action === 'off') {
+        if (cur == null) action = 'idle';
+        else if (dual) action = cur < low - 0.2 ? 'heating' : (cur > high + 0.2 ? 'cooling' : 'idle');
+        else if (mode === 'heat') action = target != null && cur < target - 0.2 ? 'heating' : 'idle';
+        else if (mode === 'cool') action = target != null && cur > target + 0.2 ? 'cooling' : 'idle';
+        else if (mode === 'dry') action = 'drying';
+        else if (mode === 'fan_only') action = 'fan';
+        else action = 'idle';
+      }
+      if (action === 'preheating' || action === 'defrosting') action = 'heating';
+      if (!THERMO_BG[action]) action = 'idle';
+
+      const m = { na, action, bg: (c.colors && c.colors[action]) || THERMO_BG[action], name: c.name || this.nm(c.entity), dual, rows: [], big: '', label: '', steps: null };
+      const say = (s) => s;
+      const room = cur != null ? deg(cur) : '';
+
+      // the big value and what −/+ change
+      if (na) m.big = '—';
+      else if (mode === 'off') m.big = this._hass.formatEntityState ? this.fmt(st) : 'Off';
+      else if (dual) {
+        m.rows = [
+          { k: 'target_temp_low', label: 'Heat below', value: deg(low), dim: action === 'cooling' },
+          { k: 'target_temp_high', label: 'Cool above', value: deg(high), dim: action === 'heating' }
+        ];
+      } else if (mode === 'dry') {
+        if (humT != null && (f & CLIMATE.HUMIDITY)) { m.big = humT + '%'; m.label = 'Dry to'; m.steps = 'humidity'; }
+        else { m.big = hum != null ? hum + '%' : this.fmt(st); m.label = 'Humidity'; }
+      } else if (mode === 'fan_only') {
+        const fans = a.fan_modes || [];
+        m.big = a.fan_mode ? this._attr(st, 'fan_mode', a.fan_mode) : 'Fan';
+        m.label = 'Fan';
+        if (fans.length > 1 && (f & CLIMATE.FAN)) m.steps = 'fan';
+      } else if (target != null) {
+        m.big = deg(target);
+        m.label = { heat: 'Heat to', cool: 'Cool to', auto: 'Around' }[mode] || 'Target';
+        m.steps = 'temperature';
+      } else { m.big = room || this.fmt(st); m.label = 'Now'; }
+      m.bigSize = m.big.length > 5 ? 96 : 132;
+
+      // one sentence about what is going on
+      const eta = (to) => this._eta(action, cur, to);
+      const preset = a.preset_mode && !['none', 'None', 'comfort', 'home'].includes(a.preset_mode) && !na && mode !== 'off' ? this._attr(st, 'preset_mode', a.preset_mode) : '';
+      let s;
+      if (na) s = 'The thermostat isn’t responding. Check its power or connection.';
+      else if (mode === 'off') s = 'Off.' + (room ? ' It’s ' + room + ' in the ' + m.name.toLowerCase() + '.' : '');
+      else if (dual) s = action === 'heating' ? room + ' now, below ' + deg(low) + '. Heating up' + (eta(low) ? ', warm in about ' + eta(low) : '') + '.'
+        : action === 'cooling' ? room + ' now, above ' + deg(high) + '. Cooling down' + (eta(high) ? ', cool in about ' + eta(high) : '') + '.'
+        : room + ' now: comfortable, so it’s resting.';
+      else if (mode === 'dry') s = 'Drying the air' + (hum != null ? ': ' + hum + '% now' + (humT != null ? ', down to ' + humT + '%' : '') : '') + '.';
+      else if (mode === 'fan_only') s = 'Just moving air.' + (room ? ' It’s ' + room + ' in the room.' : '');
+      else if (action === 'heating') s = 'Heating from ' + room + '.' + (target != null && eta(target) ? ' Warm in about ' + eta(target) + '.' : '');
+      else if (action === 'cooling') s = 'Cooling from ' + room + '.' + (target != null && eta(target) ? ' Cool in about ' + eta(target) + '.' : '');
+      else if (target != null && mode !== 'auto') s = 'Holding at ' + deg(target) + '.' + (room ? ' It’s ' + room + ' now.' : '');
+      else s = room ? 'It’s ' + room + '. ' + (mode === 'auto' ? 'Auto is keeping it there.' : 'Resting.') : 'Resting.';
+      if (mode === 'auto' && (action === 'heating' || action === 'cooling') && target != null) s = s.replace(/\.$/, '') + '; auto keeps it around ' + deg(target) + '.';
+      if (preset) s = preset + ': ' + s.charAt(0).toLowerCase() + s.slice(1);
+      m.say = say(s);
+      m.meta = na ? '' : mode === 'dry' ? (room ? 'It’s ' + room + ' in the room' : '') : (hum != null ? hum + '% humidity' : '');
+
+      // options, only what the thermostat supports
+      const open = this._menu;
+      m.preset = !na && mode !== 'off' && (f & CLIMATE.PRESET) && (a.preset_modes || []).length ? { value: a.preset_mode && !['none', 'None'].includes(a.preset_mode) ? this._attr(st, 'preset_mode', a.preset_mode) : 'No preset', open: open === 'preset' } : null;
+      m.chips = [];
+      if (!na && mode !== 'off') {
+        if ((f & CLIMATE.FAN) && (a.fan_modes || []).length && mode !== 'fan_only') m.chips.push({ k: 'fan', label: 'Fan', value: this._attr(st, 'fan_mode', a.fan_mode), open: open === 'fan' });
+        if ((f & CLIMATE.SWING) && (a.swing_modes || []).length) m.chips.push({ k: 'swing', label: 'Swing', value: this._attr(st, 'swing_mode', a.swing_mode), open: open === 'swing' });
+        if (c.show_humidity !== false && (f & CLIMATE.HUMIDITY) && humT != null && mode !== 'dry') m.chips.push({ k: 'humidity', label: 'Humidity', value: humT + '%', open: open === 'humidity' });
+      }
+      const LISTS = { preset: ['Preset', 'preset_mode', a.preset_modes], fan: ['Fan speed', 'fan_mode', a.fan_modes], swing: ['Swing', 'swing_mode', a.swing_modes] };
+      if (open === 'humidity') {
+        const lo = Number(a.min_humidity) || 30, hi = Number(a.max_humidity) || 70;
+        const opts = []; for (let x = Math.ceil(lo / 5) * 5; x <= hi; x += 5) opts.push(x);
+        m.menu = { title: 'Target humidity', top: false, opts: opts.map((x) => ({ value: String(x), label: x + '%', on: x === humT })) };
+      } else if (open && LISTS[open] && (LISTS[open][2] || []).length) {
+        const [title, key, list] = LISTS[open];
+        m.menu = { title, top: open === 'preset', opts: list.map((x) => ({ value: x, label: this._attr(st, key, x), on: x === a[key] })) };
+      } else m.menu = null;
+      const shown = (c.modes && c.modes.length ? c.modes : (a.hvac_modes || [])).filter((x) => (a.hvac_modes || []).includes(x));
+      m.modes = c.show_modes === false ? [] : shown.map((k) => ({ k, label: HVAC_NAMES[k] || this._attr(st, 'hvac_mode', k), on: k === mode && !na }));
+      return m;
+    }
+
+    view(m) {
+      const ic = (n, mdi) => `<ha-icon icon="${ccIcon(n, mdi)}"></ha-icon>`;
+      const plus = ccIcon('plus', 'mdi:plus'), minus = ccIcon('minus', 'mdi:minus');
+      return `<ha-card class="${m.na ? 'na' : ''}" style="background:${m.bg}">
+        <div class="top">
+          <button type="button" class="room" data-act="more">${esc(m.name)}</button>
+          ${m.preset ? `<button type="button" class="chip" data-act="menu" data-arg="preset" aria-haspopup="listbox" aria-expanded="${m.preset.open}">${esc(m.preset.value)}${ic('chev', 'mdi:chevron-down')}</button>` : ''}
+        </div>
+        ${m.dual ? `<div class="rows">${m.rows.map((r) => `<div class="row" style="opacity:${r.dim ? 0.5 : 1}">
+            <span class="v"><span class="lbl">${esc(r.label)}</span><span class="big">${esc(r.value)}</span></span>
+            <button type="button" class="step" data-act="step" data-arg="${r.k}:-1" aria-label="Lower ${esc(r.label.toLowerCase())}"><ha-icon icon="${minus}"></ha-icon></button>
+            <button type="button" class="step" data-act="step" data-arg="${r.k}:1" aria-label="Raise ${esc(r.label.toLowerCase())}"><ha-icon icon="${plus}"></ha-icon></button>
+          </div>`).join('')}</div>`
+        : `<div class="one">
+            <span><span class="lbl">${esc(m.label)}</span><span class="big" style="font-size:${m.bigSize}px">${esc(m.big)}</span></span>
+            ${m.steps ? `<span class="steps"><button type="button" class="step" data-act="step" data-arg="${m.steps}:1" aria-label="Raise"><ha-icon icon="${plus}"></ha-icon></button><button type="button" class="step" data-act="step" data-arg="${m.steps}:-1" aria-label="Lower"><ha-icon icon="${minus}"></ha-icon></button></span>` : ''}
+          </div>`}
+        <p class="say">${esc(m.say)}</p>
+        ${m.meta ? `<span class="meta">${esc(m.meta)}</span>` : ''}
+        ${m.chips.length ? `<div class="chips">${m.chips.map((x) => `<button type="button" class="chip" data-act="menu" data-arg="${x.k}" aria-haspopup="listbox" aria-expanded="${x.open}"><small>${esc(x.label)}</small>${esc(x.value)}${ic('chev', 'mdi:chevron-down')}</button>`).join('')}</div>` : ''}
+        ${m.modes.length ? `<div class="modes" role="group" aria-label="Mode">${m.modes.map((x) => `<button type="button" class="mode" data-act="mode" data-arg="${x.k}" aria-pressed="${x.on}" ${m.na ? 'disabled' : ''}>${esc(x.label)}</button>`).join('')}</div>` : ''}
+        ${m.menu ? `<div class="menu" role="listbox" aria-label="${esc(m.menu.title)}" style="${m.menu.top ? 'top:52px' : 'bottom:' + (m.modes.length ? 62 : 14) + 'px'}"><span class="t">${esc(m.menu.title)}</span>${m.menu.opts.map((o) => `<button type="button" class="opt" role="option" data-act="pick" data-arg="${esc(o.value)}" aria-selected="${o.on}"><span>${esc(o.label)}</span>${o.on ? ic('check', 'mdi:check') : ''}</button>`).join('')}</div>` : ''}
+      </ha-card>`;
+    }
+
+    _send(patch) {
+      // gather quick taps, send once
+      this._pending = Object.assign({}, this._pending, patch);
+      this._last = ''; this._update();
+      clearTimeout(this._tt);
+      this._tt = setTimeout(() => {
+        const p = this._pending; this._pending = null;
+        if (p.humidity != null) this.call('climate', 'set_humidity', { entity_id: this._config.entity, humidity: p.humidity });
+        const t = {}; ['temperature', 'target_temp_low', 'target_temp_high'].forEach((k) => { if (p[k] != null) t[k] = p[k]; });
+        if (t.target_temp_low != null || t.target_temp_high != null) {
+          const a = this._a(); t.target_temp_low = t.target_temp_low != null ? t.target_temp_low : Number(a.target_temp_low); t.target_temp_high = t.target_temp_high != null ? t.target_temp_high : Number(a.target_temp_high);
+        }
+        if (Object.keys(t).length) this.call('climate', 'set_temperature', Object.assign({ entity_id: this._config.entity }, t));
+      }, 700);
+    }
+
+    act(a, arg) {
+      const c = this._config, st = this.st(c.entity);
+      if (a === 'more' || !st) return this.moreInfo(c.entity);
+      const at = st.attributes;
+      if (a === 'menu') { this._menu = this._menu === arg ? null : arg; this._last = ''; return this._update(); }
+      if (a === 'pick') {
+        const k = this._menu; this._menu = null; this._last = '';
+        if (k === 'preset') this.call('climate', 'set_preset_mode', { entity_id: c.entity, preset_mode: arg });
+        if (k === 'fan') this.call('climate', 'set_fan_mode', { entity_id: c.entity, fan_mode: arg });
+        if (k === 'swing') this.call('climate', 'set_swing_mode', { entity_id: c.entity, swing_mode: arg });
+        if (k === 'humidity') this._send({ humidity: Number(arg) });
+        return this._update();
+      }
+      if (a === 'mode') { this._menu = null; return this.call('climate', 'set_hvac_mode', { entity_id: c.entity, hvac_mode: arg }); }
+      if (a === 'step') {
+        const [k, d] = String(arg).split(':'), dir = Number(d);
+        const p = this._pending || {};
+        if (k === 'fan') {
+          const list = at.fan_modes || [], i = list.indexOf(at.fan_mode);
+          const next = list[Math.max(0, Math.min(list.length - 1, i + dir))];
+          if (next && next !== at.fan_mode) this.call('climate', 'set_fan_mode', { entity_id: c.entity, fan_mode: next });
+          return;
+        }
+        if (k === 'humidity') {
+          const now = p.humidity != null ? p.humidity : Number(at.humidity);
+          return this._send({ humidity: Math.max(Number(at.min_humidity) || 30, Math.min(Number(at.max_humidity) || 70, now + dir * 5)) });
+        }
+        const stepSize = Number(at.target_temp_step) || (String(this._hass.config && this._hass.config.unit_system && this._hass.config.unit_system.temperature).indexOf('F') >= 0 ? 1 : 0.5);
+        const lo = Number(at.min_temp) || 7, hi = Number(at.max_temp) || 35;
+        const cur = p[k] != null ? p[k] : Number(at[k]);
+        let next = Math.round((cur + dir * stepSize) * 10) / 10;
+        // heat stays at least 1° under cool
+        const other = (key) => (p[key] != null ? p[key] : Number(at[key]));
+        if (k === 'target_temp_low') next = Math.min(next, other('target_temp_high') - 1);
+        if (k === 'target_temp_high') next = Math.max(next, other('target_temp_low') + 1);
+        this._send({ [k]: Math.max(lo, Math.min(hi, next)) });
+      }
+    }
+  }
+  CranberryThermostatCard.defaults = { show_eta: true, show_modes: true };
+
+
   // ---------------------------------------------------------------- car
   // Where the car is parked: the place as chips, the layer and zone for a parking garage,
   // a note and a small map for anywhere else. A tap on the map starts walking directions.
@@ -2091,6 +2375,25 @@
         done: 'On while there is washing to take out. “Emptied” turns it off.',
         done_at: 'Optional. When the wash finished. Without it, the time the done helper switched on.',
         alert_after: 'How long done washing may wait before the card turns red.'
+      }
+    },
+    {
+      tag: 'cranberry-thermostat-card', cls: CranberryThermostatCard, name: 'Cranberry thermostat',
+      description: 'The whole card says what the thermostat is doing: colour, the setpoint large, and one sentence. Every HVAC mode, heat/cool, presets, fan, swing and humidity.',
+      stub: (ids) => ({ entity: ids.find((e) => e.startsWith('climate.')) || 'climate.living_room' }),
+      schema: [
+        { name: 'entity', required: true, selector: { entity: { domain: 'climate' } } },
+        { name: 'name', selector: { text: {} } },
+        { name: 'modes', selector: { select: { multiple: true, options: [{ value: 'off', label: 'Off' }, { value: 'heat', label: 'Heat' }, { value: 'cool', label: 'Cool' }, { value: 'heat_cool', label: 'Heat/cool' }, { value: 'auto', label: 'Auto' }, { value: 'dry', label: 'Dry' }, { value: 'fan_only', label: 'Fan only' }] } } },
+        { name: 'show_modes', selector: { boolean: {} } },
+        { name: 'show_eta', selector: { boolean: {} } },
+        { name: 'show_humidity', selector: { boolean: {} } }
+      ],
+      labels: { entity: 'Thermostat', name: 'Room name', modes: 'Modes to show', show_modes: 'Show the modes', show_eta: 'Say how long it takes', show_humidity: 'Show the humidity target' },
+      helpers: {
+        modes: 'Optional. Leave empty to show every mode the thermostat has.',
+        show_eta: 'Works out “warm in about … minutes” from how fast the room warmed up in the current run (needs the recorder).',
+        show_humidity: 'Only for thermostats that can aim for a humidity.'
       }
     },
     {
