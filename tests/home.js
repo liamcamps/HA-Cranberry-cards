@@ -104,7 +104,7 @@ const wait = () => new Promise((r) => setTimeout(r, 10));
   const ed = C.getConfigElement(); ok(ed.tagName.toLowerCase() === 'cranberry-home-card-editor', 'editor element');
   w.customElements.define('ha-form', class extends w.HTMLElement {});
   w.document.body.appendChild(ed); ed.setConfig(base); ed.hass = hass(); await wait();
-  const form = ed.querySelector('ha-form'); ok(form && form.schema.length === 13 && form.data.weather === 'weather.home', 'editor renders ha-form');
+  const form = ed.querySelector('ha-form'); ok(form && form.schema.length === 14 && form.data.weather === 'weather.home', 'editor renders ha-form');
   let changed = null; ed.addEventListener('config-changed', (e) => changed = e.detail.config);
   form.dispatchEvent(new w.CustomEvent('value-changed', { detail: { value: Object.assign({}, base, { home_text: '', lights: [] }) } }));
   ok(changed && !('home_text' in changed) && !('lights' in changed), 'editor emits cleaned config');
@@ -306,6 +306,51 @@ const wait = () => new Promise((r) => setTimeout(r, 10));
     const f = ed.querySelector('ha-form');
     ok(Array.isArray(f.data.warning) && f.data.warning[0] === 'binary_sensor.meteoalarm' && Array.isArray(f.data.lights), 'single values become lists');
     ok(f.schema.some((x) => x.name === 'warning' && x.selector.entity.multiple), 'warning picker present');
+  }
+
+  // 16. weather details and coming up: show, desktop only, hide
+  {
+    w = setup();
+    const card = w.document.createElement('cranberry-home-card'); w.document.body.appendChild(card);
+    const day = new Date(); day.setHours(0, 0, 0, 0);
+    const iso = (d) => d.toISOString();
+    const tomorrow9 = new Date(day.getTime() + 86400000 + 9 * 3600000);
+    const inTwo = new Date(day.getTime() + 2 * 86400000);
+    const ymd = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    let asked = [];
+    const h = hass({ 'weather.home': { entity_id: 'weather.home', state: 'clear-night', attributes: { friendly_name: 'Home', temperature: -1, temperature_unit: '°C', supported_features: 3, wind_speed: 12, wind_bearing: 225, wind_speed_unit: 'km/h' } },
+      'sun.sun': { entity_id: 'sun.sun', state: 'below_horizon', attributes: { next_rising: new Date(now + 9 * 3600000).toISOString(), next_setting: new Date(now + 18 * 3600000).toISOString() } } },
+      hourly([0, 0, 1, 0, -1, 0, 2, 3, 3, 2, 1, 0], [0, 0, 0, 0, 0, 0.6, 0, 0, 0, 0, 0, 0]));
+    h.callApi = async (m, path) => { asked.push(path); return path.indexOf('calendar.family') >= 0
+      ? [{ summary: 'Dentist', start: { dateTime: iso(tomorrow9) }, end: { dateTime: iso(new Date(tomorrow9.getTime() + 3600000)) } },
+         { summary: 'Old thing', start: { dateTime: iso(new Date(now - 7200000)) }, end: { dateTime: iso(new Date(now - 3600000)) } },
+         { summary: 'Mylou’s birthday', start: { date: ymd(inTwo) }, end: { date: ymd(new Date(inTwo.getTime() + 86400000)) } }]
+      : [{ summary: 'Call with Sam', start: { dateTime: iso(new Date(now - 600000)) }, end: { dateTime: iso(new Date(now + 1800000)) } }]; };
+    card.setConfig(Object.assign({}, base, { issues: [], weather_details: 'wide', coming_up: 'show', calendars: ['calendar.family', 'calendar.work'] }));
+    card.hass = h; await wait(); await wait();
+    const $ = (s) => card.shadowRoot.querySelector(s), $$ = (s) => [...card.shadowRoot.querySelectorAll(s)];
+    ok(asked.length === 2 && /calendars\/calendar\.family\?start=/.test(asked[0]), 'asks each calendar');
+    const evs = $$('.ev').map((e) => e.querySelector('.when').textContent + ' ' + e.querySelector('.what').textContent);
+    ok(evs.length === 3 && /^Now · until \d\d:\d\d Call with Sam$/.test(evs[0]) && /^Tomorrow 09:00 Dentist$/.test(evs[1]) && /all day Mylou’s birthday$/.test(evs[2]), 'agenda in order, ended left out: ' + evs.join(' | '));
+    ok($('.ev.now') && $('.ev').getAttribute('data-entity') === 'calendar.work', 'ongoing marked, taps open the calendar');
+    const stats = $$('.stat').map((x) => x.textContent);
+    ok(stats[0] === 'High / low3° / -1°' || stats[0] === 'High / low3° / −1°', 'high and low: ' + stats.join('|'));
+    ok(stats.includes('Rain80%') && stats.includes('WindSW 12 km/h') && stats.some((x) => /^Sunrise\d\d:\d\d$/.test(x)), 'rain, wind, sunrise: ' + stats.join('|'));
+    ok($('.weather').classList.contains('fill') && ($('.plot svg') || $('.bars')), 'chart fills the height');
+    // count
+    card.setConfig(Object.assign({}, base, { issues: [], coming_up: 'show', calendars: ['calendar.family', 'calendar.work'], coming_up_count: 1 })); card.hass = Object.assign({}, h); await wait(); await wait();
+    ok($$('.ev').length === 1, 'count limits the list');
+    // stacked: desktop only hides, show keeps
+    card.setConfig(Object.assign({}, base, { issues: [], layout: 'stacked', weather_details: 'wide', coming_up: 'wide', calendars: ['calendar.family'] })); card.hass = Object.assign({}, h); await wait();
+    ok(!$('.agenda') && !$('.stats') && !$('.weather').classList.contains('fill'), 'desktop only: hidden when stacked');
+    card.setConfig(Object.assign({}, base, { issues: [], layout: 'stacked', weather_details: 'show', coming_up: 'show', calendars: ['calendar.family'] })); card.hass = Object.assign({}, h); await wait(); await wait();
+    ok($('.agenda') && $('.stats'), 'show: also when stacked');
+    card.setConfig(Object.assign({}, base, { issues: [], weather_details: 'hide', coming_up: 'hide', calendars: ['calendar.family'] })); card.hass = Object.assign({}, h); await wait();
+    ok(!$('.agenda') && !$('.stats'), 'hidden by default and on hide');
+    // nothing planned
+    h.callApi = async () => [];
+    card.hass = Object.assign({}, h); card.setConfig(Object.assign({}, base, { issues: [], coming_up: 'show', calendars: ['calendar.family'] })); await wait(); await wait();
+    ok($('.agenda .none') && $('.agenda .none').textContent === 'Nothing planned this week.', 'empty calendar: ' + ($('.agenda') ? $('.agenda').textContent : 'no agenda'));
   }
 
   console.log(pass + ' passed, ' + fail + ' failed');

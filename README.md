@@ -5,7 +5,7 @@ olive and quail, with brick only when something needs you. Every card has a visu
 
 | Card | Type |
 | --- | --- |
-| Home: clock, what needs attention, lights on (tap for a menu), weather and the coming hours | `custom:cranberry-home-card` |
+| Home: clock, coming up, what needs attention, lights on (tap for a menu), weather details and the coming hours | `custom:cranberry-home-card` |
 | Status: heating, who is home, a lock or an alarm | `custom:cranberry-status-card` |
 | Room: lights on, brightness, temperature, pop-up | `custom:cranberry-room-card` |
 | Scene: stays highlighted while the scene is active | `custom:cranberry-scene-card` |
@@ -54,6 +54,10 @@ type: custom:cranberry-home-card
 weather: weather.home
 lights: [light.living_room, light.bedroom]
 issues: [binary_sensor.front_door]
+weather_details: wide       # show | wide (desktop only) | hide: high/low, rain, wind, sun, a taller chart
+coming_up: wide             # show | wide (desktop only) | hide: the next events under the clock
+calendars: [calendar.family]
+coming_up_count: 3
 ```
 
 ```yaml

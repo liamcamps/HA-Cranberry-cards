@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.20.0 (2026-11-22)
+
+- Home card: **Weather details** (Show, Desktop only or Hide). A row with high and low, rain
+  chance, wind and the next sunrise or sunset, and the chart grows to use the card's height,
+  with rain under the line and a range of at least 6° so a flat night stays flat.
+- Home card: **Coming up** (Show, Desktop only or Hide). The next events from one or more
+  calendars under the clock ("Tomorrow 09:00 · Dentist", "Now · until 15:00"), plus the next bin
+  collection when the bins chip isn't already showing it. Pick how many in the editor.
+- Desktop only means the side-by-side layout; when the card stacks on a phone it is left out.
+
 ## 2.19.0 (2026-11-22)
 
 - Thermostat card: new **Size** option (Full or Compact) in the card editor. Compact is one strip

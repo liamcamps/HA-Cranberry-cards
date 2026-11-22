@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.19.0';
+  const VERSION = '2.20.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -32,7 +32,8 @@
     coat: 'M8 3l4 3 4-3 4 4-3 3v11H7V10L4 7z',
     check: 'M5 12l4 4 10-10',
     clock: 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z',
-    alert: 'M12 3 2 20h20zM12 10v4M12 17h.01'
+    alert: 'M12 3 2 20h20zM12 10v4M12 17h.01',
+    cal: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z'
   };
 
   // ---------- Weather art (64px, three layers: fill, fill, stroke) ----------
@@ -283,6 +284,24 @@
     .chip { display: none; align-items: center; gap: 8px; }
     .chip .serif { font-size: 40px; line-height: 1; }
     .empty { padding: 24px; font-size: 15px; }
+    /* coming up: the next things on the calendar, under the clock */
+    .agenda { flex: 1; display: flex; flex-direction: column; gap: 2px; margin-top: 6px; min-height: 0; }
+    .agenda .k, .stat .k { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--chc-sub); }
+    .agenda .k { margin-bottom: 4px; }
+    .ev { display: grid; grid-template-columns: 116px minmax(0, 1fr); align-items: baseline; gap: 12px; min-height: 30px; text-align: left; }
+    .ev .when { font-size: 14px; font-weight: 600; color: var(--chc-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ev .what { font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ev.now .when { color: var(--chc-fg); }
+    .ev .what svg { vertical-align: -3px; margin-right: 6px; }
+    .agenda .none { font-size: 15px; color: var(--chc-sub); }
+    /* weather details: a row of facts, and a chart that uses the height */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 12px; padding: 12px 0 2px; border-top: 1px solid var(--chc-rule); }
+    .stat { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .stat b { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .weather.fill .chart { flex: 1; justify-content: flex-end; min-height: 0; }
+    .weather.fill .plot { flex: 1; position: relative; min-height: 34px; max-height: 220px; }
+    .weather.fill .plot svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .weather.fill .bars { flex: 1; height: auto; min-height: 58px; max-height: 200px; }
     /* stacked layout for phones and narrow columns */
     ha-card.stacked .body { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 18px; }
     ha-card.stacked .time { font-size: 60px; }
@@ -319,7 +338,8 @@
 
     setConfig(config) {
       if (!config || !config.weather) throw new Error('Pick a weather entity');
-      this._config = Object.assign({ layout: 'auto', show_clock: true, hour_step: 2, load_fonts: true, match_row: true }, config);
+      this._config = Object.assign({ layout: 'auto', show_clock: true, hour_step: 2, load_fonts: true, match_row: true, weather_details: 'hide', coming_up: 'hide', coming_up_count: 3 }, config);
+      this._calAt = 0; this._events = null;
       if (this._config.load_fonts !== false) loadFonts();
       this._last = '';
       if (this._hass) { this._subscribe(); this._render(); }
@@ -433,6 +453,70 @@
       } catch (e) {
         this._subscribedTo = null;
       }
+    }
+
+    // ----- Calendar -----
+    // "show", "wide" (only in the side-by-side layout) or "hide"; true and false work too
+    _on(v, layout) { return v === true || v === 'show' || (v === 'wide' && layout === 'wide'); }
+
+    async _fetchCal() {
+      const h = this._hass, c = this._config;
+      const ids = [].concat(c.calendars || []).filter(Boolean);
+      if (!h || !h.callApi || !ids.length || this._calBusy) return;
+      this._calBusy = true; this._calAt = Date.now();
+      const start = new Date(), end = new Date(start.getTime() + 8 * 86400000);
+      const out = [];
+      await Promise.all(ids.map(async (id) => {
+        try {
+          const evs = await h.callApi('GET', 'calendars/' + id + '?start=' + encodeURIComponent(start.toISOString()) + '&end=' + encodeURIComponent(end.toISOString()));
+          (evs || []).forEach((e) => out.push(Object.assign({ cal: id }, e)));
+        } catch (err) { /* a calendar that fails is left out */ }
+      }));
+      this._events = out;
+      this._calBusy = false;
+      this._render(true);
+    }
+
+    _agenda(now, bins) {
+      const c = this._config;
+      const day0 = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x.getTime(); };
+      const today = day0(now), DAY = 86400000;
+      const dayName = (d) => {
+        const n = Math.round((day0(d) - today) / DAY);
+        if (n <= 0) return 'Today';
+        if (n === 1) return 'Tomorrow';
+        return new Intl.DateTimeFormat(this._lang(), { weekday: 'short' }).format(d);
+      };
+      const parse = (v) => {
+        if (!v) return null;
+        if (typeof v === 'object') return v.dateTime ? { d: new Date(v.dateTime), all: false } : (v.date ? { d: new Date(v.date + 'T00:00:00'), all: true } : null);
+        return /^\d{4}-\d{2}-\d{2}$/.test(v) ? { d: new Date(v + 'T00:00:00'), all: true } : { d: new Date(v), all: false };
+      };
+      const list = [];
+      (this._events || []).forEach((e) => {
+        const s = parse(e.start), en = parse(e.end);
+        if (!s || isNaN(s.d)) return;
+        const endT = en && !isNaN(en.d) ? en.d.getTime() : s.d.getTime() + (s.all ? DAY : 3600000);
+        if (endT <= now.getTime()) return;
+        const started = s.d <= now;
+        let when;
+        if (s.all) when = (started ? 'Today' : dayName(s.d)) + ' · all day';
+        else if (started) when = 'Now · until ' + this._fmtTime(new Date(endT));
+        else when = dayName(s.d) + ' ' + this._fmtTime(s.d);
+        list.push({ t: started ? now.getTime() : s.d.getTime(), all: s.all, when, what: e.summary || e.message || 'Busy', id: e.cal, now: started && !s.all });
+      });
+      // the next bin collection, unless the bins chip already says it
+      if (c.waste && !bins) {
+        const ws = wasteState(this._hass, c, now);
+        const next = (ws.upcoming || []).filter((x) => x.days <= 2);
+        if (next.length) {
+          const same = next.filter((x) => x.days === next[0].days);
+          const names = same.map((x) => (SHORT[x.name] || x.name).toLowerCase());
+          list.push({ t: day0(next[0].date) + 1, all: true, when: dayName(next[0].date), what: capital(listJoin(names)) + ' collected', id: same[0].id, bin: true });
+        }
+      }
+      list.sort((a, b) => a.t - b.t || (b.all ? 1 : 0) - (a.all ? 1 : 0));
+      return list.slice(0, Math.max(1, Math.min(5, Number(c.coming_up_count) || 3)));
     }
 
     // ----- Helpers -----
@@ -644,8 +728,11 @@
         const ws = wasteState(h, c, now);
         if (ws.chip && !ws.out) bins = { text: ws.chip, colours: ws.colours, id: (c.waste_out || ws.due[0].id) };
       }
+      const layout = this._layout || 'wide';
       const model = {
         now, issues, warning, homeText, bins, lamps, menu,
+        agenda: this._on(c.coming_up, layout) ? this._agenda(now, bins) : null,
+        details: this._on(c.weather_details, layout),
         date: new Intl.DateTimeFormat(this._lang(), this._width && this._width < 560 ? { weekday: 'short', day: 'numeric', month: 'short' } : { weekday: 'long', day: 'numeric', month: 'long' }).format(now),
         time: this._fmtTime(now)
       };
@@ -765,10 +852,15 @@
       const hours = [{ temp, cond: atNight(cond, now.getTime()), label: 'Now' }];
       for (let i = step - 1; hours.length < 6 && i < fc.length; i += step) {
         const f = fc[i];
-        hours.push({ temp: num(f.temperature), cond: hourly ? atNight(f.condition, Date.parse(f.datetime)) : f.condition, label: hourly ? this._fmtTime(new Date(f.datetime), false) : new Intl.DateTimeFormat(this._lang(), { weekday: 'short' }).format(new Date(f.datetime)) });
+        hours.push({ mm: num(f.precipitation) || 0, temp: num(f.temperature), cond: hourly ? atNight(f.condition, Date.parse(f.datetime)) : f.condition, label: hourly ? this._fmtTime(new Date(f.datetime), false) : new Intl.DateTimeFormat(this._lang(), { weekday: 'short' }).format(new Date(f.datetime)) });
       }
       const ht = hours.map((x) => x.temp).filter((v) => v != null);
-      const mn = Math.min.apply(null, ht) - 1, mx = Math.max.apply(null, ht) + 1;
+      let mn = Math.min.apply(null, ht) - 1, mx = Math.max.apply(null, ht) + 1;
+      if (model.details && ht.length) {
+        // a tall chart needs a sensible range, or a flat night looks like a cliff
+        const mid = (mn + mx) / 2, half = Math.max(3, (mx - mn) / 2);
+        mn = mid - half; mx = mid + half;
+      }
       const pts = hours.map((x, i) => [25 + i * 50, 40 - ((x.temp ?? mn) - mn) / ((mx - mn) || 1) * 34]);
       const line = hours.length > 1 ? 'M' + pts.map((p) => p[0] + ' ' + p[1].toFixed(1)).join('L') : '';
       const area = line ? line + 'L' + pts[pts.length - 1][0] + ' 46L25 46Z' : '';
@@ -791,7 +883,32 @@
       rainAria = 'Rain for the next ' + next12.length + ' hours';
       }
 
+      // details: high and low, rain chance, wind, the next sunrise or sunset
+      let stats = null, rainMarks = '';
+      if (model.details) {
+        stats = [];
+        const t24 = (hourly ? fc.slice(0, 24) : fc.slice(0, 1)).map((f) => num(f.temperature)).concat(hourly ? [temp] : []).filter((v) => v != null);
+        const lo24 = hourly ? fc.slice(0, 24).map((f) => num(f.templow != null ? f.templow : f.temperature)) : fc.slice(0, 1).map((f) => num(f.templow));
+        const lows = lo24.concat(t24).filter((v) => v != null);
+        if (t24.length) stats.push({ k: 'High / low', v: round(Math.max.apply(null, t24)) + '° / ' + round(Math.min.apply(null, lows)) + '°' });
+        const probs = next12.map((f) => num(f.precipitation_probability)).filter((v) => v != null);
+        const mmSum = next12.reduce((sum, f) => sum + (num(f.precipitation) || 0), 0);
+        if (probs.length) stats.push({ k: 'Rain', v: Math.round(Math.max.apply(null, probs)) + '%' });
+        else if (next12.length) stats.push({ k: 'Rain', v: (Math.round(mmSum * 10) / 10).toLocaleString(this._lang()) + ' mm' });
+        const ws = num(oa.wind_speed) != null ? num(oa.wind_speed) : num(at.wind_speed);
+        const wb = num(oa.wind_bearing) != null ? num(oa.wind_bearing) : num(at.wind_bearing);
+        if (ws != null) {
+          const dir = wb != null ? ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(((wb % 360) + 360) % 360 / 45) % 8] + ' ' : '';
+          stats.push({ k: 'Wind', v: dir + Math.round(ws) + ' ' + (oa.wind_speed_unit || at.wind_speed_unit || 'km/h') });
+        }
+        if (!isNaN(rise) && !isNaN(set)) stats.push(rise < set ? { k: 'Sunrise', v: this._fmtTime(new Date(rise)) } : { k: 'Sunset', v: this._fmtTime(new Date(set)) });
+        // rain under the temperature line, per point
+        const maxMm = Math.max(2, ...hours.map((x) => x.mm || 0));
+        rainMarks = hours.map((x, i) => (x.mm > 0 ? `<rect x="${25 + i * 50 - 7}" y="${(46 - Math.max(1.5, x.mm / maxMm * 16)).toFixed(1)}" width="14" height="${Math.max(1.5, x.mm / maxMm * 16).toFixed(1)}" rx="2" style="fill:${BLUE};opacity:.8"></rect>` : '')).join('');
+      }
+
       return Object.assign(model, {
+        stats, rainMarks,
         cond: atNight(cond, now.getTime()), unit: unit.replace('°', ''), temp, label: this._stateText(w), feels: feelsBits.join(' · '),
         tempCol: tempColour(this._toC(temp, unit) ?? 10),
         insight, icon, hours: hours.map((x) => Object.assign(x, { col: x.temp == null ? 'inherit' : tempColour(this._toC(x.temp, unit)) })),
@@ -816,8 +933,10 @@
     _render(force) {
       if (!this._hass || !this._config) return;
       const c = this._config;
-      const m = this._model();
       const layout = c.layout === 'stacked' || (c.layout !== 'wide' && this._width > 0 && this._width < 560) ? 'stacked' : 'wide';
+      this._layout = layout;
+      if (this._on(c.coming_up, layout) && (c.calendars || []).length && Date.now() - (this._calAt || 0) > 15 * 60000) this._fetchCal();
+      const m = this._model();
       if (this._menu && !m.menu.length) this._menu = false;
       const key = JSON.stringify([m, layout, c, !!this._menu]);
       if (!force && key === this._last) return;
@@ -834,11 +953,12 @@
         ? `<div class="chart"><div class="bars" role="img" aria-label="${esc(m.rainAria)}">${m.bars.map((b) => `<span style="height:${b.h}%;opacity:${b.o}"></span>`).join('')}</div>
              <div class="ticks">${m.ticks.map((t) => `<span>${esc(t)}</span>`).join('')}</div></div>`
         : (m.hours.length > 1 ? `<div class="chart">
-             <svg width="100%" height="34" viewBox="0 0 300 46" preserveAspectRatio="none" aria-hidden="true">
+             <div class="plot"><svg width="100%" height="34" viewBox="0 0 300 46" preserveAspectRatio="none" aria-hidden="true">
                <defs><linearGradient id="${g}" x1="0" x2="1" y1="0" y2="0">${stops}</linearGradient></defs>
                <path d="${m.area}" stroke="none" style="fill:url(#${g});opacity:.28"></path>
+               ${m.rainMarks || ''}
                <path d="${m.line}" fill="none" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" style="stroke:url(#${g})"></path>
-             </svg>
+             </svg></div>
              <div class="hours" style="grid-template-columns: repeat(${m.hours.length}, minmax(0,1fr))">${m.hours.map((x) => `<span class="hour"><b style="color:${x.col}">${round(x.temp)}°</b>${window.customIcons && window.customIcons.lucide ? `<ha-icon icon="lucide:${HOUR_LUCIDE[x.cond] || 'cloud'}" style="--mdc-icon-size:18px"></ha-icon>` : this._icon(HOUR_ICON[x.cond] || I.cloud)}<span>${esc(x.label)}</span></span>`).join('')}</div>
            </div>` : '');
 
@@ -858,18 +978,20 @@
                   ${this._art(m.cond, 44)}<span class="serif" style="color:${m.tempCol}">${round(m.temp)}°</span>
                 </button>
               </div>
+              ${m.agenda ? `<div class="agenda"><span class="k">Coming up</span>${m.agenda.length ? m.agenda.map((e) => `<button class="ev${e.now ? ' now' : ''}" data-entity="${esc(e.id)}"><span class="when">${esc(e.when)}</span><span class="what">${e.bin ? this._icon(I.cal, 16) : ''}${esc(e.what)}</span></button>`).join('') : '<span class="none">Nothing planned this week.</span>'}</div>` : ''}
               <div class="stack">
                 ${m.issues.length || m.bins || m.lamps ? `<div class="chips">${m.issues.length ? `<button class="issue" data-entity="${esc(m.issues[0].id)}"><span class="n">${m.issues.length}</span><span>${esc(issueText)}</span></button>` : ''}${m.bins ? `<button class="bins" data-bins="1" aria-label="${esc(m.bins.text)}"><span class="n">${m.bins.colours.map((col) => `<svg width="${m.bins.colours.length > 1 ? 17 : 20}" height="${m.bins.colours.length > 1 ? 17 : 20}" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 13a1.5 1.5 0 0 1-1.5 1.4h-7A1.5 1.5 0 0 1 7 20zM4.5 5h15M10 3h4" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:${col}"></path><path d="M7.4 10h9.2l-.7 10H8.1z" style="fill:${col}"></path></svg>`).join('')}</span><span>${esc(m.bins.text)}</span></button>` : ''}${m.lamps ? `<button class="lamps" data-lights aria-haspopup="dialog" aria-expanded="${!!this._menu}"><span class="n">${this._icon(I.bulb, 16)}${m.lamps.n}</span><span>${esc(m.lamps.text)}</span>${this._icon(I.chev, 16)}</button>` : ''}</div>` : ''}
                 <p>${esc(m.homeText)}</p>
                 ${m.insight ? `<p class="insight">${this._icon(m.icon)}<span>${esc(m.insight)}</span></p>` : ''}
               </div>
             </div>
-            <div class="weather" role="button" tabindex="0" data-entity="${esc(c.weather)}" aria-label="${esc(m.label)}, ${round(m.temp)} degrees">
+            <div class="weather${m.details ? ' fill' : ''}" role="button" tabindex="0" data-entity="${esc(c.weather)}" aria-label="${esc(m.label)}, ${round(m.temp)} degrees">
               <div class="head">
                 ${this._art(m.cond, 64)}
                 <span class="names"><span class="label">${esc(m.label)}</span><span class="feels">${esc(m.feels)}</span></span>
                 <span class="temp serif" style="color:${m.tempCol}">${round(m.temp)}<small>°${esc(m.unit)}</small></span>
               </div>
+              ${m.stats && m.stats.length ? `<div class="stats">${m.stats.map((x) => `<span class="stat"><span class="k">${esc(x.k)}</span><b>${esc(x.v)}</b></span>`).join('')}</div>` : ''}
               ${chart}
             </div>
           </div>
@@ -915,6 +1037,7 @@
   }
 
   // ---------- Visual editor ----------
+  const SHOW_OPTS = [{ value: 'show', label: 'Show' }, { value: 'wide', label: 'Desktop only (side-by-side layout)' }, { value: 'hide', label: 'Hide' }];
   const SCHEMA = [
     { name: 'weather', required: true, selector: { entity: { domain: 'weather' } } },
     { name: 'issues', selector: { entity: { multiple: true } } },
@@ -935,6 +1058,14 @@
       ]
     },
     {
+      type: 'expandable', name: 'agenda', flatten: true, title: 'Coming up', icon: 'mdi:calendar-outline',
+      schema: [
+        { name: 'coming_up', selector: { select: { mode: 'dropdown', options: SHOW_OPTS } } },
+        { name: 'calendars', selector: { entity: { multiple: true, domain: 'calendar' } } },
+        { name: 'coming_up_count', selector: { number: { min: 1, max: 5, step: 1, mode: 'slider' } } }
+      ]
+    },
+    {
       type: 'expandable', name: 'laundry', flatten: true, title: 'Washing machine', icon: 'mdi:washing-machine',
       schema: [
         { name: 'laundry_done', selector: { entity: {} } },
@@ -950,6 +1081,7 @@
           { value: 'wide', label: 'Side by side' },
           { value: 'stacked', label: 'Stacked' }
         ] } } },
+        { name: 'weather_details', selector: { select: { mode: 'dropdown', options: SHOW_OPTS } } },
         { name: 'hour_step', selector: { number: { min: 1, max: 3, step: 1, mode: 'slider' } } },
         { name: 'show_clock', selector: { boolean: {} } },
         { name: 'insight', selector: { boolean: {} } },
@@ -970,6 +1102,10 @@
     rain_nowcast: 'Rain in the next two hours (optional)',
     layout: 'Layout',
     hour_step: 'Hours between points on the chart',
+    weather_details: 'Weather details',
+    coming_up: 'Show coming up',
+    calendars: 'Calendars',
+    coming_up_count: 'How many to show',
     show_clock: 'Show the clock',
     insight: 'Show the weather tip',
     match_row: 'As tall as the cards next to it',
@@ -989,6 +1125,9 @@
     rain_nowcast: 'A sensor with a 5-minute rain forecast in its forecast attribute, such as NL Weather’s Precipitation forecasted. Shows rain to the minute.',
     weather_now: 'Optional. A second weather entity for the current temperature, such as the NL Weather observations. The forecast still comes from Weather.',
     home_text: 'Leave empty to write it automatically.',
+    weather_details: 'High and low, rain chance, wind and sunrise or sunset, and a chart that uses the full height of the card. Desktop only leaves it out when the card stacks on a phone.',
+    coming_up: 'The next events from your calendars under the clock, and the next bin collection. Desktop only leaves it out when the card stacks on a phone.',
+    calendars: 'One or more calendars. Events from the coming week.',
     laundry_done: 'Shows a reminder while this is on or done.',
     laundry_done_at: 'Optional. A timestamp sensor or date-time helper. Without it, the card uses the moment the done sensor changed.',
     laundry_name: 'Defaults to “Washing machine”.',
