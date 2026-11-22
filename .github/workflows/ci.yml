@@ -1,0 +1,68 @@
+# Tests and the HACS check on every push and pull request.
+# On main, when the VERSION in dist/cranberry-cards.js has no release yet, it publishes one
+# (tag v<version>, notes from CHANGELOG.md), so HACS offers the update by itself.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - name: Versions match
+        run: |
+          JS=$(grep -oP "const VERSION = '\K[^']+" dist/cranberry-cards.js | head -1)
+          PKG=$(node -p "require('./package.json').version")
+          echo "cranberry-cards.js $JS, package.json $PKG"
+          test "$JS" = "$PKG"
+          grep -q "^## $JS " CHANGELOG.md || { echo "CHANGELOG.md has no section for $JS"; exit 1; }
+      - run: npm test
+
+  hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: hacs/action@main
+        with:
+          category: plugin
+          ignore: brands description topics images
+
+  release:
+    needs: [test, hacs]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Find the version
+        id: v
+        run: |
+          VER=$(grep -oP "const VERSION = '\K[^']+" dist/cranberry-cards.js | head -1)
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/v$VER" >/dev/null; then
+            echo "new=false" >> "$GITHUB_OUTPUT"; echo "v$VER is already released"
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"; echo "v$VER will be released"
+          fi
+      - name: Publish the release
+        if: steps.v.outputs.new == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VER: ${{ steps.v.outputs.version }}
+        run: |
+          awk -v h="## $VER " 'index($0, h) == 1 { f = 1; next } /^## / { f = 0 } f' CHANGELOG.md > notes.md
+          gh release create "v$VER" dist/cranberry-cards.js --title "$VER" --notes-file notes.md --target "$GITHUB_SHA"
