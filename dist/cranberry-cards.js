@@ -7,13 +7,17 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.16.0';
+  const VERSION = '2.17.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
 
   // ---------- Icons (24px, stroked) ----------
   const I = {
+    chev: 'm9 6 6 6-6 6',
+    close: 'M6 6l12 12M18 6 6 18',
+    power: 'M12 3v8M7 6.2a7 7 0 1 0 10 0',
+    bulb: 'M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z',
     moon: 'M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z',
     sun: 'M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
     cloud: 'M7 18a4 4 0 0 1-.5-8 6 6 0 0 1 11.5 1.5A3.5 3.5 0 0 1 17.5 18z',
@@ -221,7 +225,7 @@
       --chc-fg: #F2ECE0; --chc-sub: #D9C3C0; --chc-rule: rgba(242,236,224,0.2);
       background: var(--chc-bg); color: var(--chc-fg);
       border: 0; border-radius: var(--cc-r-card, 24px);
-      overflow: hidden; height: 100%; box-sizing: border-box; min-height: var(--chc-fit, 0px);
+      overflow: hidden; height: 100%; box-sizing: border-box; min-height: var(--chc-fit, 0px); position: relative;
       font-family: Figtree, var(--ha-font-family-body, var(--paper-font-body1_-_font-family, sans-serif));
       display: flex; flex-direction: column;
     }
@@ -239,6 +243,23 @@
     .chips { display: flex; flex-wrap: wrap; gap: 8px; }
     .bins { min-height: 40px; padding: 6px 14px 6px 6px; border-radius: var(--cc-r-ctl, 12px); background: #F2ECE0; color: #591E21; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
     .bins .n { height: 28px; padding: 0 4px; border-radius: var(--cc-r-chip, 8px); background: rgba(89,30,33,0.08); display: flex; align-items: center; gap: 2px; }
+    .lamps { align-self: flex-start; max-width: 100%; box-sizing: border-box; min-height: 40px; padding: 6px 10px 6px 6px; border-radius: var(--cc-r-ctl, 12px); background: rgba(242, 236, 224, 0.14); color: var(--chc-fg); display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; text-align: left; }
+    .lamps .n { height: 28px; padding: 0 8px 0 6px; flex-shrink: 0; border-radius: var(--cc-r-chip, 8px); background: var(--chc-fg); color: var(--chc-bg); display: flex; align-items: center; gap: 4px; font-weight: 700; }
+    .lamps > svg { flex-shrink: 0; opacity: .7; margin-left: -4px; }
+    .lamps[aria-expanded="true"] { background: rgba(242, 236, 224, 0.24); }
+    .menu { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; gap: 10px; padding: 16px 20px; box-sizing: border-box; background: color-mix(in srgb, var(--chc-bg) 88%, #000); animation: cc-in .25s ease both; }
+    .mhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .mtitle { font-size: 17px; font-weight: 600; }
+    .mlist { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); align-content: start; gap: 4px 20px; }
+    .mgroup { display: flex; flex-direction: column; }
+    .mlabel { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--chc-sub); padding: 6px 0 2px; }
+    .mrow { display: flex; align-items: center; gap: 10px; min-height: 40px; border-bottom: 1px solid var(--chc-rule); }
+    .mname { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 8px; font-size: 15px; font-weight: 500; }
+    .mname span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mname small { font-size: 13px; color: var(--chc-sub); }
+    .mbtn { width: 34px; height: 34px; flex-shrink: 0; border-radius: var(--cc-r-ctl, 12px); background: rgba(242, 236, 224, 0.12); display: flex; align-items: center; justify-content: center; }
+    .alloff { align-self: flex-start; height: 40px; padding: 0 16px 0 12px; border-radius: var(--cc-r-ctl, 12px); background: var(--chc-fg); color: var(--chc-bg); display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+    @media (prefers-reduced-motion: reduce) { .menu { animation: none; } }
     .issue .n { width: 28px; height: 28px; flex-shrink: 0; border-radius: var(--cc-r-chip, 8px); background: #fff; color: #A8352F; display: flex; align-items: center; justify-content: center; font-weight: 700; }
     p { margin: 0; font-size: 17px; font-weight: 500; line-height: 1.3; }
     .insight { display: flex; align-items: flex-start; gap: 8px; align-self: flex-start; max-width: 100%; box-sizing: border-box; padding: 8px 14px 8px 10px; border-radius: var(--cc-r-ctl, 12px); background: rgba(0, 0, 0, 0.2); font-size: 15px; }
@@ -607,7 +628,15 @@
         else lights = 'Lights on in ' + listJoin(lit) + '.';
       }
       const lead = issues.length ? (issues.length === 1 ? 'One thing needs you.' : (issues.length === 2 ? 'Two things need you.' : issues.length + ' things need you.')) : 'All quiet.';
-      const homeText = c.home_text || (lead + (lights ? ' ' + lights : ''));
+      // the lights that are on, for the chip and its menu; a light group lists its members that are on
+      const pct = (st) => (st.attributes.brightness != null ? Math.round(st.attributes.brightness / 2.55) + '%' : '');
+      const menu = (c.lights || []).filter((id) => h.states[id] && h.states[id].state === 'on').map((id) => {
+        const st = h.states[id];
+        const members = Array.isArray(st.attributes.entity_id) ? st.attributes.entity_id.filter((e) => h.states[e] && h.states[e].state === 'on') : [];
+        return { id, name: this._area(id) || this._name(id), items: (members.length ? members : [id]).map((e) => ({ id: e, name: this._name(e), level: pct(h.states[e]) })) };
+      });
+      const lamps = !c.home_text && lit.length ? { n: menu.reduce((s, g) => s + g.items.length, 0), text: lights.replace(/\.$/, '') } : null;
+      const homeText = c.home_text || (lead + (lights && !lamps ? ' ' + lights : ''));
 
       // weather
       let bins = null;
@@ -616,7 +645,7 @@
         if (ws.chip && !ws.out) bins = { text: ws.chip, colours: ws.colours, id: (c.waste_out || ws.due[0].id) };
       }
       const model = {
-        now, issues, warning, homeText, bins,
+        now, issues, warning, homeText, bins, lamps, menu,
         date: new Intl.DateTimeFormat(this._lang(), this._width && this._width < 560 ? { weekday: 'short', day: 'numeric', month: 'short' } : { weekday: 'long', day: 'numeric', month: 'long' }).format(now),
         time: this._fmtTime(now)
       };
@@ -789,7 +818,8 @@
       const c = this._config;
       const m = this._model();
       const layout = c.layout === 'stacked' || (c.layout !== 'wide' && this._width > 0 && this._width < 560) ? 'stacked' : 'wide';
-      const key = JSON.stringify([m, layout, c]);
+      if (this._menu && !m.menu.length) this._menu = false;
+      const key = JSON.stringify([m, layout, c, !!this._menu]);
       if (!force && key === this._last) return;
       this._last = key;
 
@@ -829,7 +859,7 @@
                 </button>
               </div>
               <div class="stack">
-                ${m.issues.length || m.bins ? `<div class="chips">${m.issues.length ? `<button class="issue" data-entity="${esc(m.issues[0].id)}"><span class="n">${m.issues.length}</span><span>${esc(issueText)}</span></button>` : ''}${m.bins ? `<button class="bins" data-bins="1" aria-label="${esc(m.bins.text)}"><span class="n">${m.bins.colours.map((col) => `<svg width="${m.bins.colours.length > 1 ? 17 : 20}" height="${m.bins.colours.length > 1 ? 17 : 20}" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 13a1.5 1.5 0 0 1-1.5 1.4h-7A1.5 1.5 0 0 1 7 20zM4.5 5h15M10 3h4" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:${col}"></path><path d="M7.4 10h9.2l-.7 10H8.1z" style="fill:${col}"></path></svg>`).join('')}</span><span>${esc(m.bins.text)}</span></button>` : ''}</div>` : ''}
+                ${m.issues.length || m.bins || m.lamps ? `<div class="chips">${m.issues.length ? `<button class="issue" data-entity="${esc(m.issues[0].id)}"><span class="n">${m.issues.length}</span><span>${esc(issueText)}</span></button>` : ''}${m.bins ? `<button class="bins" data-bins="1" aria-label="${esc(m.bins.text)}"><span class="n">${m.bins.colours.map((col) => `<svg width="${m.bins.colours.length > 1 ? 17 : 20}" height="${m.bins.colours.length > 1 ? 17 : 20}" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 13a1.5 1.5 0 0 1-1.5 1.4h-7A1.5 1.5 0 0 1 7 20zM4.5 5h15M10 3h4" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:${col}"></path><path d="M7.4 10h9.2l-.7 10H8.1z" style="fill:${col}"></path></svg>`).join('')}</span><span>${esc(m.bins.text)}</span></button>` : ''}${m.lamps ? `<button class="lamps" data-lights aria-haspopup="dialog" aria-expanded="${!!this._menu}"><span class="n">${this._icon(I.bulb, 16)}${m.lamps.n}</span><span>${esc(m.lamps.text)}</span>${this._icon(I.chev, 16)}</button>` : ''}</div>` : ''}
                 <p>${esc(m.homeText)}</p>
                 ${m.insight ? `<p class="insight">${this._icon(m.icon)}<span>${esc(m.insight)}</span></p>` : ''}
               </div>
@@ -843,14 +873,32 @@
               ${chart}
             </div>
           </div>
+          ${this._menu ? `<div class="menu" role="dialog" aria-label="Lights that are on">
+            <div class="mhead"><span class="mtitle">Lights on</span><button class="mbtn" data-close aria-label="Close">${this._icon(I.close)}</button></div>
+            <div class="mlist">${m.menu.map((g) => `<div class="mgroup">
+              <span class="mlabel">${g.items.length > 1 || g.items[0].id !== g.id ? esc(g.name) : (esc(this._area(g.id) || '') || '&nbsp;')}</span>
+              ${g.items.map((x) => `<div class="mrow">
+                <button class="mname" data-entity="${esc(x.id)}"><span>${esc(x.name)}</span>${x.level ? `<small>${esc(x.level)}</small>` : ''}</button>
+                <button class="mbtn" data-off="${esc(x.id)}" aria-label="Turn off ${esc(x.name)}">${this._icon(I.power)}</button>
+              </div>`).join('')}</div>`).join('')}</div>
+            <button class="alloff" data-alloff>${this._icon(I.power, 16)}All off</button>
+          </div>` : ''}
         </ha-card>`);
       this._fit();
       if (!this._wired) {
         this._wired = true;
         // one set of listeners for the whole card; they survive in-place updates
-        const find = (ev) => ev.composedPath().find((el) => el.getAttribute && (el.hasAttribute('data-bins') || el.hasAttribute('data-entity')));
+        const find = (ev) => ev.composedPath().find((el) => el.getAttribute && ['data-bins', 'data-entity', 'data-lights', 'data-close', 'data-off', 'data-alloff'].some((a) => el.hasAttribute(a)));
         const run = (el) => {
           const cfg = this._config, mm = this._m || {};
+          if (el.hasAttribute('data-lights')) { this._menu = !this._menu; this._render(true); return; }
+          if (el.hasAttribute('data-close')) { this._menu = false; this._render(true); return; }
+          if (el.hasAttribute('data-off')) { this._hass.callService('homeassistant', 'turn_off', { entity_id: el.getAttribute('data-off') }); return; }
+          if (el.hasAttribute('data-alloff')) {
+            const ids = (mm.menu || []).map((g) => g.id);
+            if (ids.length) this._hass.callService('homeassistant', 'turn_off', { entity_id: ids });
+            this._menu = false; this._render(true); return;
+          }
           if (el.hasAttribute('data-bins')) {
             if (cfg.waste_out) this._hass.callService('homeassistant', 'turn_on', { entity_id: cfg.waste_out });
             else if (mm.bins) this._moreInfo(mm.bins.id);
@@ -858,6 +906,7 @@
         };
         this.shadowRoot.addEventListener('click', (ev) => { const el = find(ev); if (el) { ev.stopPropagation(); run(el); } });
         this.shadowRoot.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Escape' && this._menu) { this._menu = false; this._render(true); return; }
           if (ev.key !== 'Enter' && ev.key !== ' ') return;
           const el = find(ev); if (el && el.tagName !== 'BUTTON') { ev.preventDefault(); run(el); }
         });

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.17.0 (2026-11-22)
+
+- Home card: the lights are now a chip ("3 · Lights on in Living room and Bedroom").
+  Tap it for a menu of every light that is on, grouped by room, with its brightness,
+  a button to switch each one off, and All off. Tap a name for its details.
+- CI: tests and the HACS check run on every push; a new version is released by itself.
+
 ## 2.16.0 (2026-11-22)
 
 - New: Cranberry car card. Where the car is parked as chips, layer and zone chips for a

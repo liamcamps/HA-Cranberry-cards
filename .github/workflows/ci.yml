@@ -36,7 +36,7 @@ jobs:
       - uses: hacs/action@main
         with:
           category: plugin
-          ignore: brands description topics images
+          ignore: brands description topics images license  # license: only needed for the HACS default store
 
   release:
     needs: [test, hacs]

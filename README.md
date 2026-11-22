@@ -5,7 +5,7 @@ olive and quail, with brick only when something needs you. Every card has a visu
 
 | Card | Type |
 | --- | --- |
-| Home: clock, what needs attention, weather and the coming hours | `custom:cranberry-home-card` |
+| Home: clock, what needs attention, lights on (tap for a menu), weather and the coming hours | `custom:cranberry-home-card` |
 | Status: heating, who is home, a lock or an alarm | `custom:cranberry-status-card` |
 | Room: lights on, brightness, temperature, pop-up | `custom:cranberry-room-card` |
 | Scene: stays highlighted while the scene is active | `custom:cranberry-scene-card` |
@@ -81,6 +81,6 @@ npm install
 npm test
 ```
 
-Releases: raise `VERSION` in `dist/cranberry-cards.js` and `version` in `package.json`, add
-a line to `CHANGELOG.md`, and publish a GitHub release tagged `v<version>` so HACS offers
-the update.
+Releases are automatic: raise `VERSION` in `dist/cranberry-cards.js` and `version` in
+`package.json`, add a `## <version>` section to `CHANGELOG.md`, and push to `main`. When the
+tests and the HACS check pass, CI publishes release `v<version>` and HACS offers the update.

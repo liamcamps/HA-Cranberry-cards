@@ -47,7 +47,7 @@ const wait = () => new Promise((r) => setTimeout(r, 10));
   ok(h._subs[0] && h._subs[0].forecast_type === 'hourly', 'subscribes hourly');
   ok(t.includes('One thing needs you.'), 'one issue sentence: ' + t);
   ok(t.includes('Back door open'), 'issue chip text');
-  ok(t.includes('Lights on in Living room, Kitchen and Garden lights.'), 'lights by area');
+  ok(t.includes('Lights on in Living room, Kitchen and Garden lights') && card.shadowRoot.querySelector('.lamps'), 'lights by area, in the chip');
   ok(t.includes('Dry for the next 12 hours, low of 4°.'), 'dry insight');
   ok(t.includes('Feels like 4°'), 'feels like');
   ok(card.shadowRoot.querySelector('linearGradient stop'), 'gradient line');
