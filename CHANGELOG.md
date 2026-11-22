@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.19.0 (2026-11-22)
+
+- Thermostat card: new **Size** option (Full or Compact) in the card editor. Compact is one strip
+  for the everyday column: the same colour, the setpoint, a short sentence ("Heating from 19.4°.
+  Warm in ~26 min.") and −/+. Heat/cool gets two small rows, off gets a Turn on button.
+  Modes, fan and swing stay in the full card.
+- Thermostat card: new **Pop-up to open** option; tapping the room name opens that Bubble pop-up
+  instead of the details.
+
 ## 2.18.0 (2026-11-22)
 
 - New: Cranberry thermostat card (`custom:cranberry-thermostat-card`). The whole card's colour

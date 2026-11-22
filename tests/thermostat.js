@@ -115,5 +115,33 @@ const say = () => $('.say').textContent;
   card.setConfig({ entity: 'climate.living_room', show_modes: false }); card.hass = hass(climate('heat', { temperature: 21, current_temperature: 21 }));
   ok(!$('.modes'), 'modes hidden');
 
+  // compact size
+  card.setConfig({ entity: 'climate.living_room', name: 'Living room', size: 'compact', popup: '#living-room' });
+  card._rate = { act: 'heating', perMin: 1.6 / 42 };
+  card.hass = hass(climate('heat', { supported_features: F.TARGET | F.PRESET | F.FAN, temperature: 21, current_temperature: 19.4, hvac_action: 'heating', preset_mode: 'eco', preset_modes: ['none', 'eco'], fan_mode: 'auto', fan_modes: ['auto', 'high'] }));
+  ok($('ha-card').classList.contains('compact') && /#514718/.test(bg()), 'compact heating olive');
+  ok($('.line .lbl').textContent === 'Heat to' && $('.line .big').textContent === '21°' && $('.line .big').style.fontSize === '48px', 'compact setpoint');
+  ok(/^Heating from 19\.4°\. Warm in ~[0-9]+ min\.$/.test($('.short').textContent), 'compact sentence: ' + $('.short').textContent);
+  ok($('.tag').textContent === 'Eco' && !$('.modes') && !$('.chips') && !$('.say'), 'compact: preset tag, no modes, chips or long sentence');
+  ok($$('.line .step').map((b) => b.getAttribute('aria-label')).join() === 'Lower,Raise', 'compact minus then plus');
+  $$('.line .step')[1].click(); ok($('.line .big').textContent === '21.5°', 'compact plus');
+  await wait(800); ok(calls.pop()[2].temperature === 21.5, 'compact sends');
+  let nav = null; const realNav = card.navigate; card.navigate = (p) => { nav = p; };
+  $('.room').click();
+  ok(nav === '#living-room', 'room name opens the pop-up');
+  card.navigate = realNav;
+  card.hass = hass(climate('heat_cool', { hvac_modes: ['off', 'heat_cool'], supported_features: F.RANGE, target_temp_low: 19, target_temp_high: 24, current_temperature: 17.8, hvac_action: 'heating' }));
+  ok($$('.mini').length === 2 && $$('.mini .lbl').map((x) => x.textContent).join() === 'Heat,Cool' && $$('.mini')[1].style.opacity === '0.5', 'compact heat/cool rows');
+  ok($('.short').textContent === '17.8° now. Heating up.' && !$('.line > .steps'), 'compact heat/cool sentence');
+  $$('.mini')[0].querySelectorAll('.step')[1].click(); await wait(800);
+  ok(JSON.stringify(calls.pop()[2]) === JSON.stringify({ entity_id: 'climate.living_room', target_temp_low: 19.5, target_temp_high: 24 }), 'compact heat point');
+  card.hass = hass(climate('off', { current_temperature: 18.2 }));
+  ok($('.short').textContent === 'It’s 18.2° in the room.' && $('.on') && !$('.line .step'), 'compact off');
+  $('.on').click(); ok(JSON.stringify(calls.pop()) === JSON.stringify(['climate', 'turn_on', { entity_id: 'climate.living_room' }]), 'turn on');
+  card.hass = hass(climate('fan_only', { hvac_modes: ['off', 'fan_only'], supported_features: F.FAN, current_temperature: 24.8, fan_mode: 'medium', fan_modes: ['low', 'medium', 'high'] }));
+  ok($('.line .big').style.fontSize === '34px' && $$('.line .step').map((b) => b.getAttribute('aria-label')).join() === 'Slower,Faster', 'compact fan');
+  card.hass = hass(climate('unavailable', {}));
+  ok($('.short').textContent === 'Not responding.' && /opacity:\s*\.6/.test(bg()), 'compact unavailable');
+
   console.log(pass + ' passed, ' + fail + ' failed'); process.exit(0);
 })();

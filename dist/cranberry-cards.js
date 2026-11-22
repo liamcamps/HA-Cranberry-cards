@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.18.0';
+  const VERSION = '2.19.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -1113,7 +1113,7 @@
  */
 (() => {
   // Use Lucide icons when the Lucide icons integration is installed, otherwise Home Assistant's own.
-  const LUCIDE = { vacation: 'plane', car: 'car', pin: 'map-pin', nav: 'navigation', plus: 'plus', minus: 'minus', chev: 'chevron-down', home: 'house', radiator: 'heater', thermometer: 'thermometer', evening: 'sunset', night: 'moon', walk: 'footprints', people: 'users', washer: 'washing-machine', alert: 'triangle-alert', check: 'check', 'chevron-right': 'chevron-right', info: 'info', lock: 'lock', 'lock-open': 'lock-open', shield: 'shield-check', 'shield-off': 'shield-off', play: 'play', pause: 'pause', stop: 'square', 'skip-next': 'skip-forward', 'skip-previous': 'skip-back', bulb: 'lightbulb' };
+  const LUCIDE = { vacation: 'plane', car: 'car', pin: 'map-pin', nav: 'navigation', plus: 'plus', minus: 'minus', chev: 'chevron-down', home: 'house', radiator: 'heater', thermometer: 'thermometer', evening: 'sunset', night: 'moon', walk: 'footprints', people: 'users', washer: 'washing-machine', alert: 'triangle-alert', check: 'check', 'chevron-right': 'chevron-right', info: 'info', lock: 'lock', 'lock-open': 'lock-open', shield: 'shield-check', 'shield-off': 'shield-off', play: 'play', pause: 'pause', stop: 'square', 'skip-next': 'skip-forward', 'skip-previous': 'skip-back', bulb: 'lightbulb', power: 'power' };
   const ccIcon = (name, fallback) => (window.customIcons && window.customIcons.lucide && LUCIDE[name] ? 'lucide:' + LUCIDE[name] : fallback);
   const { morph, MOTION } = window.CranberryMorph;
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -1782,10 +1782,32 @@
       .opt ha-icon { --mdc-icon-size: 16px; }
       button:focus-visible { outline-color: #F2ECE0; }
       .menu button:focus-visible { outline-color: #231C1A; }
-      @media (prefers-reduced-motion: reduce) { ha-card, .row { transition: none; } .menu { animation: none; } }
+      ha-card.compact { padding: 12px 12px 14px 18px; }
+      .compact .top { min-height: 28px; }
+      .compact .room { font-size: 13px; display: flex; align-items: center; gap: 2px; }
+      .compact .room ha-icon { --mdc-icon-size: 14px; }
+      .compact .tag { height: 26px; padding: 0 8px; border-radius: var(--cc-r-chip, 8px); background: rgba(242,236,224,.14); font-size: 12px; font-weight: 700; display: flex; align-items: center; }
+      .line { display: flex; align-items: center; gap: 12px; min-height: 72px; }
+      .line .lead { display: flex; flex-direction: column; flex-shrink: 0; min-width: 92px; }
+      .line .lbl, .mini .lbl { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .72; min-height: 14px; }
+      .line .big { margin-left: -2px; line-height: 1; }
+      .line .short { flex: 1; min-width: 0; font-size: 15px; font-weight: 500; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+      .line .steps { flex-direction: row; padding: 0; flex-shrink: 0; }
+      .line .step { width: 44px; height: 44px; border-radius: 14px; }
+      .line .step ha-icon { --mdc-icon-size: 20px; }
+      .minis { display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
+      .mini { display: flex; align-items: center; gap: 6px; transition: opacity .3s ease; }
+      .mini .lbl { width: 40px; letter-spacing: .06em; opacity: .75; }
+      .mini .big { width: 56px; font-size: 28px; line-height: 34px; letter-spacing: -.04em; margin: 0; }
+      .mini .step { width: 34px; height: 34px; border-radius: 10px; }
+      .mini .step ha-icon { --mdc-icon-size: 16px; }
+      .on { height: 40px; flex-shrink: 0; border-radius: var(--cc-r-control, 12px); padding: 0 14px 0 10px; background: #F2ECE0; color: #231C1A; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+      .on ha-icon { --mdc-icon-size: 16px; }
+      .on:focus-visible { outline-color: #231C1A; }
+      @media (prefers-reduced-motion: reduce) { ha-card, .row, .mini { transition: none; } .menu { animation: none; } }
     `;
     }
-    getGridOptions() { return { columns: 12, rows: 'auto', min_columns: 6 }; }
+    getGridOptions() { return this._config && this._config.size === 'compact' ? { columns: 12, rows: 'auto', min_columns: 6, min_rows: 2 } : { columns: 12, rows: 'auto', min_columns: 6 }; }
     _update() {
       super._update();
       if (!this._escWired && this.shadowRoot.firstChild) {
@@ -1831,12 +1853,21 @@
       this._histBusy = false;
       this._last = ''; this._update();
     }
-    _eta(action, from, to) {
+    _etaMin(action, from, to) {
       const r = this._rate;
-      if (this._config.show_eta === false || !r || r.act !== action || !(r.perMin > 0)) return null;
+      if (this._config.show_eta === false || !r || r.act !== action || !(r.perMin > 0) || from == null || to == null) return null;
       const m = Math.round(Math.abs(to - from) / r.perMin);
-      if (m < 1 || m > 600) return null;
+      return m < 1 || m > 600 ? null : m;
+    }
+    _eta(action, from, to) {
+      const m = this._etaMin(action, from, to);
+      if (m == null) return null;
       return m < 90 ? m + ' minutes' : (Math.round(m / 30) / 2).toLocaleString(this._lang()) + ' hours';
+    }
+    _etaShort(action, from, to) {
+      const m = this._etaMin(action, from, to);
+      if (m == null) return null;
+      return m < 90 ? '~' + m + ' min' : '~' + (Math.round(m / 30) / 2).toLocaleString(this._lang()) + ' h';
     }
 
     model() {
@@ -1916,6 +1947,21 @@
       if (mode === 'auto' && (action === 'heating' || action === 'cooling') && target != null) s = s.replace(/\.$/, '') + '; auto keeps it around ' + deg(target) + '.';
       if (preset) s = preset + ': ' + s.charAt(0).toLowerCase() + s.slice(1);
       m.say = say(s);
+      // the compact sentence: shorter, at most two lines
+      const etaS = (to) => this._etaShort(action, cur, to);
+      let t;
+      if (na) t = 'Not responding.';
+      else if (mode === 'off') t = room ? 'It’s ' + room + ' in the room.' : 'Off.';
+      else if (dual) t = action === 'heating' ? room + ' now. Heating up.' : action === 'cooling' ? room + ' now. Cooling down.' : room + ' now. Comfortable.';
+      else if (mode === 'dry') t = hum != null ? hum + '% now. Drying the air.' : 'Drying the air.';
+      else if (mode === 'fan_only') t = 'Moving air.' + (room ? ' ' + room + ' in the room.' : '');
+      else if (action === 'heating') t = 'Heating from ' + room + '.' + (target != null && etaS(target) ? ' Warm in ' + etaS(target) + '.' : '');
+      else if (action === 'cooling') t = 'Cooling from ' + room + '.' + (target != null && etaS(target) ? ' Cool in ' + etaS(target) + '.' : '');
+      else if (mode === 'auto') t = room ? room + ' now. Auto is on it.' : 'Auto is on it.';
+      else t = room ? 'Holding. It’s ' + room + ' now.' : 'Holding.';
+      m.short = t;
+      m.tag = preset;
+      m.canOn = !na && mode === 'off';
       m.meta = na ? '' : mode === 'dry' ? (room ? 'It’s ' + room + ' in the room' : '') : (hum != null ? hum + '% humidity' : '');
 
       // options, only what the thermostat supports
@@ -1944,6 +1990,7 @@
     view(m) {
       const ic = (n, mdi) => `<ha-icon icon="${ccIcon(n, mdi)}"></ha-icon>`;
       const plus = ccIcon('plus', 'mdi:plus'), minus = ccIcon('minus', 'mdi:minus');
+      if (this._config.size === 'compact') return this._compact(m, ic, plus, minus);
       return `<ha-card class="${m.na ? 'na' : ''}" style="background:${m.bg}">
         <div class="top">
           <button type="button" class="room" data-act="more">${esc(m.name)}</button>
@@ -1966,6 +2013,26 @@
       </ha-card>`;
     }
 
+    // one strip for the everyday column: setpoint, a short sentence, −/+
+    _compact(m, ic, plus, minus) {
+      const big = m.big.length > 4 ? 34 : 48;
+      const step = (k, d, label) => `<button type="button" class="step" data-act="step" data-arg="${k}:${d}" aria-label="${esc(label)}"><ha-icon icon="${d > 0 ? plus : minus}"></ha-icon></button>`;
+      const fan = m.steps === 'fan';
+      return `<ha-card class="compact ${m.na ? 'na' : ''}" style="background:${m.bg}${m.na ? ';opacity:.6' : ''}">
+        <div class="top">
+          <button type="button" class="room" data-act="more">${esc(m.name)}${ic('chevron-right', 'mdi:chevron-right')}</button>
+          ${m.tag ? `<span class="tag">${esc(m.tag)}</span>` : ''}
+        </div>
+        <div class="line">
+          ${m.dual ? `<span class="minis">${m.rows.map((r) => { const l = r.k === 'target_temp_low' ? 'Heat' : 'Cool'; return `<span class="mini" style="opacity:${r.dim ? 0.5 : 1}"><span class="lbl">${l}</span><span class="big">${esc(r.value)}</span>${step(r.k, -1, 'Lower the ' + l.toLowerCase() + ' point')}${step(r.k, 1, 'Raise the ' + l.toLowerCase() + ' point')}</span>`; }).join('')}</span>`
+            : `<span class="lead"><span class="lbl">${esc(m.label)}</span><span class="big" style="font-size:${big}px">${esc(m.big)}</span></span>`}
+          <span class="short">${esc(m.short)}</span>
+          ${m.steps && !m.dual ? `<span class="steps">${step(m.steps, -1, fan ? 'Slower' : 'Lower')}${step(m.steps, 1, fan ? 'Faster' : 'Raise')}</span>` : ''}
+          ${m.canOn ? `<button type="button" class="on" data-act="on">${ic('power', 'mdi:power')}Turn on</button>` : ''}
+        </div>
+      </ha-card>`;
+    }
+
     _send(patch) {
       // gather quick taps, send once
       this._pending = Object.assign({}, this._pending, patch);
@@ -1984,8 +2051,9 @@
 
     act(a, arg) {
       const c = this._config, st = this.st(c.entity);
-      if (a === 'more' || !st) return this.moreInfo(c.entity);
+      if (a === 'more' || !st) return c.popup ? this.navigate(c.popup) : this.moreInfo(c.entity);
       const at = st.attributes;
+      if (a === 'on') return this.call('climate', 'turn_on', { entity_id: c.entity });
       if (a === 'menu') { this._menu = this._menu === arg ? null : arg; this._last = ''; return this._update(); }
       if (a === 'pick') {
         const k = this._menu; this._menu = null; this._last = '';
@@ -2021,7 +2089,7 @@
       }
     }
   }
-  CranberryThermostatCard.defaults = { show_eta: true, show_modes: true };
+  CranberryThermostatCard.defaults = { size: 'full', show_eta: true, show_modes: true };
 
 
   // ---------------------------------------------------------------- car
@@ -2384,14 +2452,18 @@
       schema: [
         { name: 'entity', required: true, selector: { entity: { domain: 'climate' } } },
         { name: 'name', selector: { text: {} } },
+        { name: 'size', selector: { select: { mode: 'box', options: [{ value: 'full', label: 'Full' }, { value: 'compact', label: 'Compact' }] } } },
+        { name: 'popup', selector: { text: {} } },
         { name: 'modes', selector: { select: { multiple: true, options: [{ value: 'off', label: 'Off' }, { value: 'heat', label: 'Heat' }, { value: 'cool', label: 'Cool' }, { value: 'heat_cool', label: 'Heat/cool' }, { value: 'auto', label: 'Auto' }, { value: 'dry', label: 'Dry' }, { value: 'fan_only', label: 'Fan only' }] } } },
         { name: 'show_modes', selector: { boolean: {} } },
         { name: 'show_eta', selector: { boolean: {} } },
         { name: 'show_humidity', selector: { boolean: {} } }
       ],
-      labels: { entity: 'Thermostat', name: 'Room name', modes: 'Modes to show', show_modes: 'Show the modes', show_eta: 'Say how long it takes', show_humidity: 'Show the humidity target' },
+      labels: { entity: 'Thermostat', name: 'Room name', size: 'Size', popup: 'Pop-up to open', modes: 'Modes to show', show_modes: 'Show the modes', show_eta: 'Say how long it takes', show_humidity: 'Show the humidity target' },
       helpers: {
-        modes: 'Optional. Leave empty to show every mode the thermostat has.',
+        size: 'Compact is one strip for the everyday column: the setpoint, a short sentence and −/+. Modes, fan and swing stay in the full card.',
+        popup: 'Optional. The Bubble pop-up hash, for example #living-room, opened by tapping the room name. Leave empty to open the details instead.',
+        modes: 'Optional. Leave empty to show every mode the thermostat has. Full size only.',
         show_eta: 'Works out “warm in about … minutes” from how fast the room warmed up in the current run (needs the recorder).',
         show_humidity: 'Only for thermostats that can aim for a humidity.'
       }

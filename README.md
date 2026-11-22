@@ -13,7 +13,7 @@ olive and quail, with brick only when something needs you. Every card has a visu
 | Washing machine (localthings): time left, phase, done | `custom:cranberry-washer-card` |
 | Waste collection (Afvalwijzer): which bin goes out next | `custom:cranberry-waste-card` |
 | Car: where it is parked, with a map | `custom:cranberry-car-card` |
-| Thermostat: the card's colour, the setpoint and one sentence; every mode, heat/cool, presets, fan, swing | `custom:cranberry-thermostat-card` |
+| Thermostat: the card's colour, the setpoint and one sentence; every mode, heat/cool, presets, fan, swing; full or compact | `custom:cranberry-thermostat-card` |
 
 ## Install
 
@@ -68,6 +68,14 @@ popup: '#living-room'
 type: custom:cranberry-thermostat-card
 entity: climate.living_room
 modes: [heat, auto, off]   # optional, default: all the thermostat has
+```
+
+```yaml
+# compact: one strip with the setpoint, a short sentence and −/+
+type: custom:cranberry-thermostat-card
+entity: climate.living_room
+size: compact
+popup: '#living-room'      # optional: tapping the room name opens this pop-up
 ```
 
 ```yaml
