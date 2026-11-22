@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.21.0 (2026-11-22)
+
+- Home card, quieter: the clock is the only large thing on the left.
+  - Coming up is plain text, the title first and when in grey: "Dentist · tomorrow 09:00".
+  - The weather tip no longer has its own dark background.
+  - Next to a red chip, the lights chip shortens to "Lights on in 3 rooms" so both fit on one line.
+
 ## 2.20.0 (2026-11-22)
 
 - Home card: **Weather details** (Show, Desktop only or Hide). A row with high and low, rain

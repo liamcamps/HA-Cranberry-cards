@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.20.0';
+  const VERSION = '2.21.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -263,7 +263,7 @@
     @media (prefers-reduced-motion: reduce) { .menu { animation: none; } }
     .issue .n { width: 28px; height: 28px; flex-shrink: 0; border-radius: var(--cc-r-chip, 8px); background: #fff; color: #A8352F; display: flex; align-items: center; justify-content: center; font-weight: 700; }
     p { margin: 0; font-size: 17px; font-weight: 500; line-height: 1.3; }
-    .insight { display: flex; align-items: flex-start; gap: 8px; align-self: flex-start; max-width: 100%; box-sizing: border-box; padding: 8px 14px 8px 10px; border-radius: var(--cc-r-ctl, 12px); background: rgba(0, 0, 0, 0.2); font-size: 15px; }
+    .insight { display: flex; align-items: flex-start; gap: 8px; align-self: flex-start; max-width: 100%; font-size: 15px; color: var(--chc-sub); }
     .insight svg { flex-shrink: 0; margin-top: 1px; color: var(--chc-sub); }
     .weather { cursor: pointer; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; padding-left: 24px; border-left: 1px solid var(--chc-rule); width: 100%; box-sizing: border-box; }
     .head { display: flex; align-items: center; gap: 12px; }
@@ -285,15 +285,12 @@
     .chip .serif { font-size: 40px; line-height: 1; }
     .empty { padding: 24px; font-size: 15px; }
     /* coming up: the next things on the calendar, under the clock */
-    .agenda { flex: 1; display: flex; flex-direction: column; gap: 2px; margin-top: 6px; min-height: 0; }
+    .agenda { flex: 1; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; min-height: 0; }
     .agenda .k, .stat .k { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--chc-sub); }
-    .agenda .k { margin-bottom: 4px; }
-    .ev { display: grid; grid-template-columns: 116px minmax(0, 1fr); align-items: baseline; gap: 12px; min-height: 30px; text-align: left; }
-    .ev .when { font-size: 14px; font-weight: 600; color: var(--chc-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ev .what { font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ev.now .when { color: var(--chc-fg); }
-    .ev .what svg { vertical-align: -3px; margin-right: 6px; }
-    .agenda .none { font-size: 15px; color: var(--chc-sub); }
+    .agenda .k { margin-bottom: 2px; }
+    .ev { display: block; max-width: 100%; font-size: 16px; font-weight: 500; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+    .ev .when { color: var(--chc-sub); }
+    .agenda .none { font-size: 16px; font-weight: 500; color: var(--chc-sub); }
     /* weather details: a row of facts, and a chart that uses the height */
     .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 12px; padding: 12px 0 2px; border-top: 1px solid var(--chc-rule); }
     .stat { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -483,9 +480,9 @@
       const today = day0(now), DAY = 86400000;
       const dayName = (d) => {
         const n = Math.round((day0(d) - today) / DAY);
-        if (n <= 0) return 'Today';
-        if (n === 1) return 'Tomorrow';
-        return new Intl.DateTimeFormat(this._lang(), { weekday: 'short' }).format(d);
+        if (n <= 0) return 'today';
+        if (n === 1) return 'tomorrow';
+        return new Intl.DateTimeFormat(this._lang(), { weekday: 'long' }).format(d);
       };
       const parse = (v) => {
         if (!v) return null;
@@ -500,8 +497,8 @@
         if (endT <= now.getTime()) return;
         const started = s.d <= now;
         let when;
-        if (s.all) when = (started ? 'Today' : dayName(s.d)) + ' · all day';
-        else if (started) when = 'Now · until ' + this._fmtTime(new Date(endT));
+        if (s.all) when = started ? 'today' : dayName(s.d);
+        else if (started) when = 'now, until ' + this._fmtTime(new Date(endT));
         else when = dayName(s.d) + ' ' + this._fmtTime(s.d);
         list.push({ t: started ? now.getTime() : s.d.getTime(), all: s.all, when, what: e.summary || e.message || 'Busy', id: e.cal, now: started && !s.all });
       });
@@ -719,7 +716,9 @@
         const members = Array.isArray(st.attributes.entity_id) ? st.attributes.entity_id.filter((e) => h.states[e] && h.states[e].state === 'on') : [];
         return { id, name: this._area(id) || this._name(id), items: (members.length ? members : [id]).map((e) => ({ id: e, name: this._name(e), level: pct(h.states[e]) })) };
       });
-      const lamps = !c.home_text && lit.length ? { n: menu.reduce((s, g) => s + g.items.length, 0), text: lights.replace(/\.$/, '') } : null;
+      // next to a red chip, the lights chip keeps it short so both fit on one line
+      const lampText = issues.length && lit.length > 1 ? 'Lights on in ' + lit.length + (litNames.length ? ' places' : ' rooms') : lights.replace(/\.$/, '');
+      const lamps = !c.home_text && lit.length ? { n: menu.reduce((s, g) => s + g.items.length, 0), text: lampText } : null;
       const homeText = c.home_text || (lead + (lights && !lamps ? ' ' + lights : ''));
 
       // weather
@@ -978,7 +977,7 @@
                   ${this._art(m.cond, 44)}<span class="serif" style="color:${m.tempCol}">${round(m.temp)}°</span>
                 </button>
               </div>
-              ${m.agenda ? `<div class="agenda"><span class="k">Coming up</span>${m.agenda.length ? m.agenda.map((e) => `<button class="ev${e.now ? ' now' : ''}" data-entity="${esc(e.id)}"><span class="when">${esc(e.when)}</span><span class="what">${e.bin ? this._icon(I.cal, 16) : ''}${esc(e.what)}</span></button>`).join('') : '<span class="none">Nothing planned this week.</span>'}</div>` : ''}
+              ${m.agenda ? `<div class="agenda"><span class="k">Coming up</span>${m.agenda.length ? m.agenda.map((e) => `<button class="ev" data-entity="${esc(e.id)}"><span class="what">${esc(e.what)}</span> <span class="when">· ${esc(e.when)}</span></button>`).join('') : '<span class="none">Nothing planned this week.</span>'}</div>` : ''}
               <div class="stack">
                 ${m.issues.length || m.bins || m.lamps ? `<div class="chips">${m.issues.length ? `<button class="issue" data-entity="${esc(m.issues[0].id)}"><span class="n">${m.issues.length}</span><span>${esc(issueText)}</span></button>` : ''}${m.bins ? `<button class="bins" data-bins="1" aria-label="${esc(m.bins.text)}"><span class="n">${m.bins.colours.map((col) => `<svg width="${m.bins.colours.length > 1 ? 17 : 20}" height="${m.bins.colours.length > 1 ? 17 : 20}" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 13a1.5 1.5 0 0 1-1.5 1.4h-7A1.5 1.5 0 0 1 7 20zM4.5 5h15M10 3h4" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:${col}"></path><path d="M7.4 10h9.2l-.7 10H8.1z" style="fill:${col}"></path></svg>`).join('')}</span><span>${esc(m.bins.text)}</span></button>` : ''}${m.lamps ? `<button class="lamps" data-lights aria-haspopup="dialog" aria-expanded="${!!this._menu}"><span class="n">${this._icon(I.bulb, 16)}${m.lamps.n}</span><span>${esc(m.lamps.text)}</span>${this._icon(I.chev, 16)}</button>` : ''}</div>` : ''}
                 <p>${esc(m.homeText)}</p>
