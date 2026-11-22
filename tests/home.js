@@ -45,7 +45,7 @@ const wait = () => new Promise((r) => setTimeout(r, 10));
   card.hass = h; await wait();
   let t = card.shadowRoot.textContent.replace(/\s+/g, ' ');
   ok(h._subs[0] && h._subs[0].forecast_type === 'hourly', 'subscribes hourly');
-  ok(t.includes('One thing needs you.'), 'one issue sentence: ' + t);
+  ok(card.shadowRoot.querySelector('.issue .n').textContent === '1' && !t.includes('needs you'), 'one issue: in the chip only');
   ok(t.includes('Back door open'), 'issue chip text');
   ok(t.includes('Lights on in 3 places') && card.shadowRoot.querySelector('.lamps'), 'next to a red chip the lights chip is short');
   ok(t.includes('Dry for the next 12 hours, low of 4°.'), 'dry insight');
@@ -65,7 +65,7 @@ const wait = () => new Promise((r) => setTimeout(r, 10));
   t = card.shadowRoot.textContent.replace(/\s+/g, ' ');
   ok(card.shadowRoot.querySelectorAll('.bars span').length === 12, 'rain bars');
   ok(/Rain from about \d\d:\d\d, heaviest around \d\d:\d\d\./.test(t), 'rain later insight: ' + t);
-  ok(t.includes('All quiet.'), 'all quiet');
+  ok(!t.includes('All quiet.') && !card.shadowRoot.querySelector('.home p:not(.insight)'), 'no home sentence when all is quiet');
 
   // 3. raining now
   w = setup(); card = w.document.createElement('cranberry-home-card'); card.setConfig(base); w.document.body.appendChild(card);
@@ -82,7 +82,7 @@ const wait = () => new Promise((r) => setTimeout(r, 10));
   t = card.shadowRoot.textContent.replace(/\s+/g, ' ');
   ok(card.shadowRoot.querySelector('.warn'), 'warning strip');
   ok(t.includes('Code orange · Strong wind · until'), 'strip text: ' + t);
-  ok(t.includes('Two things need you.'), 'warning counts as issue');
+  ok(card.shadowRoot.querySelector('.issue .n').textContent === '2' && !t.includes('need you'), 'warning counts as issue, in the chip only');
   ok(t.includes('Gusts up to 90 km/h'), 'gusts');
 
   // 5. snow, freezing colour
@@ -119,7 +119,7 @@ const wait = () => new Promise((r) => setTimeout(r, 10));
   card.hass = h; await wait();
   t = card.shadowRoot.textContent.replace(/\s+/g, ' ');
   ok(t.includes('Washing machine done 25 min ago'), 'washer with timestamp: ' + t.slice(-300));
-  ok(t.includes('One thing needs you.'), 'washer counts');
+  ok(card.shadowRoot.querySelector('.issue .n').textContent === '1', 'washer counts');
   h.states['sensor.washer_finished'] = { entity_id: 'sensor.washer_finished', state: 'unknown', attributes: {} };
   h.states['binary_sensor.washer_done'] = Object.assign({}, h.states['binary_sensor.washer_done'], { last_changed: new Date(now - 135 * 60000).toISOString() });
   card.hass = Object.assign({}, h); await wait();
@@ -323,15 +323,18 @@ const wait = () => new Promise((r) => setTimeout(r, 10));
       hourly([0, 0, 1, 0, -1, 0, 2, 3, 3, 2, 1, 0], [0, 0, 0, 0, 0, 0.6, 0, 0, 0, 0, 0, 0]));
     h.callApi = async (m, path) => { asked.push(path); return path.indexOf('calendar.family') >= 0
       ? [{ summary: 'Dentist', start: { dateTime: iso(tomorrow9) }, end: { dateTime: iso(new Date(tomorrow9.getTime() + 3600000)) } },
+         { summary: 'Dinner', start: { dateTime: iso(new Date(tomorrow9.getTime() + 9.5 * 3600000)) }, end: { dateTime: iso(new Date(tomorrow9.getTime() + 12 * 3600000)) } },
          { summary: 'Old thing', start: { dateTime: iso(new Date(now - 7200000)) }, end: { dateTime: iso(new Date(now - 3600000)) } },
          { summary: 'Mylou’s birthday', start: { date: ymd(inTwo) }, end: { date: ymd(new Date(inTwo.getTime() + 86400000)) } }]
       : [{ summary: 'Call with Sam', start: { dateTime: iso(new Date(now - 600000)) }, end: { dateTime: iso(new Date(now + 1800000)) } }]; };
-    card.setConfig(Object.assign({}, base, { issues: [], weather_details: 'wide', coming_up: 'show', calendars: ['calendar.family', 'calendar.work'] }));
+    card.setConfig(Object.assign({}, base, { issues: [], weather_details: 'wide', coming_up: 'show', calendars: ['calendar.family', 'calendar.work'], coming_up_count: 3 }));
     card.hass = h; await wait(); await wait();
     const $ = (s) => card.shadowRoot.querySelector(s), $$ = (s) => [...card.shadowRoot.querySelectorAll(s)];
     ok(asked.length === 2 && /calendars\/calendar\.family\?start=/.test(asked[0]), 'asks each calendar');
-    const evs = $$('.ev').map((e) => e.textContent);
-    ok(evs.length === 3 && /^Call with Sam · now, until \d\d:\d\d$/.test(evs[0]) && evs[1] === 'Dentist · tomorrow 09:00' && /^Mylou’s birthday · [A-Z][a-z]+day$/.test(evs[2]), 'agenda in order, ended left out: ' + evs.join(' | '));
+    const evs = $$('.ev').map((e) => [...e.querySelectorAll('small,.serif,.what,.when')].map((x) => x.textContent).join('|'));
+    const dn = (d) => new Intl.DateTimeFormat('en-GB', { weekday: 'short' }).format(d) + '|' + d.getDate();
+    ok(evs.length === 3 && new RegExp('^' + dn(new Date()) + '\\|Call with Sam\\|Now, until \\d\\d:\\d\\d$').test(evs[0]) && evs[1] === dn(tomorrow9) + '|Dentist|09:00 · +1 more' && evs[2] === dn(inTwo) + '|Mylou’s birthday|All day', 'one block per day, ended left out: ' + evs.join(' / '));
+    ok(/^[A-Z][a-z]+day \d+ [A-Z][a-z]+: Dentist, 09:00$/.test($$('.ev')[1].getAttribute('aria-label')), 'spoken label: ' + $$('.ev')[1].getAttribute('aria-label'));
     ok($('.ev').getAttribute('data-entity') === 'calendar.work', 'taps open the calendar');
     const stats = $$('.stat').map((x) => x.textContent);
     ok(stats[0] === 'High / low3° / -1°' || stats[0] === 'High / low3° / −1°', 'high and low: ' + stats.join('|'));

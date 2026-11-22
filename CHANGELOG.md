@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.22.0 (2026-11-22)
+
+- Home card: Coming up as date blocks, one per day ("MON 23 · Dentist · 09:00 · +1 more"),
+  two days by default.
+- Home card: no more sentence under the chips ("All quiet.", "One thing needs you.",
+  "All lights are off."). The red chip already says when something needs you. A fixed home
+  sentence set in the editor still shows.
+
 ## 2.21.0 (2026-11-22)
 
 - Home card, quieter: the clock is the only large thing on the left.

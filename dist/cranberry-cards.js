@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.21.0';
+  const VERSION = '2.22.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -285,11 +285,16 @@
     .chip .serif { font-size: 40px; line-height: 1; }
     .empty { padding: 24px; font-size: 15px; }
     /* coming up: the next things on the calendar, under the clock */
-    .agenda { flex: 1; display: flex; flex-direction: column; gap: 6px; margin-top: 10px; min-height: 0; }
+    .agenda { flex: 1; display: flex; flex-direction: column; gap: 8px; margin-top: 14px; min-height: 0; }
     .agenda .k, .stat .k { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--chc-sub); }
     .agenda .k { margin-bottom: 2px; }
-    .ev { display: block; max-width: 100%; font-size: 16px; font-weight: 500; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
-    .ev .when { color: var(--chc-sub); }
+    .ev { display: flex; align-items: center; gap: 12px; max-width: 100%; text-align: left; }
+    .ev .day { width: 44px; height: 48px; flex-shrink: 0; border-radius: var(--cc-r-ctl, 12px); background: rgba(242, 236, 224, 0.12); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .ev .day small { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--chc-sub); line-height: 12px; }
+    .ev .day .serif { font-size: 24px; line-height: 26px; }
+    .ev .txt { min-width: 0; display: flex; flex-direction: column; }
+    .ev .what { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ev .when { font-size: 13px; font-weight: 500; color: var(--chc-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .agenda .none { font-size: 16px; font-weight: 500; color: var(--chc-sub); }
     /* weather details: a row of facts, and a chart that uses the height */
     .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 12px; padding: 12px 0 2px; border-top: 1px solid var(--chc-rule); }
@@ -335,7 +340,7 @@
 
     setConfig(config) {
       if (!config || !config.weather) throw new Error('Pick a weather entity');
-      this._config = Object.assign({ layout: 'auto', show_clock: true, hour_step: 2, load_fonts: true, match_row: true, weather_details: 'hide', coming_up: 'hide', coming_up_count: 3 }, config);
+      this._config = Object.assign({ layout: 'auto', show_clock: true, hour_step: 2, load_fonts: true, match_row: true, weather_details: 'hide', coming_up: 'hide', coming_up_count: 2 }, config);
       this._calAt = 0; this._events = null;
       if (this._config.load_fonts !== false) loadFonts();
       this._last = '';
@@ -477,13 +482,7 @@
     _agenda(now, bins) {
       const c = this._config;
       const day0 = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x.getTime(); };
-      const today = day0(now), DAY = 86400000;
-      const dayName = (d) => {
-        const n = Math.round((day0(d) - today) / DAY);
-        if (n <= 0) return 'today';
-        if (n === 1) return 'tomorrow';
-        return new Intl.DateTimeFormat(this._lang(), { weekday: 'long' }).format(d);
-      };
+      const DAY = 86400000, today = day0(now);
       const parse = (v) => {
         if (!v) return null;
         if (typeof v === 'object') return v.dateTime ? { d: new Date(v.dateTime), all: false } : (v.date ? { d: new Date(v.date + 'T00:00:00'), all: true } : null);
@@ -496,11 +495,8 @@
         const endT = en && !isNaN(en.d) ? en.d.getTime() : s.d.getTime() + (s.all ? DAY : 3600000);
         if (endT <= now.getTime()) return;
         const started = s.d <= now;
-        let when;
-        if (s.all) when = started ? 'today' : dayName(s.d);
-        else if (started) when = 'now, until ' + this._fmtTime(new Date(endT));
-        else when = dayName(s.d) + ' ' + this._fmtTime(s.d);
-        list.push({ t: started ? now.getTime() : s.d.getTime(), all: s.all, when, what: e.summary || e.message || 'Busy', id: e.cal, now: started && !s.all });
+        const when = s.all ? 'All day' : started ? 'Now, until ' + this._fmtTime(new Date(endT)) : this._fmtTime(s.d);
+        list.push({ day: started ? today : day0(s.d), t: started ? now.getTime() : s.d.getTime(), all: s.all, when, what: e.summary || e.message || 'Busy', id: e.cal });
       });
       // the next bin collection, unless the bins chip already says it
       if (c.waste && !bins) {
@@ -508,12 +504,24 @@
         const next = (ws.upcoming || []).filter((x) => x.days <= 2);
         if (next.length) {
           const same = next.filter((x) => x.days === next[0].days);
-          const names = same.map((x) => (SHORT[x.name] || x.name).toLowerCase());
-          list.push({ t: day0(next[0].date) + 1, all: true, when: dayName(next[0].date), what: capital(listJoin(names)) + ' collected', id: same[0].id, bin: true });
+          list.push({ day: day0(next[0].date), t: day0(next[0].date), all: true, when: 'Bin collection', what: capital(listJoin(same.map((x) => (SHORT[x.name] || x.name).toLowerCase()))), id: same[0].id });
         }
       }
-      list.sort((a, b) => a.t - b.t || (b.all ? 1 : 0) - (a.all ? 1 : 0));
-      return list.slice(0, Math.max(1, Math.min(5, Number(c.coming_up_count) || 3)));
+      // timed events first within a day, all-day after
+      list.sort((a, b) => a.day - b.day || (a.all ? 1 : 0) - (b.all ? 1 : 0) || a.t - b.t);
+      // one block per day: the first event, and how many more that day
+      const days = [];
+      list.forEach((x) => {
+        const g = days[days.length - 1];
+        if (g && g.day === x.day) g.more++;
+        else days.push(Object.assign({ more: 0 }, x));
+      });
+      const fmt = (o) => new Intl.DateTimeFormat(this._lang(), o);
+      return days.slice(0, Math.max(1, Math.min(5, Number(c.coming_up_count) || 2))).map((g) => {
+        const d = new Date(g.day);
+        return { wd: fmt({ weekday: 'short' }).format(d).replace(/\.$/, ''), n: d.getDate(), what: g.what, when: g.when + (g.more ? ' · +' + g.more + ' more' : ''), id: g.id,
+          aria: fmt({ weekday: 'long', day: 'numeric', month: 'long' }).format(d) + ': ' + g.what + ', ' + g.when };
+      });
     }
 
     // ----- Helpers -----
@@ -977,10 +985,10 @@
                   ${this._art(m.cond, 44)}<span class="serif" style="color:${m.tempCol}">${round(m.temp)}°</span>
                 </button>
               </div>
-              ${m.agenda ? `<div class="agenda"><span class="k">Coming up</span>${m.agenda.length ? m.agenda.map((e) => `<button class="ev" data-entity="${esc(e.id)}"><span class="what">${esc(e.what)}</span> <span class="when">· ${esc(e.when)}</span></button>`).join('') : '<span class="none">Nothing planned this week.</span>'}</div>` : ''}
+              ${m.agenda ? `<div class="agenda"><span class="k">Coming up</span>${m.agenda.length ? m.agenda.map((e) => `<button class="ev" data-entity="${esc(e.id)}" aria-label="${esc(e.aria)}"><span class="day"><small>${esc(e.wd)}</small><span class="serif">${e.n}</span></span><span class="txt"><span class="what">${esc(e.what)}</span><span class="when">${esc(e.when)}</span></span></button>`).join('') : '<span class="none">Nothing planned this week.</span>'}</div>` : ''}
               <div class="stack">
                 ${m.issues.length || m.bins || m.lamps ? `<div class="chips">${m.issues.length ? `<button class="issue" data-entity="${esc(m.issues[0].id)}"><span class="n">${m.issues.length}</span><span>${esc(issueText)}</span></button>` : ''}${m.bins ? `<button class="bins" data-bins="1" aria-label="${esc(m.bins.text)}"><span class="n">${m.bins.colours.map((col) => `<svg width="${m.bins.colours.length > 1 ? 17 : 20}" height="${m.bins.colours.length > 1 ? 17 : 20}" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 13a1.5 1.5 0 0 1-1.5 1.4h-7A1.5 1.5 0 0 1 7 20zM4.5 5h15M10 3h4" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:${col}"></path><path d="M7.4 10h9.2l-.7 10H8.1z" style="fill:${col}"></path></svg>`).join('')}</span><span>${esc(m.bins.text)}</span></button>` : ''}${m.lamps ? `<button class="lamps" data-lights aria-haspopup="dialog" aria-expanded="${!!this._menu}"><span class="n">${this._icon(I.bulb, 16)}${m.lamps.n}</span><span>${esc(m.lamps.text)}</span>${this._icon(I.chev, 16)}</button>` : ''}</div>` : ''}
-                <p>${esc(m.homeText)}</p>
+                ${c.home_text ? `<p>${esc(m.homeText)}</p>` : ''}
                 ${m.insight ? `<p class="insight">${this._icon(m.icon)}<span>${esc(m.insight)}</span></p>` : ''}
               </div>
             </div>
@@ -1104,7 +1112,7 @@
     weather_details: 'Weather details',
     coming_up: 'Show coming up',
     calendars: 'Calendars',
-    coming_up_count: 'How many to show',
+    coming_up_count: 'How many days to show',
     show_clock: 'Show the clock',
     insight: 'Show the weather tip',
     match_row: 'As tall as the cards next to it',

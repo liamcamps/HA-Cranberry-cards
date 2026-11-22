@@ -52,7 +52,7 @@ $('.menu').dispatchEvent(new w.KeyboardEvent('keydown', { key: 'Escape', bubbles
 ok(!$('.menu'), 'Escape closes');
 $('.lamps').click();
 card.hass = mk({ 'light.living_room': S('light.living_room', 'off', {}), 'switch.balcony': S('switch.balcony', 'off', {}) });
-ok(!$('.menu') && !$('.lamps') && card.shadowRoot.querySelector('p').textContent.includes('All lights are off.'), 'menu and chip go when everything is off');
+ok(!$('.menu') && !$('.lamps') && !card.shadowRoot.textContent.includes('All lights are off.'), 'menu and chip go when everything is off, no sentence');
 card.setConfig({ weather: 'weather.home', lights: ['switch.balcony'], home_text: 'Welcome home.', load_fonts: false }); card.hass = mk();
 ok(!$('.lamps'), 'no chip with a fixed home sentence');
 console.log(pass + ' passed, ' + fail + ' failed'); process.exit(0);
