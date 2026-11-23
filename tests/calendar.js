@@ -78,7 +78,24 @@ const rowText = (r) => { const tw = r.ownerDocument.createTreeWalker(r, 4); cons
   }
   // tap opens the calendar
   let opened = null; el.addEventListener('hass-more-info', (e) => { opened = e.detail.entityId; });
-  if ($(el, '.ev')) { $(el, '.ev').click(); ok(opened === 'calendar.family', 'tap opens the calendar'); }
+  if ($(el, '.ev')) {
+    $(el, '.ev').click();
+    ok($(el, '.detail') && $(el, '.dtitle').textContent === 'Call' && $(el, '.dstatus').textContent === 'Happening now' && !opened, 'tap shows the event, not the calendar');
+    $(el, '.dcal').click(); ok(opened === 'calendar.family', 'the calendar name still opens the calendar');
+    $(el, '[data-act="back"]').click(); ok(!$(el, '.detail') && $(el, '.ev'), 'back to the list');
+  }
+  // details: day, time, place and description
+  EV = { 'calendar.family': [
+    { summary: 'Dentist', start: { dateTime: at(1, 9) }, end: { dateTime: at(1, 9, 45) }, location: 'Tandartspraktijk', description: 'Bring the card<br>Room 2' },
+    { summary: 'Holiday', start: { date: ymd(2) }, end: { date: ymd(5) } } ] };
+  el = await make({ calendars: ['calendar.family'] });
+  $$(el, '.ev')[0].click();
+  const rows = $$(el, '.drow').map((r) => r.textContent.trim());
+  ok(/^\w+day \d+ \w+ · 09:00 – 09:45$/.test(rows[0]) && rows[1] === 'Tandartspraktijk' && rows[2] === 'Family', 'when, where, calendar: ' + rows.join(' | '));
+  ok($(el, '.ddesc').textContent === 'Bring the card\nRoom 2' && !$(el, '.dstatus'), 'description as text with its line break');
+  $(el, '[data-act="back"]').click();
+  $$(el, '.ev').find((x) => x.textContent.includes('Holiday')).click();
+  ok(/^\w{3} \d+ \w+ – \w{3} \d+ \w+ · All day$/.test($(el, '.drow').textContent.trim()), 'multi-day all-day: ' + $(el, '.drow').textContent.trim());
 
   // nothing at all
   EV = {};
@@ -125,7 +142,9 @@ const rowText = (r) => { const tw = r.ownerDocument.createTreeWalker(r, 4); cons
   ok(num(box('Dentist'), 'top') === 120 && num(box('Dentist'), 'height') === 40, 'placed at its time: ' + box('Dentist'));
   ok(num(box('Dentist'), 'width') === 50 && num(box('Call'), 'width') === 50 && num(box('Dentist'), 'left') + num(box('Call'), 'left') === 50, 'same start: side by side');
   ok(num(box('Lunch'), 'width') === 100, 'no overlap: full width');
-  ok(num(box('Call'), 'height') === 20 && $$(el, '.te').find((x) => x.textContent.includes('Call')).classList.contains('short'), 'a short event on one line');
+  const callBox = $$(el, '.te').find((x) => x.textContent.includes('Call'));
+  ok(num(box('Call'), 'height') === 22 && callBox.classList.contains('tiny') && callBox.querySelector('small').textContent === '09:00', 'a very short event: one line, the whole time');
+  ok(!$$(el, '.te').find((x) => x.textContent.includes('Dentist')).classList.contains('tiny'), 'an hour: two lines');
   ok($(el, '.adl') && $$(el, '.ad')[2].textContent.includes('Holiday'), 'all-day row');
   ok($(el, '.hrs span').textContent === '07:00' && num($(el, '.dc').getAttribute('style'), 'height') === 680, 'from 06:00 to 23:00 (night shift ends past 22:00 that day): ' + $(el, '.dc').getAttribute('style'));
   const shiftTop = box('Night shift');

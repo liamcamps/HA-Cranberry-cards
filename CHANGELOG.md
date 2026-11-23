@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.28.0 (2026-11-23)
+
+- Calendar card: the time of an event in the week is always shown in full.
+  - Small events use two compact lines, time then title.
+  - Very short ones use one line, where the time stays whole and the title gets what's left.
+  - Something happening now shows its real start time; the outline already says it's now.
+- Calendar card: tapping an event shows its **details** in the card: the title, "Happening now" when it is, the day and time (or the days, for something longer), where, which calendar, and the description. Descriptions from Google lose their HTML and keep their line breaks. The back button returns to the list or week; tapping the calendar's name still opens the calendar.
+
 ## 2.27.1 (2026-11-23)
 
 - Calendar card: events in the week are solid. They use the same tint, mixed with the card's colour, so the hour lines no longer show through them. The current-time line runs behind the events instead of across them.

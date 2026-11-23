@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.27.1';
+  const VERSION = '2.28.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -1286,7 +1286,7 @@
  */
 (() => {
   // Use Lucide icons when the Lucide icons integration is installed, otherwise Home Assistant's own.
-  const LUCIDE = { vacation: 'plane', car: 'car', pin: 'map-pin', nav: 'navigation', plus: 'plus', minus: 'minus', chev: 'chevron-down', home: 'house', radiator: 'heater', thermometer: 'thermometer', evening: 'sunset', night: 'moon', walk: 'footprints', people: 'users', washer: 'washing-machine', alert: 'triangle-alert', check: 'check', 'chevron-right': 'chevron-right', info: 'info', lock: 'lock', 'lock-open': 'lock-open', shield: 'shield-check', 'shield-off': 'shield-off', play: 'play', pause: 'pause', stop: 'square', 'skip-next': 'skip-forward', 'skip-previous': 'skip-back', bulb: 'lightbulb', power: 'power', x: 'x' };
+  const LUCIDE = { vacation: 'plane', car: 'car', pin: 'map-pin', nav: 'navigation', plus: 'plus', minus: 'minus', chev: 'chevron-down', home: 'house', radiator: 'heater', thermometer: 'thermometer', evening: 'sunset', night: 'moon', walk: 'footprints', people: 'users', washer: 'washing-machine', alert: 'triangle-alert', check: 'check', 'chevron-right': 'chevron-right', info: 'info', lock: 'lock', 'lock-open': 'lock-open', shield: 'shield-check', 'shield-off': 'shield-off', play: 'play', pause: 'pause', stop: 'square', 'skip-next': 'skip-forward', 'skip-previous': 'skip-back', bulb: 'lightbulb', power: 'power', x: 'x', 'chevron-left': 'chevron-left', clock: 'clock', pin: 'map-pin' };
   const ccIcon = (name, fallback) => (window.customIcons && window.customIcons.lucide && LUCIDE[name] ? 'lucide:' + LUCIDE[name] : fallback);
   const { morph, MOTION } = window.CranberryMorph;
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -2555,10 +2555,13 @@
       .te .wev { height: 100%; overflow: hidden; padding: 4px 6px; border-radius: 8px; }
       .te .wev small { font-size: 10px; }
       .te .wev b { font-size: 12px; line-height: 1.2; }
-      .te.short .wev { flex-direction: row; align-items: center; gap: 4px; padding: 0 6px; }
-      .te.short .wev b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .te .wev small { flex-shrink: 0; overflow: visible; text-overflow: clip; }
+      .te.short .wev { padding: 2px 6px; gap: 0; }
+      .te.short .wev small { font-size: 10px; line-height: 12px; }
+      .te.short .wev b { font-size: 11px; line-height: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .te.tiny .wev { flex-direction: row; align-items: center; gap: 4px; padding: 0 6px; }
+      .te.tiny .wev b { min-width: 0; }
       .te.split .wev { padding-left: 5px; padding-right: 4px; }
-      .te.split.short .wev small { display: none; }
       .nowline { position: absolute; left: -1px; right: 0; height: 2px; background: var(--cc-c); z-index: 0; pointer-events: none; }
       .nowline::before { content: ''; position: absolute; left: -4px; top: -3px; width: 8px; height: 8px; border-radius: 4px; background: var(--cc-c); }
       .ad .wev { padding: 4px 6px; }
@@ -2587,6 +2590,14 @@
       .tog[aria-pressed="true"] i { background: var(--cc-c); }
       .tog[aria-pressed="true"] i::after { transform: translateX(14px); background: var(--cc-on); }
       .err { font-size: 14px; font-weight: 600; color: var(--cc-b); }
+      .detail { display: flex; flex-direction: column; gap: 10px; padding: 12px 0 10px; }
+      .dtitle { font-size: 24px; font-weight: 700; line-height: 1.25; padding-top: 4px; }
+      .dstatus { align-self: flex-start; height: 28px; padding: 0 10px; border-radius: var(--cc-r-chip, 8px); background: var(--cc-c); color: var(--cc-on); display: flex; align-items: center; font-size: 13px; font-weight: 700; }
+      .drow { display: flex; align-items: center; gap: 12px; min-height: 32px; font-size: 16px; font-weight: 500; text-align: left; }
+      .drow ha-icon { --mdc-icon-size: 20px; color: var(--cc-muted); width: 20px; flex-shrink: 0; }
+      .drow .dot { width: 10px; height: 10px; border-radius: 5px; margin: 0 5px; }
+      .dcal { align-self: flex-start; color: var(--cc-muted); }
+      .ddesc { margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--cc-rule); font-size: 15px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
       .btns { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
       .btn { height: 44px; padding: 0 18px; border-radius: var(--cc-r-ctl, 12px); font-size: 14px; font-weight: 700; background: var(--cc-raise); }
       .btn.go { background: var(--cc-c); color: var(--cc-on); }
@@ -2629,7 +2640,7 @@
       }
       if (this._ro) this._ro.observe(this);
     }
-    disconnectedCallback() { clearInterval(this._tick); if (this._ro) this._ro.disconnect(); this._view = null; this._form = null; }
+    disconnectedCallback() { clearInterval(this._tick); if (this._ro) this._ro.disconnect(); this._view = null; this._form = null; this._detail = null; }
     setConfig(config) { super.setConfig(config); this._at = 0; this._events = null; this._refresh(); }
     set hass(h) { const first = !this._hass; this._hass = h; if (first) this._refresh(); this._update(); }
     // calendars: "calendar.family" or { entity: calendar.liam, people: [person.liam] }
@@ -2695,7 +2706,7 @@
       const wd = (t) => new Intl.DateTimeFormat(this._lang(), { weekday: 'short' }).format(new Date(t)).replace(/\.$/, '');
       const days = {};
       for (let i = 0, d = today; i < n; i++, d = day0(d + DAY * 1.5)) days[d] = [];
-      (this._events || []).forEach((e) => {
+      (this._events || []).forEach((e, ix) => {
         const s = parse(e.start), en = parse(e.end);
         if (!s || isNaN(s.d)) return;
         let endT = en && !isNaN(en.d) ? en.d.getTime() : s.d.getTime() + (s.all ? DAY : 3600000);
@@ -2712,12 +2723,12 @@
           else if (d === last) { when = ongoing ? 'Now, until ' + this._time(new Date(endT)) : 'Until ' + this._time(new Date(endT)); rank = 0; }
           else { when = ongoing ? 'Now' : 'All day'; rank = 0; }
           // the week view has less room: just the time, "Now", or where it starts and ends
-          const short = s.all ? 'All day' : ongoing ? 'Now' : when.replace(/^All day · .*/, 'All day');
+          const short = s.all ? 'All day' : span === 1 ? this._time(s.d) : d === first ? this._time(s.d) + ' →' : d === last ? 'Until ' + this._time(new Date(endT)) : 'All day';
           const ci = colour[e.cal] || 0;
           // where it sits on the day, in minutes; a piece that fills the whole day goes in the all-day row
           const sMin = s.all ? 0 : d === first ? Math.round((s.d.getTime() - d) / 60000) : 0;
           const eMin = s.all ? 1440 : d === last ? Math.round((endT - d) / 60000) : 1440;
-          days[d].push({ t: d === first ? s.d.getTime() : d, rank, when, short, now: ongoing && !s.all, what: e.summary || e.message || 'Busy', loc: e.location || '', id: e.cal, dot: CAL_DOTS[ci], tint: CAL_COLOURS[ci], all: s.all || (sMin <= 0 && eMin >= 1440), sMin: Math.max(0, sMin), eMin: Math.min(1440, eMin), fromPrev: !s.all && d !== first, toNext: !s.all && d !== last });
+          days[d].push({ t: d === first ? s.d.getTime() : d, rank, when, short, now: ongoing && !s.all, what: e.summary || e.message || 'Busy', loc: e.location || '', id: e.cal, dot: CAL_DOTS[ci], tint: CAL_COLOURS[ci], ix, all: s.all || (sMin <= 0 && eMin >= 1440), sMin: Math.max(0, sMin), eMin: Math.min(1440, eMin), fromPrev: !s.all && d !== first, toNext: !s.all && d !== last });
         }
       });
       const keys = Object.keys(days).map(Number).sort((a, b) => a - b);
@@ -2769,11 +2780,30 @@
         if (writable.indexOf(f.cal) < 0) f.cal = writable[0];
         form = Object.assign({}, f, { cals: writable.map((id) => ({ id, name: this.nm(id), dot: CAL_DOTS[colour[id]], tint: CAL_COLOURS[colour[id]], on: id === f.cal })) });
       }
-      return { title: c.title || '', legend, rows, week, grid, view, form, canAdd: writable.length > 0, seg: c.switcher !== false && canWeek, loading: this._events == null && ids.length > 0, none: !ids.length };
+      let detail = null;
+      if (this._detail) {
+        const e = this._detail, s = parse(e.start), en = parse(e.end);
+        if (s && !isNaN(s.d)) {
+          let endT = en && !isNaN(en.d) ? en.d.getTime() : s.d.getTime() + (s.all ? DAY : 3600000);
+          const lastDay = new Date(s.all ? endT - DAY : endT);
+          const dayF = (dt, o) => new Intl.DateTimeFormat(this._lang(), Object.assign({ weekday: 'long', day: 'numeric', month: 'long' }, o || {})).format(dt);
+          const sameDay = day0(s.d) === day0(s.all ? lastDay : endT - 1);
+          let when;
+          if (s.all) when = sameDay ? dayF(s.d) + ' · All day' : dayF(s.d, { weekday: 'short' }) + ' – ' + dayF(lastDay, { weekday: 'short' }) + ' · All day';
+          else if (sameDay) when = dayF(s.d) + ' · ' + this._time(s.d) + ' – ' + this._time(new Date(endT));
+          else when = dayF(s.d, { weekday: 'short' }) + ', ' + this._time(s.d) + ' – ' + dayF(new Date(endT), { weekday: 'short' }) + ', ' + this._time(new Date(endT));
+          const nowT = now.getTime(), ci = colour[e.cal] || 0;
+          const status = s.d.getTime() <= nowT && endT > nowT ? 'Happening now' : endT <= nowT ? 'Over' : '';
+          // descriptions can carry a little HTML (Google); show it as plain text with its line breaks
+          const desc = String(e.description || '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\n{3,}/g, '\n\n').trim();
+          detail = { what: e.summary || e.message || 'Busy', when, status, loc: e.location || '', desc, cal: e.cal, calName: this.nm(e.cal), dot: CAL_DOTS[ci] };
+        }
+      }
+      return { title: c.title || '', legend, rows, week, grid, view, form, detail, canAdd: writable.length > 0, seg: c.switcher !== false && canWeek, loading: this._events == null && ids.length > 0, none: !ids.length };
     }
     view(m) {
-      const ev = (e) => `<button type="button" class="ev${e.now ? ' now' : ''}" data-act="open" data-arg="${esc(e.id)}"><span class="when"><span class="dot" style="--dot:${e.dot}"></span>${esc(e.when)}</span><span class="what">${esc(e.what)}${e.loc ? ` <small>· ${esc(e.loc)}</small>` : ''}</span></button>`;
-      const wev = (e) => `<button type="button" class="wev${e.now ? ' now' : ''}" style="--dot:${e.dot};--tint:color-mix(in srgb, ${e.tint} 24%, var(--cc-card))" data-act="open" data-arg="${esc(e.id)}" aria-label="${esc(e.what + ', ' + e.when)}"><small>${esc(e.short)}</small><b>${esc(e.what)}</b></button>`;
+      const ev = (e) => `<button type="button" class="ev${e.now ? ' now' : ''}" data-act="open" data-arg="${e.ix}"><span class="when"><span class="dot" style="--dot:${e.dot}"></span>${esc(e.when)}</span><span class="what">${esc(e.what)}${e.loc ? ` <small>· ${esc(e.loc)}</small>` : ''}</span></button>`;
+      const wev = (e) => `<button type="button" class="wev${e.now ? ' now' : ''}" style="--dot:${e.dot};--tint:color-mix(in srgb, ${e.tint} 24%, var(--cc-card))" data-act="open" data-arg="${e.ix}" aria-label="${esc(e.what + ', ' + e.when)}"><small>${esc(e.short)}</small><b>${esc(e.what)}</b></button>`;
       const block = (r) => `<span class="block"><small>${esc(r.wd)}</small><b>${r.n}</b></span>`;
       const body = m.none ? '<div class="empty">Pick one or more calendars in the editor.</div>'
         : m.loading ? '<div class="empty">Loading…</div>'
@@ -2786,6 +2816,7 @@
       const seg = m.seg ? `<span class="seg" role="group" aria-label="View">${['agenda', 'week'].map((v) => `<button type="button" data-act="view" data-arg="${v}" aria-pressed="${m.view === v}">${v === 'agenda' ? 'Agenda' : 'Week'}</button>`).join('')}</span>` : '';
       const legend = m.legend.length ? `<div class="legend">${m.legend.map((l) => `<span><span class="dot" style="--dot:${l.dot}"></span>${esc(l.name)}</span>`).join('')}</div>` : '';
       if (m.form) return `<ha-card>${this._formView(m.form)}</ha-card>`;
+      if (m.detail) return `<ha-card>${this._detailView(m.detail)}</ha-card>`;
       return `<ha-card>
         ${m.title ? `<div class="title">${esc(m.title)}</div>` : ''}
         ${legend || seg ? `<div class="top">${legend}${seg}</div>` : ''}
@@ -2797,17 +2828,28 @@
       const g = m.grid, HH = 40, px = (min) => ((min - g.from * 60) / 60) * HH;
       const hours = []; for (let h = g.from + 1; h < g.to; h++) hours.push(h);
       const lbl = (h) => this._time(new Date(2000, 0, 1, h, 0));
-      const wev = (e) => `<button type="button" class="wev${e.now ? ' now' : ''}" style="--dot:${e.dot};--tint:color-mix(in srgb, ${e.tint} 24%, var(--cc-card))" data-act="open" data-arg="${esc(e.id)}" aria-label="${esc(e.what + ', ' + e.when)}"><small>${esc(e.short)}</small><b>${esc(e.what)}</b></button>`;
+      const wev = (e) => `<button type="button" class="wev${e.now ? ' now' : ''}" style="--dot:${e.dot};--tint:color-mix(in srgb, ${e.tint} 24%, var(--cc-card))" data-act="open" data-arg="${e.ix}" aria-label="${esc(e.what + ', ' + e.when)}"><small>${esc(e.short)}</small><b>${esc(e.what)}</b></button>`;
       const head = m.week.map((r) => `<div class="hd${r.today ? ' today' : ''}"><span class="block"><small>${esc(r.wd)}</small><b>${r.n}</b></span></div>`).join('');
       const allDay = g.hasAllDay ? `<div class="adl">All day</div>${g.cols.map((x) => `<div class="ad">${x.allDay.map(wev).join('')}</div>`).join('')}` : '';
       const cols = g.cols.map((x) => `<div class="dc" style="height:${(g.to - g.from) * HH}px">${x.timed.map((e) => {
-        const top = px(e.sMin), h = Math.max(20, px(e.eMin) - top), w = 100 / e.lanes;
-        return `<div class="te${h < 44 ? ' short' : ''}${e.lanes > 1 ? ' split' : ''}" title="${esc(e.short + ' · ' + e.what)}" style="top:${top.toFixed(1)}px;height:${h.toFixed(1)}px;left:${(e.lane * w).toFixed(3)}%;width:${w.toFixed(3)}%">${wev(e)}</div>`;
+        const top = px(e.sMin), h = Math.max(22, px(e.eMin) - top), w = 100 / e.lanes;
+        return `<div class="te${h < 44 ? ' short' : ''}${h < 28 ? ' tiny' : ''}${e.lanes > 1 ? ' split' : ''}" title="${esc(e.short + ' · ' + e.what)}" style="top:${top.toFixed(1)}px;height:${h.toFixed(1)}px;left:${(e.lane * w).toFixed(3)}%;width:${w.toFixed(3)}%">${wev(e)}</div>`;
       }).join('')}${x.now != null ? `<span class="nowline" style="top:${px(x.now).toFixed(1)}px"></span>` : ''}</div>`).join('');
       return `<div class="tg" style="--hh:${HH}px">
         <div></div>${head}
         ${allDay}
         <div class="hrs">${hours.map((h) => `<span style="top:${px(h * 60)}px">${esc(lbl(h))}</span>`).join('')}</div>${cols}
+      </div>`;
+    }
+    _detailView(d) {
+      return `<div class="detail">
+        <div class="fhead"><button type="button" class="x" data-act="back" aria-label="Back"><ha-icon icon="${ccIcon('chevron-left', 'mdi:chevron-left')}"></ha-icon></button></div>
+        <div class="dtitle">${esc(d.what)}</div>
+        ${d.status ? `<div class="dstatus">${esc(d.status)}</div>` : ''}
+        <div class="drow"><ha-icon icon="${ccIcon('clock', 'mdi:clock-outline')}"></ha-icon><span>${esc(d.when)}</span></div>
+        ${d.loc ? `<div class="drow"><ha-icon icon="${ccIcon('pin', 'mdi:map-marker-outline')}"></ha-icon><span>${esc(d.loc)}</span></div>` : ''}
+        <button type="button" class="drow dcal" data-act="cal" data-arg="${esc(d.cal)}"><span class="dot" style="--dot:${d.dot}"></span><span>${esc(d.calName)}</span></button>
+        ${d.desc ? `<div class="ddesc">${esc(d.desc)}</div>` : ''}
       </div>`;
     }
     _formView(f) {
@@ -2830,7 +2872,12 @@
       </div>`;
     }
     act(a, arg) {
-      if (a === 'open' && arg) this.moreInfo(arg);
+      if (a === 'open' && arg != null) {
+        const e = (this._events || [])[Number(arg)];
+        if (e) { this._detail = Object.assign({}, e); this._redraw(); }
+      }
+      if (a === 'back') { this._detail = null; this._redraw(); }
+      if (a === 'cal' && arg) this.moreInfo(arg);
       if (a === 'view') { this._view = arg; this._last = ''; this._update(); }
       if (a === 'new') {
         const pad = (x) => String(x).padStart(2, '0'), d = new Date();
