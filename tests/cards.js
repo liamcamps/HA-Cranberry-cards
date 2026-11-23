@@ -77,6 +77,21 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   el = make('cranberry-room-card', { entity: 'switch.garden' });
   ok(txt(el).includes('On') && q(el, '.fill').style.width === '100%', 'switch room');
 
+  // a person: home, away or a zone, since when; tap opens their pop-up
+  const today1020 = new Date(); today1020.setHours(10, 20, 0, 0);
+  states['person.liam'] = Object.assign(S('person.liam', 'home', { friendly_name: 'Liam Camps' }), { last_changed: today1020.toISOString() });
+  el = make('cranberry-status-card', { entity: 'person.liam', popup: '#liam' });
+  ok(q(el, '.name').textContent === 'Liam' && /^Home · since 10:20( AM)?$/.test(q(el, '.state').textContent) && q(el, 'ha-card').getAttribute('style').includes('--cc-o'), 'person home: ' + q(el, '.state').textContent);
+  states['person.liam'] = Object.assign(S('person.liam', 'not_home', { friendly_name: 'Liam Camps' }), { last_changed: new Date(Date.now() - 2 * 86400000 - 3600000).toISOString() });
+  el = make('cranberry-status-card', { entity: 'person.liam', popup: '#liam' });
+  ok(/^Away · since \w+day$/.test(q(el, '.state').textContent) && q(el, 'ha-card').getAttribute('style').includes('--cc-q'), 'person away: ' + q(el, '.state').textContent);
+  states['person.liam'] = Object.assign(S('person.liam', 'work', { friendly_name: 'Liam Camps' }), { last_changed: new Date(Date.now() - 86400000).toISOString() });
+  el = make('cranberry-status-card', { entity: 'person.liam', popup: '#liam' });
+  ok(q(el, '.state').textContent.indexOf('Work · since ') === 0, 'person in a zone: ' + q(el, '.state').textContent);
+  let navTo = null; el.navigate = (p) => { navTo = p; };
+  q(el, '.txt').click();
+  ok(navTo === '#liam', 'tap opens the pop-up');
+
   // room alert: an open door turns the card brick and says which
   states['binary_sensor.balcony_door'] = S('binary_sensor.balcony_door', 'on', { friendly_name: 'Balcony door', device_class: 'door' });
   states['lock.front'] = S('lock.front', 'locked', { friendly_name: 'Front door' });

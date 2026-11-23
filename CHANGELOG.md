@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.29.0 (2026-11-23)
+
+- Status card: **a person**. Shows the first name, and "Home", "Away" or the zone they're in ("Work") with since when ("Home · since 18:40", "Away · since yesterday"). Olive when home, quail when not.
+- Status card: new **Pop-up to open** option, for example a pop-up with a map of that person.
+- Room card on narrow screens (two side by side on a phone):
+  - The temperature moves into the second line ("All off · 20.8°"), so the name has room.
+  - As narrow as on a phone, the extra button is left out. Keep it in the room's pop-up too.
+
 ## 2.28.0 (2026-11-23)
 
 - Calendar card: the time of an event in the week is always shown in full.

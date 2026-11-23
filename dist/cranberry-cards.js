@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.28.0';
+  const VERSION = '2.29.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -1286,7 +1286,7 @@
  */
 (() => {
   // Use Lucide icons when the Lucide icons integration is installed, otherwise Home Assistant's own.
-  const LUCIDE = { vacation: 'plane', car: 'car', pin: 'map-pin', nav: 'navigation', plus: 'plus', minus: 'minus', chev: 'chevron-down', home: 'house', radiator: 'heater', thermometer: 'thermometer', evening: 'sunset', night: 'moon', walk: 'footprints', people: 'users', washer: 'washing-machine', alert: 'triangle-alert', check: 'check', 'chevron-right': 'chevron-right', info: 'info', lock: 'lock', 'lock-open': 'lock-open', shield: 'shield-check', 'shield-off': 'shield-off', play: 'play', pause: 'pause', stop: 'square', 'skip-next': 'skip-forward', 'skip-previous': 'skip-back', bulb: 'lightbulb', power: 'power', x: 'x', 'chevron-left': 'chevron-left', clock: 'clock', pin: 'map-pin' };
+  const LUCIDE = { vacation: 'plane', car: 'car', pin: 'map-pin', nav: 'navigation', plus: 'plus', minus: 'minus', chev: 'chevron-down', home: 'house', radiator: 'heater', thermometer: 'thermometer', evening: 'sunset', night: 'moon', walk: 'footprints', people: 'users', washer: 'washing-machine', alert: 'triangle-alert', check: 'check', 'chevron-right': 'chevron-right', info: 'info', lock: 'lock', 'lock-open': 'lock-open', shield: 'shield-check', 'shield-off': 'shield-off', play: 'play', pause: 'pause', stop: 'square', 'skip-next': 'skip-forward', 'skip-previous': 'skip-back', bulb: 'lightbulb', power: 'power', x: 'x', 'chevron-left': 'chevron-left', clock: 'clock', pin: 'map-pin', user: 'user' };
   const ccIcon = (name, fallback) => (window.customIcons && window.customIcons.lucide && LUCIDE[name] ? 'lucide:' + LUCIDE[name] : fallback);
   const { morph, MOTION } = window.CranberryMorph;
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -1461,6 +1461,23 @@
         const modes = c.modes && c.modes.length ? c.modes : ['armed_home', 'armed_away', 'armed_night', 'disarmed'];
         m.btns = modes.filter((x) => ALARM_MODES[x]).map((x) => ({ act: 'alarm', arg: x, icon: ALARM_MODES[x].icon, pressed: st.state === x, aria: ALARM_MODES[x].label }));
         m.btnsW = '44%';
+      } else if (domain === 'person' && !(c.people && c.people.length)) {
+        // one person: home, away or the zone they are in, and since when
+        const home = st.state === 'home';
+        m.icon = m.icon || ccIcon('user', 'mdi:account-outline');
+        m.name = c.name || firstName(this.nm(c.entity));
+        m.tone = home ? 'olive' : 'quail';
+        const where = home ? 'Home' : st.state === 'not_home' ? 'Away' : st.state === 'unknown' ? 'Unknown' : String(st.state).replace(/_/g, ' ').replace(/^./, (ch) => ch.toUpperCase());
+        const t = new Date(st.last_changed || 0), now = new Date();
+        let since = '';
+        if (!isNaN(t) && t.getTime() > 0 && st.state !== 'unknown') {
+          const days = Math.round((new Date(now).setHours(0, 0, 0, 0) - new Date(t).setHours(0, 0, 0, 0)) / 86400000);
+          const tf = this._hass.locale && this._hass.locale.time_format;
+          if (days === 0) since = new Intl.DateTimeFormat(this._lang(), { hour: '2-digit', minute: '2-digit', hour12: tf === '12' ? true : tf === '24' ? false : undefined }).format(t);
+          else if (days === 1) since = 'yesterday';
+          else if (days < 7) since = new Intl.DateTimeFormat(this._lang(), { weekday: 'long' }).format(t);
+        }
+        m.state = where + (since ? ' · since ' + since : '');
       } else if (domain === 'zone' || (c.people && c.people.length)) {
         const ids = c.people && c.people.length ? c.people : (a.persons || []);
         const ppl = ids.map((id) => ({ n: firstName(this.nm(id)), home: (this.st(id) || {}).state === 'home' }));
@@ -1493,7 +1510,7 @@
     }
     act(a, arg) {
       const c = this._config, st = this.st(c.entity);
-      if (a === 'more' || !st) return this.moreInfo(c.entity);
+      if (a === 'more' || !st) return c.popup ? this.navigate(c.popup) : this.moreInfo(c.entity);
       if (a === 'temp') {
         const step = Number(st.attributes.target_temp_step) || (String(this._hass.config && this._hass.config.unit_system && this._hass.config.unit_system.temperature).indexOf('F') >= 0 ? 1 : 0.5);
         const cur = this._pending != null ? this._pending : Number(st.attributes.temperature);
@@ -1537,6 +1554,18 @@
       ha-card.alert .state { color: color-mix(in srgb, var(--cc-on) 82%, var(--cc-b)); font-weight: 600; }
       ha-card.alert .tog { background: rgba(242, 236, 224, 0.16) !important; color: var(--cc-on) !important; }
       ha-card.alert .temp { background: rgba(242, 236, 224, 0.16); }
+      /* a narrow card (two side by side on a phone) keeps room for the name */
+      ha-card { container-type: inline-size; }
+      .tin { display: none; }
+      @container (max-width: 300px) {
+        .temp { display: none; }
+        .tin { display: inline; }
+        .row { gap: 10px; }
+      }
+      /* as narrow as on a phone: the extra button gives its room to the name (it is in the pop-up too) */
+      @container (max-width: 230px) {
+        .extra { display: none; }
+      }
       ha-card.alert .chev { color: var(--cc-on); }
       ha-card.alert .extra { background: rgba(242, 236, 224, 0.16); color: var(--cc-on); }
     `;
@@ -1590,7 +1619,7 @@
           <button type="button" class="tog" data-act="toggle" aria-pressed="${m.lit}" aria-label="Switch ${esc(m.name)} ${m.lit ? 'off' : 'on'}"
             style="background:${m.lit ? 'var(--cc-c)' : 'var(--cc-q-t)'};color:${m.lit ? 'var(--cc-on)' : 'var(--cc-q)'}"><ha-icon icon="${esc(m.icon)}"></ha-icon></button>
           <button type="button" class="open" data-act="open" aria-label="Open ${esc(m.name)}">
-            <span class="txt"><span class="name">${esc(m.name)}</span><span class="state">${esc(m.state)}</span></span>
+            <span class="txt"><span class="name">${esc(m.name)}</span><span class="state">${esc(m.state)}${m.temp ? `<span class="tin"> · ${esc(m.temp)}</span>` : ''}</span></span>
             ${m.temp ? `<span class="temp"><ha-icon icon="${ccIcon('thermometer', 'mdi:thermometer')}"></ha-icon>${esc(m.temp)}</span>` : ''}
             ${m.open ? `<ha-icon class="chev" icon="${ccIcon('chevron-right', 'mdi:chevron-right')}"></ha-icon>` : ''}
           </button>
@@ -2972,14 +3001,14 @@
       stub: (ids) => ({ entity: ids.find((e) => e.startsWith('climate.')) || 'zone.home' }),
       schema: (c) => {
         const d = String(c.entity || '').split('.')[0];
-        const s = [{ name: 'entity', required: true, selector: { entity: {} } }, { name: 'name', selector: { text: {} } }, { name: 'icon', selector: { icon: {} } }];
+        const s = [{ name: 'entity', required: true, selector: { entity: {} } }, { name: 'name', selector: { text: {} } }, { name: 'icon', selector: { icon: {} } }, { name: 'popup', selector: { text: {} } }];
         if (d === 'lock') s.push({ name: 'alarm', selector: { entity: { domain: 'alarm_control_panel' } } }, { name: 'alert_when_unlocked', selector: { boolean: {} } });
         if (d === 'alarm_control_panel') s.push({ name: 'modes', selector: { select: { multiple: true, options: Object.keys(ALARM_MODES).map((k) => ({ value: k, label: ALARM_MODES[k].label })) } } }, { name: 'code', selector: { text: { type: 'password' } } });
         if (d === 'zone' || d === 'person') s.push({ name: 'people', selector: { entity: { multiple: true, domain: 'person' } } });
         return s;
       },
-      labels: { entity: 'Entity', name: 'Name', icon: 'Icon', alarm: 'Alarm', alert_when_unlocked: 'Always warn when unlocked', modes: 'Alarm buttons', code: 'Alarm code', people: 'People' },
-      helpers: { entity: 'Climate, lock, alarm, or zone.home for who is home.', alarm: 'Turns the card red while the door is unlocked and this alarm is on.', people: 'Optional. Leave empty to use everyone in the zone.', code: 'Only if your alarm needs a code to arm or disarm.' }
+      labels: { entity: 'Entity', name: 'Name', icon: 'Icon', popup: 'Pop-up to open', alarm: 'Alarm', alert_when_unlocked: 'Always warn when unlocked', modes: 'Alarm buttons', code: 'Alarm code', people: 'People' },
+      helpers: { popup: 'Optional. The Bubble pop-up hash, for example #liam, opened by tapping the card. Leave empty to open the details instead.', entity: 'Climate, lock, alarm, a person, or zone.home for who is home.', alarm: 'Turns the card red while the door is unlocked and this alarm is on.', people: 'Optional. Leave empty to use everyone in the zone.', code: 'Only if your alarm needs a code to arm or disarm.' }
     },
     {
       tag: 'cranberry-room-card', cls: CranberryRoomCard, name: 'Cranberry room',
@@ -2999,7 +3028,7 @@
         ] }
       ],
       labels: { entity: 'Room lights (group, light or switch)', name: 'Name', icon: 'Icon', temperature: 'Temperature sensor', popup: 'Pop-up to open', lights: 'Lights to count', alerts: 'Turn brick when open', button_entity: 'Toggle', button_name: 'Name', button_icon: 'Icon' },
-      helpers: { popup: 'The Bubble pop-up hash, for example #living-room. Leave empty to open the details instead.', lights: 'Optional. Leave empty to use the members of the group.', alerts: 'Optional. Doors, windows or locks in this room. While one is open or unlocked, the card turns brick and says which.', button_entity: 'Optional. A toggle you want on the room card itself, like a Lego light. Olive while it is on.' }
+      helpers: { popup: 'The Bubble pop-up hash, for example #living-room. Leave empty to open the details instead.', lights: 'Optional. Leave empty to use the members of the group.', alerts: 'Optional. Doors, windows or locks in this room. While one is open or unlocked, the card turns brick and says which.', button_entity: 'Optional. A toggle you want on the room card itself, like a Lego light. Olive while it is on. Left out when the card is as narrow as on a phone, so keep it in the room’s pop-up too.' }
     },
     {
       tag: 'cranberry-scene-card', cls: CranberrySceneCard, name: 'Cranberry scene',
