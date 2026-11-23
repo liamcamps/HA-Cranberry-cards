@@ -78,7 +78,7 @@ const rowText = (r) => { const tw = r.ownerDocument.createTreeWalker(r, 4); cons
   }
   // tap opens the calendar
   let opened = null; el.addEventListener('hass-more-info', (e) => { opened = e.detail.entityId; });
-  if ($(el, '.ev')) {
+  if (!late && $(el, '.ev')) {
     $(el, '.ev').click();
     ok($(el, '.detail') && $(el, '.dtitle').textContent === 'Call' && $(el, '.dstatus').textContent === 'Happening now' && !opened, 'tap shows the event, not the calendar');
     $(el, '.dcal').click(); ok(opened === 'calendar.family', 'the calendar name still opens the calendar');

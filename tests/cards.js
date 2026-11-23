@@ -101,6 +101,25 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   q(el, '.txt').click();
   ok(navTo === '#liam', 'tap opens the pop-up');
 
+  // people card: chips with photo, name and where; tap opens the pop-up
+  states['person.liam'] = S('person.liam', 'home', { friendly_name: 'Liam Camps', entity_picture: '/img/liam' });
+  states['person.mylou'] = S('person.mylou', 'work', { friendly_name: 'Mylou' });
+  el = make('cranberry-people-card', { people: [{ entity: 'person.liam', popup: '#liam' }, 'person.mylou'] });
+  const chips = [...el.shadowRoot.querySelectorAll('.chip')];
+  ok(chips.length === 2 && chips.map((c) => c.querySelector('b').textContent + ' ' + c.querySelector('span:not(.pic)').textContent).join() === 'Liam Home,Mylou Work', 'chips: names and where');
+  ok(chips[0].querySelector('img').getAttribute('src') === '/img/liam' && !chips[0].classList.contains('away') && chips[1].classList.contains('away') && chips[1].querySelector('ha-icon'), 'photo, icon without one, away faded');
+  let went = null, info = null; el.navigate = (p) => { went = p; }; el.addEventListener('hass-more-info', (e) => { info = e.detail.entityId; });
+  chips[0].click(); chips[1].click();
+  ok(went === '#liam' && info === 'person.mylou', 'tap: pop-up, or the details without one');
+  el = make('cranberry-people-card', { people: ['person.liam'], show_picture: 'icon', title: 'Home' });
+  ok(!q(el, 'img') && q(el, '.title').textContent === 'Home', 'icon on request, title');
+  const ped = w.document.createElement('cranberry-people-card-editor'); let pcfg = null;
+  ped.addEventListener('config-changed', (e) => { pcfg = e.detail.config; });
+  ped.setConfig({ people: [{ entity: 'person.liam', popup: '#liam' }, 'person.mylou'] });
+  ped.hass = hass(); w.document.body.appendChild(ped);
+  ped.querySelector('ha-form').dispatchEvent(new w.CustomEvent('value-changed', { detail: { value: Object.assign({}, ped._config, { 'popup:person.mylou': '#mylou' }) } }));
+  ok(JSON.stringify(pcfg.people) === JSON.stringify([{ entity: 'person.liam', popup: '#liam' }, { entity: 'person.mylou', popup: '#mylou' }]), 'editor: pop-up per person: ' + JSON.stringify(pcfg));
+
   // room alert: an open door turns the card brick and says which
   states['binary_sensor.balcony_door'] = S('binary_sensor.balcony_door', 'on', { friendly_name: 'Balcony door', device_class: 'door' });
   states['lock.front'] = S('lock.front', 'locked', { friendly_name: 'Front door' });

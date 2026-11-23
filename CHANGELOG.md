@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.31.0 (2026-11-23)
+
+- New **people card**: a title row with a chip per person. Each chip has the person's photo, name and where they are ("Liam · Home", "Mylou · Work"); the photo fades while they're away.
+  - Tapping a chip opens that person's pop-up, or their details if there is no pop-up.
+  - In the editor: the people, an optional title, photo or icon, and a pop-up per person.
+
 ## 2.30.0 (2026-11-23)
 
 - Status card for a person: shows the person's photo from Home Assistant by default, faded while they're away. **Picture → Icon** in the editor (`show_picture: icon`) shows the icon instead. Without a photo, the card shows the icon.

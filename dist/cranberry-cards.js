@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.30.0';
+  const VERSION = '2.31.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -2962,6 +2962,57 @@
   CranberryCalendarCard.needsEntity = false;
   CranberryCalendarCard.defaults = { days: 14, show_empty: 'fold', view: 'agenda', switcher: true, add_events: true, week_layout: 'time' };
 
+  // ---------------------------------------------------------------- people
+  // A title row with a chip per person: photo, name and where they are. Tap opens their pop-up.
+  class CranberryPeopleCard extends CranberryBase {
+    static get styles() {
+      return `
+      ha-card { background: none; box-shadow: none; border: 0; padding: 4px 0; }
+      .row { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
+      .title { font-size: 20px; font-weight: 600; margin-right: auto; padding-left: 4px; }
+      .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+      .title + .chips { justify-content: flex-end; }
+      .chip { height: 40px; box-sizing: border-box; padding: 4px 14px 4px 4px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-card); display: flex; align-items: center; gap: 10px; font-size: 14px; white-space: nowrap; }
+      .pic { width: 32px; height: 32px; border-radius: var(--cc-r-chip, 8px); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--tint); color: var(--ic); }
+      .pic img { width: 100%; height: 100%; object-fit: cover; display: block; transition: filter .3s ease, opacity .3s ease; }
+      .pic ha-icon { --mdc-icon-size: 18px; }
+      .away .pic img { filter: grayscale(.7); opacity: .7; }
+      .chip b { font-weight: 600; }
+      .chip span { color: var(--cc-muted); font-weight: 500; }
+    `;
+    }
+    getGridOptions() { return { columns: 'full', rows: 'auto' }; }
+    _people() {
+      return [].concat(this._config.people || []).map((x) => (typeof x === 'string' ? { entity: x } : x)).filter((x) => x && x.entity);
+    }
+    model() {
+      const c = this._config;
+      const people = this._people().map((p) => {
+        const st = this.st(p.entity), home = !!st && st.state === 'home';
+        const where = !st ? 'Unavailable' : home ? 'Home' : st.state === 'not_home' ? 'Away' : st.state === 'unknown' ? 'Unknown' : String(st.state).replace(/_/g, ' ').replace(/^./, (ch) => ch.toUpperCase());
+        return {
+          id: p.entity, popup: p.popup || '', home,
+          name: p.name || firstName(this.nm(p.entity)), where,
+          picture: c.show_picture !== 'icon' && st && st.attributes.entity_picture ? st.attributes.entity_picture : '',
+          icon: p.icon || ccIcon('user', 'mdi:account-outline')
+        };
+      });
+      return { title: c.title || '', people };
+    }
+    view(m) {
+      const chip = (p) => `<button type="button" class="chip${p.home ? '' : ' away'}" data-act="open" data-arg="${esc(p.id)}" aria-label="${esc(p.name + ', ' + p.where)}" style="--ic:${p.home ? 'var(--cc-o)' : 'var(--cc-q)'};--tint:${p.home ? 'var(--cc-o-t)' : 'var(--cc-q-t)'}">
+          <span class="pic">${p.picture ? `<img src="${esc(p.picture)}" alt="">` : `<ha-icon icon="${esc(p.icon)}"></ha-icon>`}</span><b>${esc(p.name)}</b><span>${esc(p.where)}</span></button>`;
+      return `<ha-card><div class="row">${m.title ? `<div class="title">${esc(m.title)}</div>` : ''}<div class="chips">${m.people.map(chip).join('')}</div></div></ha-card>`;
+    }
+    act(a, arg) {
+      if (a !== 'open') return;
+      const p = this._people().find((x) => x.entity === arg);
+      if (p && p.popup) this.navigate(p.popup); else this.moreInfo(arg);
+    }
+  }
+  CranberryPeopleCard.needsEntity = false;
+  CranberryPeopleCard.defaults = { show_picture: 'picture' };
+
   // ---------------------------------------------------------------- editors
   const makeEditor = (schema, labels, helpers, io) => class extends HTMLElement {
     setConfig(config) { this._config = io ? io.toForm(config) : Object.assign({}, config); this._render(); }
@@ -3133,6 +3184,39 @@
         note_for: 'The option that shows the note and the map, e.g. Elsewhere.',
         spot: 'Any entity with latitude and longitude, like sensor.car_parked_spot.'
       }
+    },
+    {
+      tag: 'cranberry-people-card', cls: CranberryPeopleCard, name: 'Cranberry people',
+      description: 'A title row with a chip per person: photo, name and where they are.',
+      stub: (ids) => ({ people: ids.filter((e) => e.startsWith('person.')).slice(0, 4) }),
+      // in YAML a person with a pop-up becomes { entity, popup }
+      io: {
+        toForm: (cfg) => {
+          const f = Object.assign({}, cfg);
+          f.people = [].concat(cfg.people || []).map((x) => {
+            if (x && typeof x === 'object') { if (x.popup) f['popup:' + x.entity] = x.popup; return x.entity; }
+            return x;
+          }).filter(Boolean);
+          return f;
+        },
+        fromForm: (f) => {
+          const cfg = {};
+          Object.keys(f).forEach((k) => { if (k.indexOf('popup:') !== 0) cfg[k] = f[k]; });
+          if (f.people) cfg.people = f.people.map((id) => (f['popup:' + id] ? { entity: id, popup: f['popup:' + id] } : id));
+          return cfg;
+        }
+      },
+      schema: (f) => [
+        { name: 'people', selector: { entity: { multiple: true, domain: 'person' } } },
+        { name: 'title', selector: { text: {} } },
+        { name: 'show_picture', selector: { select: { mode: 'box', options: [{ value: 'picture', label: 'Photo' }, { value: 'icon', label: 'Icon' }] } } },
+        ...((f && f.people) || []).length ? [{
+          type: 'expandable', name: 'popups', flatten: true, title: 'Pop-up per person', icon: 'mdi:map-marker-outline',
+          schema: f.people.map((id) => ({ name: 'popup:' + id, title: id.replace(/^person\./, '').replace(/_/g, ' ').replace(/^./, (ch) => ch.toUpperCase()), selector: { text: {} } }))
+        }] : []
+      ],
+      labels: { people: 'People', title: 'Title', show_picture: 'Picture' },
+      helpers: { title: 'Optional. Shown on the left, the chips on the right.', show_picture: 'The photo set for each person in Home Assistant. Without a photo the chip shows the icon.', popups: 'A Bubble pop-up hash per person, for example #liam. Leave empty to open the details instead.' }
     },
     {
       tag: 'cranberry-calendar-card', cls: CranberryCalendarCard, name: 'Cranberry calendar',
