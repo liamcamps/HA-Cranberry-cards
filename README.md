@@ -1,6 +1,6 @@
 # Cranberry Canvas for Home Assistant
 
-Nine dashboard cards in a warm, calm palette where every colour means
+Ten dashboard cards in a warm, calm palette where every colour means
 one thing: cranberry for the house, olive for running, harbour for cool and wet, ochre for
 caution, quail for off, and brick only when something needs you. Every card has a visual editor.
 
@@ -17,6 +17,7 @@ so HACS can install and update it too.
 | Washing machine (localthings): time left, phase, done | `custom:cranberry-washer-card` |
 | Waste collection (Afvalwijzer): which bin goes out next | `custom:cranberry-waste-card` |
 | Car: where it is parked, with a map | `custom:cranberry-car-card` |
+| Calendar: the coming days from your calendars, with date blocks like the home card | `custom:cranberry-calendar-card` |
 | Thermostat: the card's colour, the setpoint and one sentence; every mode, heat/cool, presets, fan, swing; full or compact | `custom:cranberry-thermostat-card` |
 
 ## Install
@@ -81,6 +82,14 @@ type: custom:cranberry-thermostat-card
 entity: climate.living_room
 size: compact
 popup: '#living-room'      # optional: tapping the room name opens this pop-up
+```
+
+```yaml
+# the calendar, for example inside a Bubble pop-up #calendar
+type: custom:cranberry-calendar-card
+calendars: [calendar.family, calendar.liam, calendar.mylou]   # colours follow this order
+days: 14
+show_empty: fold           # fold | hide
 ```
 
 ```yaml

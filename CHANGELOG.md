@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.24.0 (2026-11-23)
+
+- New **calendar card**: the coming days from one or more calendars, with the same date blocks as
+  the home card.
+  - Today is in cranberry.
+  - Each event gets a dot in its calendar's colour: cranberry, olive, harbour, ochre, quail, in the order you pick them.
+  - Days without plans fold into one line ("Thu 26 – Sun 29 · Nothing planned"), or are left out.
+  - Events spanning midnight show on both days ("22:00 →", "Until 06:00"). Multi-day all-day events are numbered ("All day · 2 of 3").
+  - What is happening now reads "Now, until 18:30".
+  - Tap an event to open its calendar.
+- Home card: new **Pop-up to open** option under Coming up. Tapping Coming up opens it, for example a `#calendar` pop-up with the calendar card.
+
 ## 2.23.0 (2026-11-23)
 
 - The palette is official, and every colour means one thing:

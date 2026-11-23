@@ -350,6 +350,12 @@ const wait = () => new Promise((r) => setTimeout(r, 10));
     ok($('.agenda') && $('.stats'), 'show: also when stacked');
     card.setConfig(Object.assign({}, base, { issues: [], weather_details: 'hide', coming_up: 'hide', calendars: ['calendar.family'] })); card.hass = Object.assign({}, h); await wait();
     ok(!$('.agenda') && !$('.stats'), 'hidden by default and on hide');
+    // with a pop-up, Coming up opens it
+    card.setConfig(Object.assign({}, base, { issues: [], coming_up: 'show', calendars: ['calendar.family'], calendar_popup: '#calendar' })); card.hass = Object.assign({}, h); await wait(); await wait();
+    let navd = 0, pushed = ''; w.addEventListener('location-changed', () => navd++);
+    const realPush = w.history.pushState; w.history.pushState = (a, b, url) => { pushed = url; };
+    $('.ev').click(); w.history.pushState = realPush;
+    ok(/#calendar$/.test(pushed) && navd === 1 && $('button.k') && $('button.k').getAttribute('data-nav') === '#calendar', 'coming up opens the calendar pop-up: ' + [w.location.hash, navd, !!$('button.k'), $$('.ev').length, $('.agenda') && $('.agenda').innerHTML.slice(0,160)].join(' | '));
     // nothing planned
     h.callApi = async () => [];
     card.hass = Object.assign({}, h); card.setConfig(Object.assign({}, base, { issues: [], coming_up: 'show', calendars: ['calendar.family'] })); await wait(); await wait();

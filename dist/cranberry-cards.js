@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.23.0';
+  const VERSION = '2.24.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -288,6 +288,7 @@
     .agenda { flex: 1; display: flex; flex-direction: column; gap: 8px; margin-top: 14px; min-height: 0; }
     .agenda .k, .stat .k { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--chc-sub); }
     .agenda .k { margin-bottom: 2px; }
+    .agenda button.k, .agenda button.none { align-self: flex-start; text-align: left; }
     .ev { display: flex; align-items: center; gap: 12px; max-width: 100%; text-align: left; }
     .ev .day { width: 44px; height: 48px; flex-shrink: 0; border-radius: var(--cc-r-ctl, 12px); background: rgba(242, 236, 224, 0.12); display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .ev .day small { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--chc-sub); line-height: 12px; }
@@ -985,7 +986,7 @@
                   ${this._art(m.cond, 44)}<span class="serif" style="color:${m.tempCol}">${round(m.temp)}°</span>
                 </button>
               </div>
-              ${m.agenda ? `<div class="agenda"><span class="k">Coming up</span>${m.agenda.length ? m.agenda.map((e) => `<button class="ev" data-entity="${esc(e.id)}" aria-label="${esc(e.aria)}"><span class="day"><small>${esc(e.wd)}</small><span class="serif">${e.n}</span></span><span class="txt"><span class="what">${esc(e.what)}</span><span class="when">${esc(e.when)}</span></span></button>`).join('') : '<span class="none">Nothing planned this week.</span>'}</div>` : ''}
+              ${m.agenda ? `<div class="agenda">${c.calendar_popup ? `<button class="k" data-nav="${esc(c.calendar_popup)}" aria-label="Open the calendar">Coming up</button>` : '<span class="k">Coming up</span>'}${m.agenda.length ? m.agenda.map((e) => `<button class="ev" ${c.calendar_popup ? `data-nav="${esc(c.calendar_popup)}"` : `data-entity="${esc(e.id)}"`} aria-label="${esc(e.aria)}"><span class="day"><small>${esc(e.wd)}</small><span class="serif">${e.n}</span></span><span class="txt"><span class="what">${esc(e.what)}</span><span class="when">${esc(e.when)}</span></span></button>`).join('') : (c.calendar_popup ? `<button class="none" data-nav="${esc(c.calendar_popup)}">Nothing planned this week.</button>` : '<span class="none">Nothing planned this week.</span>')}</div>` : ''}
               <div class="stack">
                 ${m.issues.length || m.bins || m.lamps ? `<div class="chips">${m.issues.length ? `<button class="issue" data-entity="${esc(m.issues[0].id)}"><span class="n">${m.issues.length}</span><span>${esc(issueText)}</span></button>` : ''}${m.bins ? `<button class="bins" data-bins="1" aria-label="${esc(m.bins.text)}"><span class="n">${m.bins.colours.map((col) => `<svg width="${m.bins.colours.length > 1 ? 17 : 20}" height="${m.bins.colours.length > 1 ? 17 : 20}" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 13a1.5 1.5 0 0 1-1.5 1.4h-7A1.5 1.5 0 0 1 7 20zM4.5 5h15M10 3h4" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:${col}"></path><path d="M7.4 10h9.2l-.7 10H8.1z" style="fill:${col}"></path></svg>`).join('')}</span><span>${esc(m.bins.text)}</span></button>` : ''}${m.lamps ? `<button class="lamps" data-lights aria-haspopup="dialog" aria-expanded="${!!this._menu}"><span class="n">${this._icon(I.bulb, 16)}${m.lamps.n}</span><span>${esc(m.lamps.text)}</span>${this._icon(I.chev, 16)}</button>` : ''}</div>` : ''}
                 ${c.home_text ? `<p>${esc(m.homeText)}</p>` : ''}
@@ -1017,9 +1018,16 @@
       if (!this._wired) {
         this._wired = true;
         // one set of listeners for the whole card; they survive in-place updates
-        const find = (ev) => ev.composedPath().find((el) => el.getAttribute && ['data-bins', 'data-entity', 'data-lights', 'data-close', 'data-off', 'data-alloff'].some((a) => el.hasAttribute(a)));
+        const find = (ev) => ev.composedPath().find((el) => el.getAttribute && ['data-bins', 'data-entity', 'data-lights', 'data-close', 'data-off', 'data-alloff', 'data-nav'].some((a) => el.hasAttribute(a)));
         const run = (el) => {
           const cfg = this._config, mm = this._m || {};
+          if (el.hasAttribute('data-nav')) {
+            // a pop-up hash like #calendar, or a dashboard path
+            const path = el.getAttribute('data-nav');
+            history.pushState(null, '', path.charAt(0) === '#' ? window.location.pathname + window.location.search + path : path);
+            window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));
+            return;
+          }
           if (el.hasAttribute('data-lights')) { this._menu = !this._menu; this._render(true); return; }
           if (el.hasAttribute('data-close')) { this._menu = false; this._render(true); return; }
           if (el.hasAttribute('data-off')) { this._hass.callService('homeassistant', 'turn_off', { entity_id: el.getAttribute('data-off') }); return; }
@@ -1069,7 +1077,8 @@
       schema: [
         { name: 'coming_up', selector: { select: { mode: 'dropdown', options: SHOW_OPTS } } },
         { name: 'calendars', selector: { entity: { multiple: true, domain: 'calendar' } } },
-        { name: 'coming_up_count', selector: { number: { min: 1, max: 5, step: 1, mode: 'slider' } } }
+        { name: 'coming_up_count', selector: { number: { min: 1, max: 5, step: 1, mode: 'slider' } } },
+        { name: 'calendar_popup', selector: { text: {} } }
       ]
     },
     {
@@ -1113,6 +1122,7 @@
     coming_up: 'Show coming up',
     calendars: 'Calendars',
     coming_up_count: 'How many days to show',
+    calendar_popup: 'Pop-up to open',
     show_clock: 'Show the clock',
     insight: 'Show the weather tip',
     match_row: 'As tall as the cards next to it',
@@ -1135,6 +1145,7 @@
     weather_details: 'High and low, rain chance, wind and sunrise or sunset, and a chart that uses the full height of the card. Desktop only leaves it out when the card stacks on a phone.',
     coming_up: 'The next events from your calendars under the clock, and the next bin collection. Desktop only leaves it out when the card stacks on a phone.',
     calendars: 'One or more calendars. Events from the coming week.',
+    calendar_popup: 'Optional. The Bubble pop-up hash, for example #calendar, opened by tapping Coming up. Leave empty to open the calendar’s details instead.',
     laundry_done: 'Shows a reminder while this is on or done.',
     laundry_done_at: 'Optional. A timestamp sensor or date-time helper. Without it, the card uses the moment the done sensor changed.',
     laundry_name: 'Defaults to “Washing machine”.',
@@ -2488,6 +2499,144 @@
   CranberryWasteCard.needsEntity = false;
   CranberryWasteCard.defaults = { size: 'large' };
 
+  // ---------------------------------------------------------------- calendar
+  // The coming days from one or more calendars, with the same date blocks as the home card:
+  // one block per day, today in cranberry, days without plans folded into one line.
+  const CAL_COLOURS = ['var(--cc-c)', 'var(--cc-o)', 'var(--cc-h)', 'var(--cc-ochre)', 'var(--cc-q)'];
+  // the same colours, lifted so a small dot still shows on a dark card
+  const CAL_DOTS = ['#B8565B', '#8C7F45', '#8FA1A6', '#C99A4A', '#A9AFB1'];
+  class CranberryCalendarCard extends CranberryBase {
+    static get styles() {
+      return `
+      ha-card { padding: 12px 16px 8px; display: flex; flex-direction: column; }
+      .title { font-size: 17px; font-weight: 700; padding: 4px 0 8px; }
+      .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 2px 2px 10px; border-bottom: 1px solid var(--cc-rule); }
+      .legend span { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--cc-muted); }
+      .dot { width: 8px; height: 8px; border-radius: 4px; flex-shrink: 0; background: var(--dot); }
+      .day { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; }
+      .day + .day, .legend + .day { border-top: 1px solid var(--cc-rule); }
+      .legend + .day { border-top: 0; }
+      .block { width: 48px; height: 52px; flex-shrink: 0; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-raise); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      .block small { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--cc-muted); line-height: 12px; }
+      .block b { font-family: Fraunces, Georgia, serif; font-variation-settings: 'SOFT' 100; font-weight: 400; letter-spacing: -0.03em; font-size: 26px; line-height: 28px; }
+      .today .block { background: var(--cc-c); color: var(--cc-on); }
+      .today .block small { color: color-mix(in srgb, var(--cc-on) 75%, var(--cc-c)); }
+      .evs { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; padding-top: 4px; }
+      .ev { display: flex; align-items: baseline; gap: 12px; min-height: 26px; text-align: left; width: 100%; }
+      .when { width: 132px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--cc-muted); white-space: nowrap; }
+      .when .dot { align-self: center; }
+      .ev.now .when { color: var(--cc-text); font-weight: 700; }
+      .what { flex: 1; min-width: 0; font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .what small { font-size: 16px; color: var(--cc-muted); }
+      .free { display: flex; align-items: center; gap: 14px; padding: 10px 0; font-size: 14px; color: var(--cc-muted); }
+      .free b { width: 48px; flex-shrink: 0; text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+      .free.range b { width: auto; min-width: 48px; }
+      .empty { padding: 16px 2px; font-size: 15px; color: var(--cc-muted); }
+      ha-card { --cc-rule: color-mix(in srgb, var(--cc-text) 12%, transparent); --cc-raise: color-mix(in srgb, var(--cc-text) 7%, transparent); }
+      @media (max-width: 480px) { .when { width: 104px; } }
+    `;
+    }
+    getGridOptions() { return { columns: 12, rows: 'auto', min_columns: 6 }; }
+    connectedCallback() { this._tick = setInterval(() => this._refresh(), 60000); this._refresh(); }
+    disconnectedCallback() { clearInterval(this._tick); }
+    setConfig(config) { super.setConfig(config); this._at = 0; this._events = null; this._refresh(); }
+    set hass(h) { const first = !this._hass; this._hass = h; if (first) this._refresh(); this._update(); }
+    _ids() { return [].concat(this._config.calendars || []).map((x) => (typeof x === 'string' ? x : x && x.entity)).filter(Boolean); }
+    _refresh() {
+      // the clock moves every minute; the calendars are asked again every 10 minutes
+      if (!this._hass || !this._config) return;
+      if (Date.now() - (this._at || 0) > 10 * 60000) this._fetch();
+      this._last = ''; this._update();
+    }
+    async _fetch() {
+      const h = this._hass, ids = this._ids();
+      if (!h || !h.callApi || !ids.length || this._busy) return;
+      this._busy = true; this._at = Date.now();
+      const start = new Date(); start.setHours(0, 0, 0, 0);
+      const end = new Date(start.getTime() + (this._days() + 1) * 86400000);
+      const out = [];
+      await Promise.all(ids.map(async (id) => {
+        try {
+          const evs = await h.callApi('GET', 'calendars/' + id + '?start=' + encodeURIComponent(start.toISOString()) + '&end=' + encodeURIComponent(end.toISOString()));
+          (evs || []).forEach((e) => out.push(Object.assign({ cal: id }, e)));
+        } catch (e) { /* a calendar that fails is left out */ }
+      }));
+      this._events = out; this._busy = false;
+      this._last = ''; this._update();
+    }
+    _days() { return Math.max(1, Math.min(31, Number(this._config.days) || 14)); }
+    _lang() { return (this._hass && this._hass.locale && this._hass.locale.language) || (this._hass && this._hass.language) || 'en'; }
+    _time(d) {
+      const f = this._hass && this._hass.locale && this._hass.locale.time_format;
+      const h12 = f === '12' ? true : f === '24' ? false : undefined;
+      return new Intl.DateTimeFormat(this._lang(), { hour: '2-digit', minute: '2-digit', hour12: h12 }).format(d);
+    }
+    model() {
+      const c = this._config, ids = this._ids(), now = new Date(), DAY = 86400000;
+      const day0 = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x.getTime(); };
+      const today = day0(now), n = this._days();
+      const colour = {}; ids.forEach((id, i) => { colour[id] = i % CAL_DOTS.length; });
+      const parse = (v) => {
+        if (!v) return null;
+        if (typeof v === 'object') return v.dateTime ? { d: new Date(v.dateTime), all: false } : (v.date ? { d: new Date(v.date + 'T00:00:00'), all: true } : null);
+        return /^\d{4}-\d{2}-\d{2}$/.test(v) ? { d: new Date(v + 'T00:00:00'), all: true } : { d: new Date(v), all: false };
+      };
+      const wd = (t) => new Intl.DateTimeFormat(this._lang(), { weekday: 'short' }).format(new Date(t)).replace(/\.$/, '');
+      const days = {};
+      for (let i = 0, d = today; i < n; i++, d = day0(d + DAY * 1.5)) days[d] = [];
+      (this._events || []).forEach((e) => {
+        const s = parse(e.start), en = parse(e.end);
+        if (!s || isNaN(s.d)) return;
+        let endT = en && !isNaN(en.d) ? en.d.getTime() : s.d.getTime() + (s.all ? DAY : 3600000);
+        if (endT <= s.d.getTime()) endT = s.d.getTime() + (s.all ? DAY : 60000);
+        if (endT <= now.getTime()) return;
+        const first = day0(s.d), last = day0(endT - 1), span = Math.round((last - first) / DAY) + 1;
+        for (let d = Math.max(first, today), k = Math.round((Math.max(first, today) - first) / DAY) + 1; d <= last; d = day0(d + DAY * 1.5), k++) {
+          if (!days[d]) continue;
+          let when, rank;
+          const ongoing = d === today && s.d <= now && endT > now.getTime();
+          if (s.all) { when = span > 1 ? 'All day · ' + k + ' of ' + span : 'All day'; rank = 0; }
+          else if (span === 1) { when = ongoing ? 'Now, until ' + this._time(new Date(endT)) : this._time(s.d); rank = 1; }
+          else if (d === first) { when = ongoing ? 'Now' : this._time(s.d) + ' →'; rank = 1; }
+          else if (d === last) { when = ongoing ? 'Now, until ' + this._time(new Date(endT)) : 'Until ' + this._time(new Date(endT)); rank = 0; }
+          else { when = ongoing ? 'Now' : 'All day'; rank = 0; }
+          days[d].push({ t: d === first ? s.d.getTime() : d, rank, when, now: ongoing && !s.all, what: e.summary || e.message || 'Busy', loc: e.location || '', id: e.cal, dot: CAL_DOTS[colour[e.cal] || 0] });
+        }
+      });
+      // a day per block; runs of free days fold into one line
+      const rows = [];
+      const fold = c.show_empty !== 'hide';
+      Object.keys(days).map(Number).sort((a, b) => a - b).forEach((d) => {
+        const evs = days[d].sort((a, b) => a.rank - b.rank || a.t - b.t);
+        if (evs.length) { rows.push({ d, today: d === today, wd: wd(d), n: new Date(d).getDate(), evs }); return; }
+        if (!fold) return;
+        const prev = rows[rows.length - 1], label = wd(d) + ' ' + new Date(d).getDate();
+        if (prev && prev.free && Math.round((d - prev.last) / DAY) === 1) { prev.to = label; prev.last = d; }
+        else rows.push({ free: true, from: label, to: '', d, last: d });
+      });
+      while (rows.length && rows[rows.length - 1].free) rows.pop();
+      const legend = ids.length > 1 ? ids.map((id) => ({ name: this.nm(id), dot: CAL_DOTS[colour[id]] })) : [];
+      return { title: c.title || '', legend, rows, loading: this._events == null && ids.length > 0, none: !ids.length };
+    }
+    view(m) {
+      const ev = (e) => `<button type="button" class="ev${e.now ? ' now' : ''}" data-act="open" data-arg="${esc(e.id)}"><span class="when"><span class="dot" style="--dot:${e.dot}"></span>${esc(e.when)}</span><span class="what">${esc(e.what)}${e.loc ? ` <small>· ${esc(e.loc)}</small>` : ''}</span></button>`;
+      const body = m.none ? '<div class="empty">Pick one or more calendars in the editor.</div>'
+        : m.loading ? '<div class="empty">Loading…</div>'
+        : !m.rows.length ? `<div class="empty">Nothing planned in the coming ${this._days()} days.</div>`
+        : m.rows.map((r) => r.free
+          ? `<div class="day free${r.to ? ' range' : ''}"><b>${esc(r.from)}${r.to ? ' – ' + esc(r.to) : ''}</b>Nothing planned</div>`
+          : `<div class="day${r.today ? ' today' : ''}"><span class="block"><small>${esc(r.wd)}</small><b>${r.n}</b></span><div class="evs">${r.evs.map(ev).join('')}</div></div>`).join('');
+      return `<ha-card>
+        ${m.title ? `<div class="title">${esc(m.title)}</div>` : ''}
+        ${m.legend.length ? `<div class="legend">${m.legend.map((l) => `<span><span class="dot" style="--dot:${l.dot}"></span>${esc(l.name)}</span>`).join('')}</div>` : ''}
+        ${body}
+      </ha-card>`;
+    }
+    act(a, arg) { if (a === 'open' && arg) this.moreInfo(arg); }
+  }
+  CranberryCalendarCard.needsEntity = false;
+  CranberryCalendarCard.defaults = { days: 14, show_empty: 'fold' };
+
   // ---------------------------------------------------------------- editors
   const makeEditor = (schema, labels, helpers) => class extends HTMLElement {
     setConfig(config) { this._config = Object.assign({}, config); this._render(); }
@@ -2657,6 +2806,19 @@
         note_for: 'The option that shows the note and the map, e.g. Elsewhere.',
         spot: 'Any entity with latitude and longitude, like sensor.car_parked_spot.'
       }
+    },
+    {
+      tag: 'cranberry-calendar-card', cls: CranberryCalendarCard, name: 'Cranberry calendar',
+      description: 'The coming days from your calendars, with the same date blocks as the home card.',
+      stub: (ids) => ({ calendars: ids.filter((e) => e.startsWith('calendar.')).slice(0, 3) }),
+      schema: [
+        { name: 'calendars', selector: { entity: { multiple: true, domain: 'calendar' } } },
+        { name: 'title', selector: { text: {} } },
+        { name: 'days', selector: { number: { min: 1, max: 31, step: 1, mode: 'slider' } } },
+        { name: 'show_empty', selector: { select: { mode: 'dropdown', options: [{ value: 'fold', label: 'Fold into one line' }, { value: 'hide', label: 'Leave out' }] } } }
+      ],
+      labels: { calendars: 'Calendars', title: 'Title', days: 'Days to show', show_empty: 'Days without plans' },
+      helpers: { calendars: 'The colours follow this order: cranberry, olive, harbour, ochre, quail.', title: 'Optional. Leave empty inside a pop-up, which has its own title.' }
     },
     {
       tag: 'cranberry-waste-card', cls: CranberryWasteCard, name: 'Cranberry waste collection',
