@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.26.0';
+  const VERSION = '2.27.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -2541,6 +2541,28 @@
       .wev.now { box-shadow: inset 0 0 0 1.5px var(--cc-text); }
       .wev.now small { color: var(--cc-text); }
       .col .none { font-size: 12px; color: var(--cc-muted); padding: 6px 2px; }
+      /* week on a time grid: hours down the side, events at their time, overlaps side by side */
+      .tg { display: grid; grid-template-columns: 44px repeat(7, minmax(0, 1fr)); padding: 10px 0 8px; }
+      .tg .hd { padding: 0 4px 8px; }
+      .tg .hd .block { width: 100%; height: 56px; }
+      .tg .ad { padding: 0 4px 6px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+      .tg .adl { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--cc-muted); padding-top: 6px; }
+      .tg .hd + .hd, .tg .ad + .ad, .tg .dc + .dc { border-left: 1px solid var(--cc-rule); }
+      .hrs { position: relative; }
+      .hrs span { position: absolute; right: 8px; transform: translateY(-50%); font-size: 11px; font-weight: 600; color: var(--cc-muted); font-variant-numeric: tabular-nums; }
+      .dc { position: relative; background-image: repeating-linear-gradient(to bottom, var(--cc-rule) 0 1px, transparent 1px var(--hh)); border-top: 1px solid var(--cc-rule); }
+      .te { position: absolute; box-sizing: border-box; padding: 0 2px 2px; display: flex; }
+      .te .wev { height: 100%; overflow: hidden; padding: 4px 6px; border-radius: 8px; }
+      .te .wev small { font-size: 10px; }
+      .te .wev b { font-size: 12px; line-height: 1.2; }
+      .te.short .wev { flex-direction: row; align-items: center; gap: 4px; padding: 0 6px; }
+      .te.short .wev b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .te.split .wev { padding-left: 5px; padding-right: 4px; }
+      .te.split.short .wev small { display: none; }
+      .nowline { position: absolute; left: -1px; right: 0; height: 2px; background: var(--cc-c); z-index: 2; pointer-events: none; }
+      .nowline::before { content: ''; position: absolute; left: -4px; top: -3px; width: 8px; height: 8px; border-radius: 4px; background: var(--cc-c); }
+      .ad .wev { padding: 4px 6px; }
+      .ad .wev b { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .foot { display: flex; justify-content: flex-end; padding: 10px 0 6px; }
       .add { height: 44px; padding: 0 18px 0 14px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-c); color: var(--cc-on); display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
       .add ha-icon { --mdc-icon-size: 18px; }
@@ -2692,7 +2714,10 @@
           // the week view has less room: just the time, "Now", or where it starts and ends
           const short = s.all ? 'All day' : ongoing ? 'Now' : when.replace(/^All day · .*/, 'All day');
           const ci = colour[e.cal] || 0;
-          days[d].push({ t: d === first ? s.d.getTime() : d, rank, when, short, now: ongoing && !s.all, what: e.summary || e.message || 'Busy', loc: e.location || '', id: e.cal, dot: CAL_DOTS[ci], tint: CAL_COLOURS[ci] });
+          // where it sits on the day, in minutes; a piece that fills the whole day goes in the all-day row
+          const sMin = s.all ? 0 : d === first ? Math.round((s.d.getTime() - d) / 60000) : 0;
+          const eMin = s.all ? 1440 : d === last ? Math.round((endT - d) / 60000) : 1440;
+          days[d].push({ t: d === first ? s.d.getTime() : d, rank, when, short, now: ongoing && !s.all, what: e.summary || e.message || 'Busy', loc: e.location || '', id: e.cal, dot: CAL_DOTS[ci], tint: CAL_COLOURS[ci], all: s.all || (sMin <= 0 && eMin >= 1440), sMin: Math.max(0, sMin), eMin: Math.min(1440, eMin), fromPrev: !s.all && d !== first, toNext: !s.all && d !== last });
         }
       });
       const keys = Object.keys(days).map(Number).sort((a, b) => a - b);
@@ -2702,6 +2727,28 @@
       const want = this._view || (c.view === 'week' ? 'week' : 'agenda');
       const view = want === 'week' && canWeek ? 'week' : 'agenda';
       const week = view === 'week' ? keys.slice(0, 7).map((d) => ({ d, today: d === today, wd: wd(d), n: new Date(d).getDate(), evs: days[d] })) : [];
+      let grid = null;
+      if (view === 'week' && c.week_layout !== 'list') {
+        const timed = [].concat(...week.map((r) => r.evs.filter((e) => !e.all)));
+        // from 07:00 to 22:00, wider when something starts earlier or ends later; a piece that only
+        // continues from yesterday or into tomorrow runs to the edge instead of stretching the grid
+        const from = Math.max(0, Math.min(7, ...timed.filter((e) => !e.fromPrev).map((e) => Math.floor(e.sMin / 60))));
+        const to = Math.min(24, Math.max(22, ...timed.filter((e) => !e.toNext).map((e) => Math.ceil(e.eMin / 60)), ...timed.map((e) => Math.ceil(e.sMin / 60) + (e.sMin % 60 ? 0 : 1))));
+        const cols = week.map((r) => {
+          const evs = r.evs.filter((e) => !e.all).map((e) => {
+            const sMin = Math.max(from * 60, Math.min(e.sMin, to * 60 - 20)), eMin = Math.min(to * 60, e.eMin);
+            return Object.assign({}, e, { sMin, eMin: Math.max(eMin, sMin + 20) });
+          }).sort((a, b) => a.sMin - b.sMin || b.eMin - a.eMin);
+          // group events that overlap, then give each a lane within its group
+          let group = [], groupEnd = -1;
+          const done = (g) => { const lanes = []; g.forEach((e) => { let i = lanes.findIndex((end) => end <= e.sMin); if (i < 0) { i = lanes.length; lanes.push(0); } lanes[i] = e.eMin; e.lane = i; }); g.forEach((e) => { e.lanes = lanes.length; }); };
+          evs.forEach((e) => { if (e.sMin >= groupEnd && group.length) { done(group); group = []; } group.push(e); groupEnd = Math.max(groupEnd, e.eMin); });
+          if (group.length) done(group);
+          const nowMin = r.today ? (now.getHours() * 60 + now.getMinutes()) : null;
+          return { allDay: r.evs.filter((e) => e.all), timed: evs, now: nowMin != null && nowMin >= from * 60 && nowMin <= to * 60 ? nowMin : null };
+        });
+        grid = { from, to, cols, hasAllDay: cols.some((x) => x.allDay.length) };
+      }
       // a day per block; runs of free days fold into one line
       const rows = [];
       const fold = c.show_empty !== 'hide';
@@ -2722,7 +2769,7 @@
         if (writable.indexOf(f.cal) < 0) f.cal = writable[0];
         form = Object.assign({}, f, { cals: writable.map((id) => ({ id, name: this.nm(id), dot: CAL_DOTS[colour[id]], tint: CAL_COLOURS[colour[id]], on: id === f.cal })) });
       }
-      return { title: c.title || '', legend, rows, week, view, form, canAdd: writable.length > 0, seg: c.switcher !== false && canWeek, loading: this._events == null && ids.length > 0, none: !ids.length };
+      return { title: c.title || '', legend, rows, week, grid, view, form, canAdd: writable.length > 0, seg: c.switcher !== false && canWeek, loading: this._events == null && ids.length > 0, none: !ids.length };
     }
     view(m) {
       const ev = (e) => `<button type="button" class="ev${e.now ? ' now' : ''}" data-act="open" data-arg="${esc(e.id)}"><span class="when"><span class="dot" style="--dot:${e.dot}"></span>${esc(e.when)}</span><span class="what">${esc(e.what)}${e.loc ? ` <small>· ${esc(e.loc)}</small>` : ''}</span></button>`;
@@ -2730,6 +2777,7 @@
       const block = (r) => `<span class="block"><small>${esc(r.wd)}</small><b>${r.n}</b></span>`;
       const body = m.none ? '<div class="empty">Pick one or more calendars in the editor.</div>'
         : m.loading ? '<div class="empty">Loading…</div>'
+        : m.view === 'week' && m.grid ? this._gridView(m)
         : m.view === 'week' ? `<div class="week">${m.week.map((r) => `<div class="col${r.today ? ' today' : ''}">${block(r)}${r.evs.length ? r.evs.map(wev).join('') : '<span class="none">Free</span>'}</div>`).join('')}</div>`
         : !m.rows.length ? `<div class="empty">Nothing planned in the coming ${this._days()} days.</div>`
         : m.rows.map((r) => r.free
@@ -2744,6 +2792,23 @@
         ${body}
         ${m.canAdd && !m.none && !m.loading ? `<div class="foot"><button type="button" class="add" data-act="new"><ha-icon icon="${ccIcon('plus', 'mdi:plus')}"></ha-icon>New event</button></div>` : ''}
       </ha-card>`;
+    }
+    _gridView(m) {
+      const g = m.grid, HH = 40, px = (min) => ((min - g.from * 60) / 60) * HH;
+      const hours = []; for (let h = g.from + 1; h < g.to; h++) hours.push(h);
+      const lbl = (h) => this._time(new Date(2000, 0, 1, h, 0));
+      const wev = (e) => `<button type="button" class="wev${e.now ? ' now' : ''}" style="--dot:${e.dot};--tint:color-mix(in srgb, ${e.tint} 24%, transparent)" data-act="open" data-arg="${esc(e.id)}" aria-label="${esc(e.what + ', ' + e.when)}"><small>${esc(e.short)}</small><b>${esc(e.what)}</b></button>`;
+      const head = m.week.map((r) => `<div class="hd${r.today ? ' today' : ''}"><span class="block"><small>${esc(r.wd)}</small><b>${r.n}</b></span></div>`).join('');
+      const allDay = g.hasAllDay ? `<div class="adl">All day</div>${g.cols.map((x) => `<div class="ad">${x.allDay.map(wev).join('')}</div>`).join('')}` : '';
+      const cols = g.cols.map((x) => `<div class="dc" style="height:${(g.to - g.from) * HH}px">${x.timed.map((e) => {
+        const top = px(e.sMin), h = Math.max(20, px(e.eMin) - top), w = 100 / e.lanes;
+        return `<div class="te${h < 44 ? ' short' : ''}${e.lanes > 1 ? ' split' : ''}" title="${esc(e.short + ' · ' + e.what)}" style="top:${top.toFixed(1)}px;height:${h.toFixed(1)}px;left:${(e.lane * w).toFixed(3)}%;width:${w.toFixed(3)}%">${wev(e)}</div>`;
+      }).join('')}${x.now != null ? `<span class="nowline" style="top:${px(x.now).toFixed(1)}px"></span>` : ''}</div>`).join('');
+      return `<div class="tg" style="--hh:${HH}px">
+        <div></div>${head}
+        ${allDay}
+        <div class="hrs">${hours.map((h) => `<span style="top:${px(h * 60)}px">${esc(lbl(h))}</span>`).join('')}</div>${cols}
+      </div>`;
     }
     _formView(f) {
       const v = (k) => esc(f[k] == null ? '' : f[k]);
@@ -2814,7 +2879,7 @@
     }
   }
   CranberryCalendarCard.needsEntity = false;
-  CranberryCalendarCard.defaults = { days: 14, show_empty: 'fold', view: 'agenda', switcher: true, add_events: true };
+  CranberryCalendarCard.defaults = { days: 14, show_empty: 'fold', view: 'agenda', switcher: true, add_events: true, week_layout: 'time' };
 
   // ---------------------------------------------------------------- editors
   const makeEditor = (schema, labels, helpers, io) => class extends HTMLElement {
@@ -3019,9 +3084,10 @@
         { name: 'show_empty', selector: { select: { mode: 'dropdown', options: [{ value: 'fold', label: 'Fold into one line' }, { value: 'hide', label: 'Leave out' }] } } },
         { name: 'view', selector: { select: { mode: 'box', options: [{ value: 'agenda', label: 'Agenda' }, { value: 'week', label: 'Week' }] } } },
         { name: 'switcher', selector: { boolean: {} } },
+        { name: 'week_layout', selector: { select: { mode: 'box', options: [{ value: 'time', label: 'At their time' }, { value: 'list', label: 'As a list per day' }] } } },
         { name: 'add_events', selector: { boolean: {} } }
       ],
-      labels: { calendars: 'Calendars', title: 'Title', days: 'Days to show in the agenda', show_empty: 'Days without plans', view: 'Start with', switcher: 'Show the Agenda / Week switch', add_events: 'Show “New event”' },
+      labels: { calendars: 'Calendars', title: 'Title', days: 'Days to show in the agenda', show_empty: 'Days without plans', view: 'Start with', switcher: 'Show the Agenda / Week switch', week_layout: 'Week', add_events: 'Show “New event”' },
       helpers: { calendars: 'The colours follow this order: cranberry, olive, harbour, ochre, quail.', title: 'Optional. Leave empty inside a pop-up, which has its own title.', view: 'Week shows the next seven days side by side. On a narrow screen the card always shows the agenda.', add_events: 'Only calendars that accept new events can be picked, like Local calendar and Google Calendar.', who: 'Pick the people who see a calendar. Leave it empty and everyone sees it.' }
     },
     {

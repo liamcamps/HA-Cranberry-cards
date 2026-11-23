@@ -95,6 +95,7 @@ days: 14
 show_empty: fold           # fold | hide
 view: agenda               # agenda | week: the view it opens on
 switcher: true             # the Agenda / Week switch
+week_layout: time          # time: events at their time, overlaps side by side | list
 add_events: true           # the New event button, for calendars that accept events
 ```
 

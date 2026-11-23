@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.27.0 (2026-11-23)
+
+- Calendar card: the week sits on a **time grid**. Hours run down the side and each event is placed and sized by when it starts and ends. Events that overlap sit side by side; when they share a slot, they show just their title.
+  - All-day events have their own row under the dates.
+  - A cranberry line marks the current time in today's column.
+  - The grid runs from 07:00 to 22:00 and stretches when something starts earlier or ends later. An overnight event runs to the bottom of its first day and the top of the next, without stretching the grid.
+  - The list per day is still there: **Week → As a list per day** in the editor (`week_layout: list`).
+
 ## 2.26.0 (2026-11-23)
 
 - Calendar card: **New event**. The button under the list opens a form: what, which calendar, the day (or all day), from and until, and where. It adds the event through Home Assistant's `calendar.create_event`.

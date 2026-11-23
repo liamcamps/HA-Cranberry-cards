@@ -93,7 +93,7 @@ const rowText = (r) => { const tw = r.ownerDocument.createTreeWalker(r, 4); cons
     ],
     'calendar.liam': [{ summary: 'Night shift', start: { dateTime: at(3, 22) }, end: { dateTime: at(4, 6) } }]
   };
-  el = await make({ calendars: ['calendar.family', 'calendar.liam'] });
+  el = await make({ calendars: ['calendar.family', 'calendar.liam'], week_layout: 'list' });
   ok(!$(el, '.week') && $$(el, '.seg button').map((b) => b.getAttribute('aria-pressed')).join() === 'true,false', 'starts on the agenda, switch shown');
   $$(el, '.seg button')[1].click();
   ok($(el, '.week') && $$(el, '.col').length === 7 && $(el, '.col.today'), 'switch to the week: seven columns, today marked');
@@ -103,8 +103,35 @@ const rowText = (r) => { const tw = r.ownerDocument.createTreeWalker(r, 4); cons
   ok($$(el, '.wev')[0].getAttribute('style').includes('color-mix(in srgb, var(--cc-c) 24%'), 'tinted by calendar');
   $$(el, '.seg button')[0].click();
   ok(!$(el, '.week') && $(el, '.day'), 'and back to the agenda');
-  el = await make({ calendars: ['calendar.family'], view: 'week' });
+  el = await make({ calendars: ['calendar.family'], view: 'week', week_layout: 'list' });
   ok($(el, '.week'), 'start with the week');
+
+  // week on a time grid
+  EV = {
+    'calendar.family': [
+      { summary: 'Dentist', start: { dateTime: at(1, 9) }, end: { dateTime: at(1, 10) } },
+      { summary: 'Call', start: { dateTime: at(1, 9) }, end: { dateTime: at(1, 9, 30) } },
+      { summary: 'Lunch', start: { dateTime: at(1, 12) }, end: { dateTime: at(1, 13) } },
+      { summary: 'Holiday', start: { date: ymd(2) }, end: { date: ymd(3) } },
+      { summary: 'Early run', start: { dateTime: at(3, 6) }, end: { dateTime: at(3, 7) } }
+    ],
+    'calendar.liam': [{ summary: 'Night shift', start: { dateTime: at(4, 22) }, end: { dateTime: at(5, 6) } }]
+  };
+  el = await make({ calendars: ['calendar.family', 'calendar.liam'], view: 'week' });
+  ok($(el, '.tg') && $$(el, '.dc').length === 7 && $$(el, '.tg .hd').length === 7, 'time grid with seven day columns');
+  const box = (name) => { const b = $$(el, '.te').find((x) => x.textContent.includes(name)); return b && b.getAttribute('style'); };
+  const num = (st, k) => parseFloat((st.match(new RegExp(k + ':(-?[0-9.]+)')) || [])[1]);
+  // the grid starts at 06:00 because of the early run; 40px an hour
+  ok(num(box('Dentist'), 'top') === 120 && num(box('Dentist'), 'height') === 40, 'placed at its time: ' + box('Dentist'));
+  ok(num(box('Dentist'), 'width') === 50 && num(box('Call'), 'width') === 50 && num(box('Dentist'), 'left') + num(box('Call'), 'left') === 50, 'same start: side by side');
+  ok(num(box('Lunch'), 'width') === 100, 'no overlap: full width');
+  ok(num(box('Call'), 'height') === 20 && $$(el, '.te').find((x) => x.textContent.includes('Call')).classList.contains('short'), 'a short event on one line');
+  ok($(el, '.adl') && $$(el, '.ad')[2].textContent.includes('Holiday'), 'all-day row');
+  ok($(el, '.hrs span').textContent === '07:00' && num($(el, '.dc').getAttribute('style'), 'height') === 680, 'from 06:00 to 23:00 (night shift ends past 22:00 that day): ' + $(el, '.dc').getAttribute('style'));
+  const shiftTop = box('Night shift');
+  ok(shiftTop && num(shiftTop, 'top') === 640, 'the night shift starts at 22:00 on its first day');
+  const nextDay = $$(el, '.dc')[5].textContent.includes('Night shift');
+  ok(nextDay, 'and continues the next morning');
   el._w = 400; el._last = ''; el._update();
   ok(!$(el, '.week') && !$(el, '.seg'), 'narrow: agenda, no switch');
   el = await make({ calendars: ['calendar.family'], switcher: false });
