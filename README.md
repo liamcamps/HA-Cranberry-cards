@@ -1,8 +1,11 @@
 # Cranberry Canvas for Home Assistant
 
-Nine dashboard cards and a matching theme in a warm, calm palette where every colour means
+Nine dashboard cards in a warm, calm palette where every colour means
 one thing: cranberry for the house, olive for running, harbour for cool and wet, ochre for
 caution, quail for off, and brick only when something needs you. Every card has a visual editor.
+
+The matching theme lives in its own repository, [HA-Cranberry](https://github.com/liamcamps/HA-Cranberry),
+so HACS can install and update it too.
 
 | Card | Type |
 | --- | --- |
@@ -20,7 +23,7 @@ caution, quail for off, and brick only when something needs you. Every card has 
 
 ### Cards, through HACS
 
-1. HACS → ⋮ → **Custom repositories** → `https://github.com/liamcamps/HA-Cranberry`,
+1. HACS → ⋮ → **Custom repositories** → `https://github.com/liamcamps/HA-Cranberry-cards`,
    type **Dashboard**.
 2. Search for **Cranberry Canvas cards** and download it. HACS adds the resource itself and
    shows an update whenever a new release is published.
@@ -31,12 +34,9 @@ Recommended with it: **Bubble Card** and **Navbar card** (HACS), and **Lucide Ic
 
 ### Theme
 
-HACS installs one kind of thing per repository, so the theme is copied by hand:
-
-1. Copy `themes/cranberry_canvas.yaml` to `/config/themes/`.
-2. Make sure `configuration.yaml` has `frontend:` → `themes: !include_dir_merge_named themes`.
-3. Developer tools → Actions → `frontend.reload_themes`, then Profile → Theme →
-   **Cranberry Canvas**.
+The theme has its own repository: add `https://github.com/liamcamps/HA-Cranberry` to HACS as
+type **Theme** and download **Cranberry Canvas theme**. Its
+[README](https://github.com/liamcamps/HA-Cranberry) has the one-time `configuration.yaml` step.
 
 ### Car card map (optional)
 
