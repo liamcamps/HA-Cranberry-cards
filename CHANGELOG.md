@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.24.1 (2026-11-23)
+
+- Home card: the temperature line is a smooth curve through every hour. It never overshoots, so a flat stretch stays flat and the curve doesn't dip below the coldest hour.
+- Home card: no more small rain marks under the temperature line. A trace of rain looked like a loose piece of line. When rain is coming, the chart already switches to rain bars.
+
 ## 2.24.0 (2026-11-23)
 
 - New **calendar card**: the coming days from one or more calendars, with the same date blocks as

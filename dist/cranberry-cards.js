@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.24.0';
+  const VERSION = '2.24.1';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -870,7 +870,27 @@
         mn = mid - half; mx = mid + half;
       }
       const pts = hours.map((x, i) => [25 + i * 50, 40 - ((x.temp ?? mn) - mn) / ((mx - mn) || 1) * 34]);
-      const line = hours.length > 1 ? 'M' + pts.map((p) => p[0] + ' ' + p[1].toFixed(1)).join('L') : '';
+      // a smooth line through every point that never overshoots (monotone cubic, Fritsch–Carlson),
+      // so a flat stretch stays flat and the line never dips below the coldest hour
+      const smooth = (P) => {
+        const n = P.length, d = [], m = [];
+        for (let i = 0; i < n - 1; i++) d.push((P[i + 1][1] - P[i][1]) / (P[i + 1][0] - P[i][0]));
+        m[0] = d[0]; m[n - 1] = d[n - 2];
+        for (let i = 1; i < n - 1; i++) m[i] = d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2;
+        for (let i = 0; i < n - 1; i++) {
+          if (d[i] === 0) { m[i] = 0; m[i + 1] = 0; continue; }
+          const a = m[i] / d[i], b = m[i + 1] / d[i], h = a * a + b * b;
+          if (h > 9) { const t = 3 / Math.sqrt(h); m[i] = t * a * d[i]; m[i + 1] = t * b * d[i]; }
+        }
+        const f = (v) => v.toFixed(1);
+        let out = 'M' + P[0][0] + ' ' + f(P[0][1]);
+        for (let i = 0; i < n - 1; i++) {
+          const dx = (P[i + 1][0] - P[i][0]) / 3;
+          out += 'C' + f(P[i][0] + dx) + ' ' + f(P[i][1] + m[i] * dx) + ' ' + f(P[i + 1][0] - dx) + ' ' + f(P[i + 1][1] - m[i + 1] * dx) + ' ' + P[i + 1][0] + ' ' + f(P[i + 1][1]);
+        }
+        return out;
+      };
+      const line = hours.length > 1 ? smooth(pts) : '';
       const area = line ? line + 'L' + pts[pts.length - 1][0] + ' 46L25 46Z' : '';
 
       // rain bars: 5-minute nowcast when it shows rain, otherwise hourly
@@ -892,7 +912,7 @@
       }
 
       // details: high and low, rain chance, wind, the next sunrise or sunset
-      let stats = null, rainMarks = '';
+      let stats = null;
       if (model.details) {
         stats = [];
         const t24 = (hourly ? fc.slice(0, 24) : fc.slice(0, 1)).map((f) => num(f.temperature)).concat(hourly ? [temp] : []).filter((v) => v != null);
@@ -910,13 +930,10 @@
           stats.push({ k: 'Wind', v: dir + Math.round(ws) + ' ' + (oa.wind_speed_unit || at.wind_speed_unit || 'km/h') });
         }
         if (!isNaN(rise) && !isNaN(set)) stats.push(rise < set ? { k: 'Sunrise', v: this._fmtTime(new Date(rise)) } : { k: 'Sunset', v: this._fmtTime(new Date(set)) });
-        // rain under the temperature line, per point
-        const maxMm = Math.max(2, ...hours.map((x) => x.mm || 0));
-        rainMarks = hours.map((x, i) => (x.mm > 0 ? `<rect x="${25 + i * 50 - 7}" y="${(46 - Math.max(1.5, x.mm / maxMm * 16)).toFixed(1)}" width="14" height="${Math.max(1.5, x.mm / maxMm * 16).toFixed(1)}" rx="2" style="fill:${BLUE};opacity:.8"></rect>` : '')).join('');
       }
 
       return Object.assign(model, {
-        stats, rainMarks,
+        stats,
         cond: atNight(cond, now.getTime()), unit: unit.replace('°', ''), temp, label: this._stateText(w), feels: feelsBits.join(' · '),
         tempCol: tempColour(this._toC(temp, unit) ?? 10),
         insight, icon, hours: hours.map((x) => Object.assign(x, { col: x.temp == null ? 'inherit' : tempColour(this._toC(x.temp, unit)) })),
@@ -964,7 +981,6 @@
              <div class="plot"><svg width="100%" height="34" viewBox="0 0 300 46" preserveAspectRatio="none" aria-hidden="true">
                <defs><linearGradient id="${g}" x1="0" x2="1" y1="0" y2="0">${stops}</linearGradient></defs>
                <path d="${m.area}" stroke="none" style="fill:url(#${g});opacity:.28"></path>
-               ${m.rainMarks || ''}
                <path d="${m.line}" fill="none" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" style="stroke:url(#${g})"></path>
              </svg></div>
              <div class="hours" style="grid-template-columns: repeat(${m.hours.length}, minmax(0,1fr))">${m.hours.map((x) => `<span class="hour"><b style="color:${x.col}">${round(x.temp)}°</b>${window.customIcons && window.customIcons.lucide ? `<ha-icon icon="lucide:${HOUR_LUCIDE[x.cond] || 'cloud'}" style="--mdc-icon-size:18px"></ha-icon>` : this._icon(HOUR_ICON[x.cond] || I.cloud)}<span>${esc(x.label)}</span></span>`).join('')}</div>
