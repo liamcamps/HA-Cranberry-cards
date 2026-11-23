@@ -90,6 +90,8 @@ type: custom:cranberry-calendar-card
 calendars: [calendar.family, calendar.liam, calendar.mylou]   # colours follow this order
 days: 14
 show_empty: fold           # fold | hide
+view: agenda               # agenda | week: the view it opens on
+switcher: true             # the Agenda / Week switch
 ```
 
 ```yaml

@@ -62,11 +62,11 @@ const rowText = (r) => { const tw = r.ownerDocument.createTreeWalker(r, 4); cons
 
   // folding runs of free days into one line
   EV = { 'calendar.family': [{ summary: 'A', start: { dateTime: at(0, 23, 59) }, end: { dateTime: at(0, 23, 59) } }, { summary: 'B', start: { dateTime: at(4, 10) }, end: { dateTime: at(4, 11) } }] };
-  el = await make({ calendars: ['calendar.family'], days: 6 });
+  el = await make({ calendars: ['calendar.family'], days: 7 });
   const free = $$(el, '.free').map(rowText);
   ok(free.length === 1 && / – /.test(free[0]), 'three free days in one line: ' + free.join(' | '));
   ok(!$(el, '.legend'), 'no legend for one calendar');
-  el = await make({ calendars: ['calendar.family'], days: 6, show_empty: 'hide' });
+  el = await make({ calendars: ['calendar.family'], days: 7, show_empty: 'hide' });
   ok(!$(el, '.free') && $$(el, '.day').length === 2, 'leave out free days');
 
   // happening now (skip in the last half hour of the day, when "now" would run past midnight)
@@ -83,7 +83,32 @@ const rowText = (r) => { const tw = r.ownerDocument.createTreeWalker(r, 4); cons
   // nothing at all
   EV = {};
   el = await make({ calendars: ['calendar.family'], days: 5 });
-  ok($(el, '.empty').textContent === 'Nothing planned in the coming 5 days.', 'nothing planned');
+  ok($(el, '.empty').textContent === 'Nothing planned in the coming 7 days.', 'nothing planned (at least a week)');
+
+  // week view
+  EV = {
+    'calendar.family': [
+      { summary: 'Dentist', start: { dateTime: at(1, 9) }, end: { dateTime: at(1, 9, 45) } },
+      { summary: 'Holiday', start: { date: ymd(2) }, end: { date: ymd(4) } }
+    ],
+    'calendar.liam': [{ summary: 'Night shift', start: { dateTime: at(3, 22) }, end: { dateTime: at(4, 6) } }]
+  };
+  el = await make({ calendars: ['calendar.family', 'calendar.liam'] });
+  ok(!$(el, '.week') && $$(el, '.seg button').map((b) => b.getAttribute('aria-pressed')).join() === 'true,false', 'starts on the agenda, switch shown');
+  $$(el, '.seg button')[1].click();
+  ok($(el, '.week') && $$(el, '.col').length === 7 && $(el, '.col.today'), 'switch to the week: seven columns, today marked');
+  const cols = $$(el, '.col').map((c) => [...c.querySelectorAll('.wev')].map((x) => x.querySelector('small').textContent + ' ' + x.querySelector('b').textContent).join(' / ') || c.querySelector('.none').textContent);
+  ok(cols[0] === 'Free' && cols[1] === '09:00 Dentist' && cols[2] === 'All day Holiday', 'week columns: ' + cols.slice(0, 3).join(' | '));
+  ok(cols[3] === 'All day Holiday / 22:00 → Night shift' && cols[4] === 'Until 06:00 Night shift', 'all day first, overnight on both days: ' + cols[3] + ' | ' + cols[4]);
+  ok($$(el, '.wev')[0].getAttribute('style').includes('color-mix(in srgb, var(--cc-c) 24%'), 'tinted by calendar');
+  $$(el, '.seg button')[0].click();
+  ok(!$(el, '.week') && $(el, '.day'), 'and back to the agenda');
+  el = await make({ calendars: ['calendar.family'], view: 'week' });
+  ok($(el, '.week'), 'start with the week');
+  el._w = 400; el._last = ''; el._update();
+  ok(!$(el, '.week') && !$(el, '.seg'), 'narrow: agenda, no switch');
+  el = await make({ calendars: ['calendar.family'], switcher: false });
+  ok(!$(el, '.seg') && !$(el, '.top'), 'switch can be hidden');
 
   console.log(pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);

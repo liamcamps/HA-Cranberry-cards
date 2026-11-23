@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.24.1';
+  const VERSION = '2.25.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -2526,12 +2526,25 @@
       return `
       ha-card { padding: 12px 16px 8px; display: flex; flex-direction: column; }
       .title { font-size: 17px; font-weight: 700; padding: 4px 0 8px; }
-      .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 2px 2px 10px; border-bottom: 1px solid var(--cc-rule); }
+      .top { display: flex; align-items: center; gap: 12px; min-height: 40px; padding: 0 0 10px; border-bottom: 1px solid var(--cc-rule); }
+      .legend { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 0 2px; }
+      .seg { display: flex; gap: 2px; padding: 4px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-raise); flex-shrink: 0; margin-left: auto; }
+      .seg button { height: 32px; padding: 0 14px; border-radius: var(--cc-r-chip, 8px); font-size: 13px; font-weight: 700; color: var(--cc-muted); }
+      .seg button[aria-pressed="true"] { background: var(--cc-card); color: var(--cc-text); box-shadow: 0 1px 2px rgba(35, 28, 26, .12); }
+      .week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin: 0 -5px; padding: 10px 0 8px; }
+      .col { min-width: 0; padding: 0 5px; display: flex; flex-direction: column; gap: 6px; min-height: 200px; }
+      .col + .col { border-left: 1px solid var(--cc-rule); }
+      .col .block { width: 100%; height: 56px; }
+      .wev { width: 100%; box-sizing: border-box; border-radius: 10px; background: var(--tint); border-left: 3px solid var(--dot); padding: 7px 8px 8px; display: flex; flex-direction: column; gap: 1px; text-align: left; }
+      .wev small { font-size: 11px; font-weight: 700; color: var(--cc-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .wev b { font-size: 13px; font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
+      .wev.now { box-shadow: inset 0 0 0 1.5px var(--cc-text); }
+      .wev.now small { color: var(--cc-text); }
+      .col .none { font-size: 12px; color: var(--cc-muted); padding: 6px 2px; }
       .legend span { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--cc-muted); }
       .dot { width: 8px; height: 8px; border-radius: 4px; flex-shrink: 0; background: var(--dot); }
       .day { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; }
-      .day + .day, .legend + .day { border-top: 1px solid var(--cc-rule); }
-      .legend + .day { border-top: 0; }
+      .day + .day { border-top: 1px solid var(--cc-rule); }
       .block { width: 48px; height: 52px; flex-shrink: 0; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-raise); display: flex; flex-direction: column; align-items: center; justify-content: center; }
       .block small { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--cc-muted); line-height: 12px; }
       .block b { font-family: Fraunces, Georgia, serif; font-variation-settings: 'SOFT' 100; font-weight: 400; letter-spacing: -0.03em; font-size: 26px; line-height: 28px; }
@@ -2553,8 +2566,15 @@
     `;
     }
     getGridOptions() { return { columns: 12, rows: 'auto', min_columns: 6 }; }
-    connectedCallback() { this._tick = setInterval(() => this._refresh(), 60000); this._refresh(); }
-    disconnectedCallback() { clearInterval(this._tick); }
+    connectedCallback() {
+      this._tick = setInterval(() => this._refresh(), 60000); this._refresh();
+      // the week needs room: narrower than this, the card shows the agenda
+      if (window.ResizeObserver && !this._ro) {
+        this._ro = new ResizeObserver((en) => { const w = Math.round(en[0].contentRect.width); if (Math.abs(w - (this._w || 0)) > 8) { this._w = w; this._last = ''; this._update(); } });
+      }
+      if (this._ro) this._ro.observe(this);
+    }
+    disconnectedCallback() { clearInterval(this._tick); if (this._ro) this._ro.disconnect(); this._view = null; }
     setConfig(config) { super.setConfig(config); this._at = 0; this._events = null; this._refresh(); }
     set hass(h) { const first = !this._hass; this._hass = h; if (first) this._refresh(); this._update(); }
     _ids() { return [].concat(this._config.calendars || []).map((x) => (typeof x === 'string' ? x : x && x.entity)).filter(Boolean); }
@@ -2580,7 +2600,7 @@
       this._events = out; this._busy = false;
       this._last = ''; this._update();
     }
-    _days() { return Math.max(1, Math.min(31, Number(this._config.days) || 14)); }
+    _days() { return Math.max(7, Math.min(31, Number(this._config.days) || 14)); }
     _lang() { return (this._hass && this._hass.locale && this._hass.locale.language) || (this._hass && this._hass.language) || 'en'; }
     _time(d) {
       const f = this._hass && this._hass.locale && this._hass.locale.time_format;
@@ -2616,14 +2636,24 @@
           else if (d === first) { when = ongoing ? 'Now' : this._time(s.d) + ' →'; rank = 1; }
           else if (d === last) { when = ongoing ? 'Now, until ' + this._time(new Date(endT)) : 'Until ' + this._time(new Date(endT)); rank = 0; }
           else { when = ongoing ? 'Now' : 'All day'; rank = 0; }
-          days[d].push({ t: d === first ? s.d.getTime() : d, rank, when, now: ongoing && !s.all, what: e.summary || e.message || 'Busy', loc: e.location || '', id: e.cal, dot: CAL_DOTS[colour[e.cal] || 0] });
+          // the week view has less room: just the time, "Now", or where it starts and ends
+          const short = s.all ? 'All day' : ongoing ? 'Now' : when.replace(/^All day · .*/, 'All day');
+          const ci = colour[e.cal] || 0;
+          days[d].push({ t: d === first ? s.d.getTime() : d, rank, when, short, now: ongoing && !s.all, what: e.summary || e.message || 'Busy', loc: e.location || '', id: e.cal, dot: CAL_DOTS[ci], tint: CAL_COLOURS[ci] });
         }
       });
+      const keys = Object.keys(days).map(Number).sort((a, b) => a - b);
+      keys.forEach((d) => days[d].sort((a, b) => a.rank - b.rank || a.t - b.t));
+      // which view: the switch, else the start view; the week needs at least 560px
+      const canWeek = !this._w || this._w >= 560;
+      const want = this._view || (c.view === 'week' ? 'week' : 'agenda');
+      const view = want === 'week' && canWeek ? 'week' : 'agenda';
+      const week = view === 'week' ? keys.slice(0, 7).map((d) => ({ d, today: d === today, wd: wd(d), n: new Date(d).getDate(), evs: days[d] })) : [];
       // a day per block; runs of free days fold into one line
       const rows = [];
       const fold = c.show_empty !== 'hide';
       Object.keys(days).map(Number).sort((a, b) => a - b).forEach((d) => {
-        const evs = days[d].sort((a, b) => a.rank - b.rank || a.t - b.t);
+        const evs = days[d];
         if (evs.length) { rows.push({ d, today: d === today, wd: wd(d), n: new Date(d).getDate(), evs }); return; }
         if (!fold) return;
         const prev = rows[rows.length - 1], label = wd(d) + ' ' + new Date(d).getDate();
@@ -2632,26 +2662,34 @@
       });
       while (rows.length && rows[rows.length - 1].free) rows.pop();
       const legend = ids.length > 1 ? ids.map((id) => ({ name: this.nm(id), dot: CAL_DOTS[colour[id]] })) : [];
-      return { title: c.title || '', legend, rows, loading: this._events == null && ids.length > 0, none: !ids.length };
+      return { title: c.title || '', legend, rows, week, view, seg: c.switcher !== false && canWeek, loading: this._events == null && ids.length > 0, none: !ids.length };
     }
     view(m) {
       const ev = (e) => `<button type="button" class="ev${e.now ? ' now' : ''}" data-act="open" data-arg="${esc(e.id)}"><span class="when"><span class="dot" style="--dot:${e.dot}"></span>${esc(e.when)}</span><span class="what">${esc(e.what)}${e.loc ? ` <small>· ${esc(e.loc)}</small>` : ''}</span></button>`;
+      const wev = (e) => `<button type="button" class="wev${e.now ? ' now' : ''}" style="--dot:${e.dot};--tint:color-mix(in srgb, ${e.tint} 24%, transparent)" data-act="open" data-arg="${esc(e.id)}" aria-label="${esc(e.what + ', ' + e.when)}"><small>${esc(e.short)}</small><b>${esc(e.what)}</b></button>`;
+      const block = (r) => `<span class="block"><small>${esc(r.wd)}</small><b>${r.n}</b></span>`;
       const body = m.none ? '<div class="empty">Pick one or more calendars in the editor.</div>'
         : m.loading ? '<div class="empty">Loading…</div>'
+        : m.view === 'week' ? `<div class="week">${m.week.map((r) => `<div class="col${r.today ? ' today' : ''}">${block(r)}${r.evs.length ? r.evs.map(wev).join('') : '<span class="none">Free</span>'}</div>`).join('')}</div>`
         : !m.rows.length ? `<div class="empty">Nothing planned in the coming ${this._days()} days.</div>`
         : m.rows.map((r) => r.free
           ? `<div class="day free${r.to ? ' range' : ''}"><b>${esc(r.from)}${r.to ? ' – ' + esc(r.to) : ''}</b>Nothing planned</div>`
-          : `<div class="day${r.today ? ' today' : ''}"><span class="block"><small>${esc(r.wd)}</small><b>${r.n}</b></span><div class="evs">${r.evs.map(ev).join('')}</div></div>`).join('');
+          : `<div class="day${r.today ? ' today' : ''}">${block(r)}<div class="evs">${r.evs.map(ev).join('')}</div></div>`).join('');
+      const seg = m.seg ? `<span class="seg" role="group" aria-label="View">${['agenda', 'week'].map((v) => `<button type="button" data-act="view" data-arg="${v}" aria-pressed="${m.view === v}">${v === 'agenda' ? 'Agenda' : 'Week'}</button>`).join('')}</span>` : '';
+      const legend = m.legend.length ? `<div class="legend">${m.legend.map((l) => `<span><span class="dot" style="--dot:${l.dot}"></span>${esc(l.name)}</span>`).join('')}</div>` : '';
       return `<ha-card>
         ${m.title ? `<div class="title">${esc(m.title)}</div>` : ''}
-        ${m.legend.length ? `<div class="legend">${m.legend.map((l) => `<span><span class="dot" style="--dot:${l.dot}"></span>${esc(l.name)}</span>`).join('')}</div>` : ''}
+        ${legend || seg ? `<div class="top">${legend}${seg}</div>` : ''}
         ${body}
       </ha-card>`;
     }
-    act(a, arg) { if (a === 'open' && arg) this.moreInfo(arg); }
+    act(a, arg) {
+      if (a === 'open' && arg) this.moreInfo(arg);
+      if (a === 'view') { this._view = arg; this._last = ''; this._update(); }
+    }
   }
   CranberryCalendarCard.needsEntity = false;
-  CranberryCalendarCard.defaults = { days: 14, show_empty: 'fold' };
+  CranberryCalendarCard.defaults = { days: 14, show_empty: 'fold', view: 'agenda', switcher: true };
 
   // ---------------------------------------------------------------- editors
   const makeEditor = (schema, labels, helpers) => class extends HTMLElement {
@@ -2830,11 +2868,13 @@
       schema: [
         { name: 'calendars', selector: { entity: { multiple: true, domain: 'calendar' } } },
         { name: 'title', selector: { text: {} } },
-        { name: 'days', selector: { number: { min: 1, max: 31, step: 1, mode: 'slider' } } },
-        { name: 'show_empty', selector: { select: { mode: 'dropdown', options: [{ value: 'fold', label: 'Fold into one line' }, { value: 'hide', label: 'Leave out' }] } } }
+        { name: 'days', selector: { number: { min: 7, max: 31, step: 1, mode: 'slider' } } },
+        { name: 'show_empty', selector: { select: { mode: 'dropdown', options: [{ value: 'fold', label: 'Fold into one line' }, { value: 'hide', label: 'Leave out' }] } } },
+        { name: 'view', selector: { select: { mode: 'box', options: [{ value: 'agenda', label: 'Agenda' }, { value: 'week', label: 'Week' }] } } },
+        { name: 'switcher', selector: { boolean: {} } }
       ],
-      labels: { calendars: 'Calendars', title: 'Title', days: 'Days to show', show_empty: 'Days without plans' },
-      helpers: { calendars: 'The colours follow this order: cranberry, olive, harbour, ochre, quail.', title: 'Optional. Leave empty inside a pop-up, which has its own title.' }
+      labels: { calendars: 'Calendars', title: 'Title', days: 'Days to show in the agenda', show_empty: 'Days without plans', view: 'Start with', switcher: 'Show the Agenda / Week switch' },
+      helpers: { calendars: 'The colours follow this order: cranberry, olive, harbour, ochre, quail.', title: 'Optional. Leave empty inside a pop-up, which has its own title.', view: 'Week shows the next seven days side by side. On a narrow screen the card always shows the agenda.' }
     },
     {
       tag: 'cranberry-waste-card', cls: CranberryWasteCard, name: 'Cranberry waste collection',

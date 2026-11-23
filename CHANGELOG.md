@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.25.0 (2026-11-23)
+
+- Calendar card: **week view**. The next seven days side by side, each topped by a date block (today in cranberry). Events are tinted by calendar, and what's happening now is outlined.
+  - An **Agenda / Week** switch at the top changes between the views.
+  - **Start with** in the editor picks the view the card opens on, and the switch can be hidden.
+  - Narrower than 560px, the card always shows the agenda.
+- Calendar card: the agenda shows at least seven days, so the week always has its data.
+
 ## 2.24.1 (2026-11-23)
 
 - Home card: the temperature line is a smooth curve through every hour. It never overshoots, so a flat stretch stays flat and the curve doesn't dip below the coldest hour.
