@@ -1,6 +1,11 @@
 # ---------------------------------------------------------------------------
 # Cranberry Canvas — a Home Assistant theme
-# Palette: Cranberry #591E21 · Canvas #E3DDCF · Olive #514718 · Quail #7D8689
+# Palette
+#   Colour    Cranberry #591E21 · Olive #514718 · Harbour #40606A · Quail #7D8689
+#             Brick #A8352F · Ochre #8E6420 · Mist #9CC3D6 · Sun #F0B85A (data only)
+#   Light     Canvas #E3DDCF page · Paper #EEE9DF cards · Ink #231C1A · Stone #6E6560
+#   Dark      Night #1B1513 page · Ember #2E2422 cards · Ember raised #3A2F2C
+#             Cream #F2ECE0 · Taupe #B5ABA0
 #
 # Install
 #   1. Save this file as  /config/themes/cranberry_canvas.yaml
@@ -15,10 +20,17 @@
 #     URL:  https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap
 #     Type: Stylesheet
 #
-# Colour rules (same as the design):
-#   cranberry = lights / scenes on      olive  = fine & running (locked, armed, heating, playing)
-#   quail     = off / idle              brick  = only when something needs you
+# Colour rules (same as the design): each colour means one thing
+#   cranberry = the house: lights and scenes on, selected, the home card
+#   olive     = running and fine: heating, playing, locked, armed
+#   harbour   = cool and wet: cooling, rain, water, info
+#   ochre     = caution: warnings, drying
+#   quail     = off and idle
+#   brick     = only when something needs you: a whole card turns brick,
+#               and on the cranberry home card it is a cream chip with brick text
 #
+# Version 4: the palette made official (harbour, ochre, paper, ember, stone,
+#   taupe), lighter cards in light mode, warm secondary text, brick for problems.
 # Version 3: also themes Home Assistant's own interface (buttons, dialogs,
 #   forms, chips, tooltips, tables, code editor, graphs) through its colour
 #   scales, so settings pages and more-info windows match the dashboard.
@@ -85,28 +97,32 @@ Cranberry Canvas:
       cc-canvas: "#E3DDCF"
       cc-olive: "#514718"
       cc-quail: "#7D8689"
-      cc-panel: "#D7D0BF"
+      cc-panel: "#EEE9DF"
       cc-ink: "#231C1A"
       cc-brick: "#A8352F"
+      cc-harbour: "#40606A"
+      cc-ochre-tone: "#8E6420"
+      cc-paper: "#EEE9DF"
+      cc-ember: "#2E2422"
 
       # Cranberry home card
       cranberry-home-card-background: "#591E21"
 
       # Bubble Card
-      bubble-main-background-color: "#D7D0BF"
-      bubble-secondary-background-color: "#ECE7DC"
+      bubble-main-background-color: "#EEE9DF"
+      bubble-secondary-background-color: "#E3DDCF"
       bubble-accent-color: "#591E21"
       bubble-icon-background-color: "rgba(125, 134, 137, 0.20)"
-      bubble-button-main-background-color: "#D7D0BF"
+      bubble-button-main-background-color: "#EEE9DF"
       bubble-button-icon-background-color: "rgba(125, 134, 137, 0.20)"
       bubble-light-color: "#591E21"
       bubble-light-white-color: "#591E21"
       bubble-sub-button-background-color: "rgba(227, 221, 207, 0.65)"
       bubble-pop-up-background-color: "rgba(227, 221, 207, 0.98)"
-      bubble-pop-up-main-background-color: "#D7D0BF"
+      bubble-pop-up-main-background-color: "#EEE9DF"
       bubble-backdrop-background-color: "rgba(35, 28, 26, 0.35)"
       bubble-horizontal-buttons-stack-background-color: "#591E21"
-      bubble-media-player-main-background-color: "#D7D0BF"
+      bubble-media-player-main-background-color: "#EEE9DF"
       bubble-media-player-slider-background-color: "rgba(81, 71, 24, 0.25)"
       bubble-media-player-icon-background-color: "rgba(125, 134, 137, 0.20)"
 
@@ -122,16 +138,16 @@ Cranberry Canvas:
 
       # Surfaces
       primary-background-color: "#E3DDCF"
-      secondary-background-color: "#D7D0BF"
+      secondary-background-color: "#EEE9DF"
       lovelace-background: "#E3DDCF"
       ha-panel-background: "#E3DDCF"
-      card-background-color: "#D7D0BF"
-      ha-card-background: "#D7D0BF"
-      ha-color-form-background: "#ECE7DC"
+      card-background-color: "#EEE9DF"
+      ha-card-background: "#EEE9DF"
+      ha-color-form-background: "#E3DDCF"
       ha-color-form-background-hover: "#F1EDE4"
       app-header-background-color: "#E3DDCF"
       app-header-text-color: "#231C1A"
-      sidebar-background-color: "#D7D0BF"
+      sidebar-background-color: "#EEE9DF"
       sidebar-text-color: "#231C1A"
       sidebar-icon-color: "#545C5F"
       sidebar-selected-text-color: "#591E21"
@@ -139,7 +155,7 @@ Cranberry Canvas:
 
       # Text and lines
       primary-text-color: "#231C1A"
-      secondary-text-color: "#545C5F"
+      secondary-text-color: "#6E6560"
       disabled-text-color: "#7D8689"
       divider-color: "rgba(35, 28, 26, 0.12)"
       outline-color: "rgba(35, 28, 26, 0.18)"
@@ -150,7 +166,7 @@ Cranberry Canvas:
       error-color: "#A8352F"
       warning-color: "#8E6420"
       success-color: "#514718"
-      info-color: "#5B6B70"
+      info-color: "#40606A"
 
       # Generic states
       state-active-color: "#591E21"
@@ -188,7 +204,7 @@ Cranberry Canvas:
       state-climate-heat-color: "#514718"
       state-climate-heat_cool-color: "#514718"
       state-climate-auto-color: "#514718"
-      state-climate-cool-color: "#5B6B70"
+      state-climate-cool-color: "#40606A"
       state-climate-dry-color: "#7D8689"
       state-climate-fan_only-color: "#7D8689"
       state-climate-off-color: "#7D8689"
@@ -231,7 +247,7 @@ Cranberry Canvas:
       energy-battery-out-color: "#591E21"
       energy-battery-in-color: "#7A3A3D"
       energy-gas-color: "#8E6420"
-      energy-water-color: "#5B6B70"
+      energy-water-color: "#40606A"
 
       # Tooltips, toggles, sliders
       switch-checked-color: "#591E21"
@@ -285,7 +301,7 @@ Cranberry Canvas:
       ha-color-orange-20: "#452C00"
       ha-color-orange-30: "#674301"
       ha-color-orange-40: "#885C11"
-      ha-color-orange-50: "#A9782C"
+      ha-color-orange-50: "#8E6420"
       ha-color-orange-60: "#C1924F"
       ha-color-orange-70: "#D6AD75"
       ha-color-orange-80: "#E9C99F"
@@ -305,7 +321,7 @@ Cranberry Canvas:
 
       # Text, links and focus
       ha-color-text-primary: "#231C1A"
-      ha-color-text-secondary: "#545C5F"
+      ha-color-text-secondary: "#6E6560"
       ha-color-text-disabled: "#7D8689"
       ha-color-text-link: "#591E21"
       ha-color-focus: "#591E21"
@@ -318,13 +334,13 @@ Cranberry Canvas:
       ha-color-on-success-loud: "#F2ECE0"
 
       # Surfaces: dialogs, menus, pickers, tooltips
-      ha-color-surface-default: "#ECE7DC"
+      ha-color-surface-default: "#EEE9DF"
       ha-color-surface-low: "#E3DDCF"
-      ha-color-surface-lower: "#D7D0BF"
+      ha-color-surface-lower: "#EEE9DF"
       ha-color-on-surface-default: "#231C1A"
       ha-color-border-neutral-quiet: "rgba(35, 28, 26, 0.12)"
-      ha-dialog-surface-background: "#ECE7DC"
-      mdc-theme-surface: "#ECE7DC"
+      ha-dialog-surface-background: "#EEE9DF"
+      mdc-theme-surface: "#EEE9DF"
       mdc-theme-on-surface: "#231C1A"
       mdc-dialog-scrim-color: "rgba(35, 28, 26, 0.35)"
       mdc-dialog-heading-ink-color: "#231C1A"
@@ -338,23 +354,23 @@ Cranberry Canvas:
       mdc-theme-on-secondary: "#F2ECE0"
       mdc-button-outline-color: "rgba(35, 28, 26, 0.25)"
       mdc-ripple-color: "#591E21"
-      ha-button-neutral-color: "#D7D0BF"
+      ha-button-neutral-color: "#E3DDCF"
 
       # Text fields, dropdowns, checkboxes
-      ha-color-form-background-disabled: "#D7D0BF"
-      input-fill-color: "#ECE7DC"
+      ha-color-form-background-disabled: "#E3DDCF"
+      input-fill-color: "#E3DDCF"
       input-ink-color: "#231C1A"
-      input-label-ink-color: "#545C5F"
+      input-label-ink-color: "#6E6560"
       input-idle-line-color: "rgba(35, 28, 26, 0.25)"
       input-hover-line-color: "#591E21"
       input-dropdown-icon-color: "#545C5F"
       input-outlined-idle-border-color: "rgba(35, 28, 26, 0.25)"
       input-outlined-hover-border-color: "#591E21"
-      input-disabled-fill-color: "#D7D0BF"
+      input-disabled-fill-color: "#E3DDCF"
       input-disabled-ink-color: "#7D8689"
       input-disabled-line-color: "rgba(35, 28, 26, 0.12)"
-      mdc-text-field-fill-color: "#ECE7DC"
-      mdc-select-fill-color: "#ECE7DC"
+      mdc-text-field-fill-color: "#E3DDCF"
+      mdc-select-fill-color: "#E3DDCF"
       mdc-checkbox-unchecked-color: "#545C5F"
       mdc-radio-unchecked-color: "#545C5F"
 
@@ -362,28 +378,28 @@ Cranberry Canvas:
       chip-background-color: "rgba(35, 28, 26, 0.10)"
       ha-assist-chip-filled-container-color: "rgba(35, 28, 26, 0.10)"
       ha-assist-chip-active-container-color: "rgba(89, 30, 33, 0.18)"
-      label-badge-background-color: "#ECE7DC"
+      label-badge-background-color: "#EEE9DF"
       label-badge-text-color: "#231C1A"
       label-badge-red: "#A8352F"
       label-badge-green: "#514718"
-      label-badge-yellow: "#A9782C"
+      label-badge-yellow: "#8E6420"
       label-badge-blue: "#7D8689"
       label-badge-grey: "#7D8689"
-      mdc-tab-text-label-color-default: "#545C5F"
+      mdc-tab-text-label-color-default: "#6E6560"
 
       # Tables (settings pages) and code
-      data-table-background-color: "#D7D0BF"
-      table-header-background-color: "#D7D0BF"
+      data-table-background-color: "#EEE9DF"
+      table-header-background-color: "#EEE9DF"
       table-row-background-color: "#E3DDCF"
       table-row-alternative-background-color: "#DED8CA"
       markdown-code-background-color: "rgba(35, 28, 26, 0.07)"
       scrollbar-thumb-color: "rgba(35, 28, 26, 0.25)"
       codemirror-keyword: "#591E21"
-      codemirror-operator: "#545C5F"
+      codemirror-operator: "#6E6560"
       codemirror-variable: "#231C1A"
       codemirror-variable-2: "#231C1A"
       codemirror-variable-3: "#514718"
-      codemirror-builtin: "#A9782C"
+      codemirror-builtin: "#8E6420"
       codemirror-atom: "#A8352F"
       codemirror-number: "#A8352F"
       codemirror-def: "#591E21"
@@ -391,17 +407,17 @@ Cranberry Canvas:
       codemirror-string-2: "#514718"
       codemirror-comment: "#7D8689"
       codemirror-tag: "#591E21"
-      codemirror-meta: "#545C5F"
-      codemirror-attribute: "#A9782C"
+      codemirror-meta: "#6E6560"
+      codemirror-attribute: "#8E6420"
       codemirror-property: "#591E21"
       codemirror-qualifier: "#514718"
-      codemirror-type: "#A9782C"
+      codemirror-type: "#8E6420"
 
       # Graphs: history and statistics use these in order
       color-1: "#591E21"
       color-2: "#514718"
       color-3: "#7D8689"
-      color-4: "#A9782C"
+      color-4: "#8E6420"
       color-5: "#A8352F"
       color-6: "#9C6363"
       color-7: "#746B40"
@@ -417,15 +433,15 @@ Cranberry Canvas:
       state-vacuum-error-color: "#A8352F"
       state-valve-active-color: "#514718"
       state-cover-active-color: "#514718"
-      state-update-active-color: "#A9782C"
+      state-update-active-color: "#8E6420"
       state-plant-active-color: "#514718"
       state-alert-on-color: "#A8352F"
       state-alert-off-color: "#7D8689"
       state-icon-error-color: "#A8352F"
       state-sensor-battery-high-color: "#514718"
-      state-sensor-battery-medium-color: "#A9782C"
+      state-sensor-battery-medium-color: "#8E6420"
       state-sensor-battery-low-color: "#A8352F"
-      state-weather-sunny-color: "#A9782C"
+      state-weather-sunny-color: "#8E6420"
       state-weather-partlycloudy-color: "#7D8689"
       state-weather-cloudy-color: "#7D8689"
       state-weather-fog-color: "#7D8689"
@@ -433,7 +449,7 @@ Cranberry Canvas:
       state-weather-pouring-color: "#4E5A5E"
       state-weather-snowy-color: "#7D8689"
       state-weather-hail-color: "#7D8689"
-      state-weather-lightning-color: "#A9782C"
+      state-weather-lightning-color: "#8E6420"
       state-weather-windy-color: "#7D8689"
       state-weather-exceptional-color: "#A8352F"
 
@@ -445,8 +461,12 @@ Cranberry Canvas:
       cc-olive: "#8C7F45"
       cc-quail: "#7D8689"
       cc-panel: "#2E2422"
-      cc-ink: "#E3DDCF"
-      cc-brick: "#C24A42"
+      cc-ink: "#F2ECE0"
+      cc-brick: "#A8352F"
+      cc-harbour: "#40606A"
+      cc-ochre-tone: "#8E6420"
+      cc-paper: "#EEE9DF"
+      cc-ember: "#2E2422"
 
       # Cranberry home card
       cranberry-home-card-background: "#591E21"
@@ -487,16 +507,16 @@ Cranberry Canvas:
       ha-color-form-background: "#3A2F2C"
       ha-color-form-background-hover: "#433733"
       app-header-background-color: "#1B1513"
-      app-header-text-color: "#E3DDCF"
+      app-header-text-color: "#F2ECE0"
       sidebar-background-color: "#241C1A"
-      sidebar-text-color: "#E3DDCF"
+      sidebar-text-color: "#F2ECE0"
       sidebar-icon-color: "#A9AFB1"
       sidebar-selected-text-color: "#E7B9B4"
       sidebar-selected-icon-color: "#E7B9B4"
 
-      primary-text-color: "#E3DDCF"
-      secondary-text-color: "#A9AFB1"
-      disabled-text-color: "#6E7578"
+      primary-text-color: "#F2ECE0"
+      secondary-text-color: "#B5ABA0"
+      disabled-text-color: "#7D8689"
       divider-color: "rgba(227, 221, 207, 0.12)"
       outline-color: "rgba(227, 221, 207, 0.18)"
       paper-item-icon-color: "#A9AFB1"
@@ -648,9 +668,9 @@ Cranberry Canvas:
       ha-color-green-95: "#FAF7E8"
 
       # Text, links and focus
-      ha-color-text-primary: "#E3DDCF"
-      ha-color-text-secondary: "#A9AFB1"
-      ha-color-text-disabled: "#6E7578"
+      ha-color-text-primary: "#F2ECE0"
+      ha-color-text-secondary: "#B5ABA0"
+      ha-color-text-disabled: "#7D8689"
       ha-color-text-link: "#D89797"
       ha-color-focus: "#B8565B"
 
@@ -665,15 +685,15 @@ Cranberry Canvas:
       ha-color-surface-default: "#2E2422"
       ha-color-surface-low: "#1B1513"
       ha-color-surface-lower: "#14100E"
-      ha-color-on-surface-default: "#E3DDCF"
+      ha-color-on-surface-default: "#F2ECE0"
       ha-color-border-neutral-quiet: "rgba(227, 221, 207, 0.12)"
       ha-dialog-surface-background: "#2E2422"
       mdc-theme-surface: "#2E2422"
-      mdc-theme-on-surface: "#E3DDCF"
+      mdc-theme-on-surface: "#F2ECE0"
       mdc-dialog-scrim-color: "rgba(0, 0, 0, 0.55)"
-      mdc-dialog-heading-ink-color: "#E3DDCF"
-      mdc-dialog-content-ink-color: "#E3DDCF"
-      ha-tooltip-background-color: "#E3DDCF"
+      mdc-dialog-heading-ink-color: "#F2ECE0"
+      mdc-dialog-content-ink-color: "#F2ECE0"
+      ha-tooltip-background-color: "#F2ECE0"
       ha-tooltip-text-color: "#1B1513"
 
       # Buttons (older parts of Home Assistant)
@@ -687,15 +707,15 @@ Cranberry Canvas:
       # Text fields, dropdowns, checkboxes
       ha-color-form-background-disabled: "#2E2422"
       input-fill-color: "#2E2422"
-      input-ink-color: "#E3DDCF"
-      input-label-ink-color: "#A9AFB1"
+      input-ink-color: "#F2ECE0"
+      input-label-ink-color: "#B5ABA0"
       input-idle-line-color: "rgba(227, 221, 207, 0.25)"
       input-hover-line-color: "#B8565B"
       input-dropdown-icon-color: "#A9AFB1"
       input-outlined-idle-border-color: "rgba(227, 221, 207, 0.25)"
       input-outlined-hover-border-color: "#B8565B"
       input-disabled-fill-color: "#14100E"
-      input-disabled-ink-color: "#6E7578"
+      input-disabled-ink-color: "#7D8689"
       input-disabled-line-color: "rgba(227, 221, 207, 0.12)"
       mdc-text-field-fill-color: "#2E2422"
       mdc-select-fill-color: "#2E2422"
@@ -707,13 +727,13 @@ Cranberry Canvas:
       ha-assist-chip-filled-container-color: "rgba(227, 221, 207, 0.10)"
       ha-assist-chip-active-container-color: "rgba(184, 86, 91, 0.25)"
       label-badge-background-color: "#2E2422"
-      label-badge-text-color: "#E3DDCF"
+      label-badge-text-color: "#F2ECE0"
       label-badge-red: "#D0574F"
       label-badge-green: "#8C7F45"
       label-badge-yellow: "#C99A4A"
       label-badge-blue: "#7D8689"
       label-badge-grey: "#7D8689"
-      mdc-tab-text-label-color-default: "#A9AFB1"
+      mdc-tab-text-label-color-default: "#B5ABA0"
 
       # Tables (settings pages) and code
       data-table-background-color: "#2E2422"
@@ -723,9 +743,9 @@ Cranberry Canvas:
       markdown-code-background-color: "rgba(227, 221, 207, 0.07)"
       scrollbar-thumb-color: "rgba(227, 221, 207, 0.25)"
       codemirror-keyword: "#B8565B"
-      codemirror-operator: "#A9AFB1"
-      codemirror-variable: "#E3DDCF"
-      codemirror-variable-2: "#E3DDCF"
+      codemirror-operator: "#B5ABA0"
+      codemirror-variable: "#F2ECE0"
+      codemirror-variable-2: "#F2ECE0"
       codemirror-variable-3: "#8C7F45"
       codemirror-builtin: "#C99A4A"
       codemirror-atom: "#D0574F"
@@ -733,9 +753,9 @@ Cranberry Canvas:
       codemirror-def: "#B8565B"
       codemirror-string: "#8C7F45"
       codemirror-string-2: "#8C7F45"
-      codemirror-comment: "#6E7578"
+      codemirror-comment: "#7D8689"
       codemirror-tag: "#B8565B"
-      codemirror-meta: "#A9AFB1"
+      codemirror-meta: "#B5ABA0"
       codemirror-attribute: "#C99A4A"
       codemirror-property: "#B8565B"
       codemirror-qualifier: "#8C7F45"

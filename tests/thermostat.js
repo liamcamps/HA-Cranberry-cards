@@ -51,7 +51,7 @@ const say = () => $('.say').textContent;
 
   // holding with eco
   card.hass = hass(climate('heat', { supported_features: F.TARGET | F.PRESET, temperature: 17, current_temperature: 18.4, hvac_action: 'idle', preset_mode: 'eco', preset_modes: ['none', 'eco'] }));
-  ok(/#2B2220/.test(bg()) && say() === 'Eco: holding at 17°. It’s 18.4° now.', 'eco holding: ' + say());
+  ok(/#3A2F2C/.test(bg()) && say() === 'Eco: holding at 17°. It’s 18.4° now.', 'eco holding: ' + say());
 
   // cooling with fan and swing chips; fan menu
   card.hass = hass(climate('cool', { hvac_modes: ['off', 'heat', 'cool', 'heat_cool', 'auto', 'dry', 'fan_only'], supported_features: F.TARGET | F.FAN | F.SWING, temperature: 23, current_temperature: 25.6, hvac_action: 'cooling', fan_mode: 'auto', fan_modes: ['auto', 'low', 'high'], swing_mode: 'vertical', swing_modes: ['off', 'vertical'] }));
@@ -68,7 +68,7 @@ const say = () => $('.say').textContent;
   const dual = (cur, act) => climate('heat_cool', { hvac_modes: ['off', 'heat_cool'], supported_features: F.RANGE, target_temp_low: 19, target_temp_high: 24, current_temperature: cur, hvac_action: act });
   card.hass = hass(dual(22, 'idle'));
   ok($$('.row').length === 2 && $$('.row .lbl').map((x) => x.textContent).join() === 'Heat below,Cool above', 'two rows');
-  ok(/#2B2220/.test(bg()) && say() === '22° now: comfortable, so it’s resting.', 'comfortable');
+  ok(/#3A2F2C/.test(bg()) && say() === '22° now: comfortable, so it’s resting.', 'comfortable');
   ok($$('.row').every((r) => r.getAttribute('style').includes('opacity:1')), 'both rows full at rest');
   card.hass = hass(dual(17.8, 'heating'));
   ok(/#514718/.test(bg()) && /^17\.8° now, below 19°\. Heating up(, warm in about \d+ minutes)?\.$/.test(say()) && $$('.row')[1].getAttribute('style').includes('0.5'), 'heating: cool row faded');
@@ -84,7 +84,7 @@ const say = () => $('.say').textContent;
 
   // dry: humidity to dry to
   card.hass = hass(climate('dry', { hvac_modes: ['off', 'dry'], supported_features: F.HUMIDITY, current_temperature: 24.1, current_humidity: 62, humidity: 50, hvac_action: 'drying' }));
-  ok(/#7A5418/.test(bg()) && $('.one .big').textContent === '50%' && $('.one .lbl').textContent === 'Dry to', 'dry big humidity');
+  ok(/#8E6420/.test(bg()) && $('.one .big').textContent === '50%' && $('.one .lbl').textContent === 'Dry to', 'dry big humidity');
   ok(say() === 'Drying the air: 62% now, down to 50%.', 'dry sentence');
   $$('.step')[1].click(); await wait(800);
   ok(JSON.stringify(calls.pop()) === JSON.stringify(['climate', 'set_humidity', { entity_id: 'climate.living_room', humidity: 45 }]), 'dry minus 5%');
@@ -97,7 +97,7 @@ const say = () => $('.say').textContent;
 
   // off and unavailable
   card.hass = hass(climate('off', { current_temperature: 18.2, temperature: 15 }));
-  ok(/#3A3634/.test(bg()) && $('.one .big').textContent === 'off' || $('.one .big').textContent === 'Off', 'off big: ' + $('.one .big').textContent);
+  ok(/#545C5F/.test(bg()) && $('.one .big').textContent === 'off' || $('.one .big').textContent === 'Off', 'off big: ' + $('.one .big').textContent);
   ok(say() === 'Off. It’s 18.2° in the living room.' && !$('.step'), 'off sentence, no steps');
   card.hass = hass(climate('unavailable', {}));
   ok($('ha-card').classList.contains('na') && $('.one .big').textContent === '—' && /isn’t responding/.test(say()), 'unavailable');

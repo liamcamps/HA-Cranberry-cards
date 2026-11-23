@@ -77,6 +77,18 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   el = make('cranberry-room-card', { entity: 'switch.garden' });
   ok(txt(el).includes('On') && q(el, '.fill').style.width === '100%', 'switch room');
 
+  // room alert: an open door turns the card brick and says which
+  states['binary_sensor.balcony_door'] = S('binary_sensor.balcony_door', 'on', { friendly_name: 'Balcony door', device_class: 'door' });
+  states['lock.front'] = S('lock.front', 'locked', { friendly_name: 'Front door' });
+  el = make('cranberry-room-card', { entity: 'light.living_room', name: 'Balcony', alerts: ['binary_sensor.balcony_door', 'lock.front'] });
+  ok(q(el, 'ha-card').classList.contains('alert') && q(el, '.state').textContent === 'Balcony door open', 'room alert: ' + q(el, '.state').textContent);
+  states['lock.front'] = S('lock.front', 'unlocked', { friendly_name: 'Front door' });
+  el = make('cranberry-room-card', { entity: 'light.living_room', name: 'Balcony', alerts: ['binary_sensor.balcony_door', 'lock.front'] });
+  ok(q(el, '.state').textContent === '2 things open', 'two alerts');
+  states['binary_sensor.balcony_door'] = S('binary_sensor.balcony_door', 'off', { friendly_name: 'Balcony door' }); states['lock.front'] = S('lock.front', 'locked', { friendly_name: 'Front door' });
+  el = make('cranberry-room-card', { entity: 'light.living_room', name: 'Balcony', alerts: ['binary_sensor.balcony_door', 'lock.front'] });
+  ok(!q(el, 'ha-card').classList.contains('alert') && q(el, '.state').textContent.includes('of 3 on'), 'closed: normal room');
+
   // room extra button (Lego light)
   states['light.dining'] = S('light.dining', 'on', { entity_id: ['light.dl'] }); states['light.dl'] = S('light.dl', 'on', { brightness: 165 });
   states['input_boolean.lego_light'] = S('input_boolean.lego_light', 'off', { friendly_name: 'Lego light' });

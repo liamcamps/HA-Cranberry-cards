@@ -1,5 +1,30 @@
 # Changelog
 
+## 2.23.0 (2026-11-23)
+
+- The palette is official, and every colour means one thing:
+  - **Cranberry** is the house.
+  - **Olive** is running.
+  - **Harbour** #40606A is cool and wet.
+  - **Ochre** #8E6420 is caution.
+  - **Quail** is off.
+  - **Brick** is only for problems.
+  - **Mist** and **Sun** are for weather data.
+  - Neutrals: **Paper** #EEE9DF cards on Canvas in light mode, **Night** and **Ember** in dark mode. **Stone** and **Taupe** are the warm secondary text.
+- Theme (version 4):
+  - Light-mode cards are lighter than the page instead of darker.
+  - Secondary text is warm.
+  - Cool and info states use Harbour; warnings use Ochre.
+  - Dark-mode text is Cream.
+  - Brick is the same in both modes.
+  - New tokens `cc-harbour`, `cc-ochre-tone`, `cc-paper` and `cc-ember`.
+- Problems:
+  - A card that needs you turns fully brick with cream text.
+  - On the cranberry home card, the problem chip and the warning strip are cream with brick text, so they stand out from the red.
+- Room card: new **Turn brick when open** option. Pick doors, windows or locks; while one is open, the card turns brick and says which ("Balcony door open").
+- Thermostat card: drying is Ochre, idle is Ember raised, off is Quail.
+- Weather tints: ice, dusk and lightning fold into Mist, Taupe and Sun.
+
 ## 2.22.0 (2026-11-22)
 
 - Home card: Coming up as date blocks, one per day ("MON 23 · Dentist · 09:00 · +1 more"),

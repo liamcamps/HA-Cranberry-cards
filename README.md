@@ -1,7 +1,8 @@
 # Cranberry Canvas for Home Assistant
 
-Nine dashboard cards and a matching theme in a warm, calm palette: cranberry, canvas,
-olive and quail, with brick only when something needs you. Every card has a visual editor.
+Nine dashboard cards and a matching theme in a warm, calm palette where every colour means
+one thing: cranberry for the house, olive for running, harbour for cool and wet, ochre for
+caution, quail for off, and brick only when something needs you. Every card has a visual editor.
 
 | Card | Type |
 | --- | --- |
@@ -80,6 +81,13 @@ type: custom:cranberry-thermostat-card
 entity: climate.living_room
 size: compact
 popup: '#living-room'      # optional: tapping the room name opens this pop-up
+```
+
+```yaml
+# a room card that turns brick while its door is open
+type: custom:cranberry-room-card
+entity: light.balcony
+alerts: [binary_sensor.balcony_door]
 ```
 
 ```yaml

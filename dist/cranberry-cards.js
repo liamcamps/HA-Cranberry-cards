@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.22.0';
+  const VERSION = '2.23.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -55,7 +55,7 @@
     wind: 'M8 22h30a7 7 0 1 0-7-7M8 42h38a7 7 0 1 1-7 7M8 32h20',
     alert: 'M32 10 8 54h48zM32 28v12M32 47v.01'
   };
-  const CREAM = '#F2ECE0', AMBER = '#F0B85A', BLUE = '#9CC3D6', ICE = '#CFE3EE', DUSK = '#C9A9A7', BOLT = '#E3B55A';
+  const CREAM = '#F2ECE0', AMBER = '#F0B85A', BLUE = '#9CC3D6', ICE = BLUE, DUSK = '#B5ABA0', BOLT = AMBER;
   const ART = {
     'clear-night': [[A.moon, CREAM], [A.stars, '#E3DDCF'], null],
     sunny: [[A.sun, AMBER], null, [A.rays, AMBER]],
@@ -233,14 +233,14 @@
     .serif { font-family: Fraunces, Georgia, serif; font-variation-settings: 'SOFT' 100; font-weight: 400; letter-spacing: -0.03em; }
     button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-align: inherit; }
     button:focus-visible { outline: 2px solid var(--chc-fg); outline-offset: 3px; border-radius: var(--cc-r-chip, 8px); }
-    .warn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 20px; box-sizing: border-box; background: #A8352F; color: #fff; font-size: 13px; font-weight: 600; }
+    .warn { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 20px; box-sizing: border-box; background: #F2ECE0; color: #A8352F; font-size: 13px; font-weight: 600; }
     .body { flex: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 28px; padding: 22px 24px; box-sizing: border-box; }
     .home { min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
     .top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
     .date { font-size: 14px; font-weight: 500; color: var(--chc-sub); }
     .time { font-size: 80px; line-height: 0.9; }
     .stack { display: flex; flex-direction: column; gap: 8px; }
-    .issue { align-self: flex-start; max-width: 100%; box-sizing: border-box; min-height: 40px; padding: 6px 14px 6px 6px; border-radius: var(--cc-r-ctl, 12px); background: #A8352F; color: #fff; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
+    .issue { align-self: flex-start; max-width: 100%; box-sizing: border-box; min-height: 40px; padding: 6px 14px 6px 6px; border-radius: var(--cc-r-ctl, 12px); background: #F2ECE0; color: #A8352F; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
     .chips { display: flex; flex-wrap: wrap; gap: 8px; }
     .bins { min-height: 40px; padding: 6px 14px 6px 6px; border-radius: var(--cc-r-ctl, 12px); background: #F2ECE0; color: #591E21; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
     .bins .n { height: 28px; padding: 0 4px; border-radius: var(--cc-r-chip, 8px); background: rgba(89,30,33,0.08); display: flex; align-items: center; gap: 2px; }
@@ -261,7 +261,7 @@
     .mbtn { width: 34px; height: 34px; flex-shrink: 0; border-radius: var(--cc-r-ctl, 12px); background: rgba(242, 236, 224, 0.12); display: flex; align-items: center; justify-content: center; }
     .alloff { align-self: flex-start; height: 40px; padding: 0 16px 0 12px; border-radius: var(--cc-r-ctl, 12px); background: var(--chc-fg); color: var(--chc-bg); display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
     @media (prefers-reduced-motion: reduce) { .menu { animation: none; } }
-    .issue .n { width: 28px; height: 28px; flex-shrink: 0; border-radius: var(--cc-r-chip, 8px); background: #fff; color: #A8352F; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .issue .n { width: 28px; height: 28px; flex-shrink: 0; border-radius: var(--cc-r-chip, 8px); background: #A8352F; color: #F2ECE0; display: flex; align-items: center; justify-content: center; font-weight: 700; }
     p { margin: 0; font-size: 17px; font-weight: 500; line-height: 1.3; }
     .insight { display: flex; align-items: flex-start; gap: 8px; align-self: flex-start; max-width: 100%; font-size: 15px; color: var(--chc-sub); }
     .insight svg { flex-shrink: 0; margin-top: 1px; color: var(--chc-sub); }
@@ -1276,8 +1276,9 @@
   const BASE = `
     :host { display: block; height: 100%;
       --cc-c: var(--cc-cranberry, #591E21); --cc-o: var(--cc-olive, #514718); --cc-q: var(--cc-quail, #7D8689); --cc-b: var(--cc-brick, #A8352F);
-      --cc-card: var(--ha-card-background, var(--card-background-color, #D7D0BF));
-      --cc-text: var(--primary-text-color, #231C1A); --cc-muted: var(--secondary-text-color, #545C5F);
+      --cc-h: var(--cc-harbour, #40606A); --cc-ochre: var(--cc-ochre-tone, #8E6420);
+      --cc-card: var(--ha-card-background, var(--card-background-color, #EEE9DF));
+      --cc-text: var(--primary-text-color, #231C1A); --cc-muted: var(--secondary-text-color, #6E6560);
       --cc-bgc: var(--primary-background-color, #E3DDCF); --cc-on: #F2ECE0;
       --cc-c-t: color-mix(in srgb, var(--cc-c) 15%, transparent);
       --cc-o-t: color-mix(in srgb, var(--cc-o) 18%, transparent);
@@ -1381,9 +1382,9 @@
       .btns button { flex: 1; min-width: 42px; height: 42px; border-radius: var(--cc-r-ctl, 12px); display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 600; background: var(--tint); color: var(--cc-text); padding: 0 10px; }
       .btns button[aria-pressed="true"] { background: var(--ic); color: var(--cc-on); }
       .btns ha-icon { --mdc-icon-size: 18px; }
-      ha-card.alert { background: var(--cc-b); color: #fff; }
-      ha-card.alert .state { color: #F6DEDA; }
-      ha-card.alert .btns button { background: #fff; color: var(--cc-b); }
+      ha-card.alert { background: var(--cc-b); color: var(--cc-on); }
+      ha-card.alert .state { color: color-mix(in srgb, var(--cc-on) 82%, var(--cc-b)); }
+      ha-card.alert .btns button { background: var(--cc-on); color: var(--cc-b); }
       .tap { cursor: pointer; }
     `;
     }
@@ -1455,7 +1456,7 @@
     view(m) {
       const ic = m.tone === 'olive' ? 'var(--cc-o)' : 'var(--cc-q)';
       const tint = m.tone === 'olive' ? 'var(--cc-o-t)' : 'var(--cc-q-t)';
-      const icStyle = m.alert ? 'background: rgba(255,255,255,.22); color: #fff' : `background: ${tint}; color: ${ic}`;
+      const icStyle = m.alert ? 'background: rgba(242,236,224,.18); color: var(--cc-on)' : `background: ${tint}; color: ${ic}`;
       return `<ha-card class="${m.alert ? 'alert' : ''} ${m.na ? 'na' : ''}" style="--ic:${ic};--tint:${tint}">
         <div class="row">
           <div class="ic" style="${icStyle}"><ha-icon icon="${esc(m.icon)}"></ha-icon></div>
@@ -1503,6 +1504,14 @@
       .extra { position: relative; width: 40px; height: 40px; border-radius: var(--cc-r-ctl, 12px); flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--cc-q-t); color: var(--cc-q); }
       .extra[aria-pressed="true"] { background: var(--cc-o); color: var(--cc-on); }
       .extra ha-icon { --mdc-icon-size: 20px; }
+      /* something in the room needs you: the whole card turns brick */
+      ha-card.alert { background: var(--cc-b); color: var(--cc-on); }
+      ha-card.alert .fill { display: none; }
+      ha-card.alert .state { color: color-mix(in srgb, var(--cc-on) 82%, var(--cc-b)); font-weight: 600; }
+      ha-card.alert .tog { background: rgba(242, 236, 224, 0.16) !important; color: var(--cc-on) !important; }
+      ha-card.alert .temp { background: rgba(242, 236, 224, 0.16); }
+      ha-card.alert .chev { color: var(--cc-on); }
+      ha-card.alert .extra { background: rgba(242, 236, 224, 0.16); color: var(--cc-on); }
     `;
     }
     getGridOptions() { return { columns: 6, rows: 'auto', min_columns: 4 }; }
@@ -1536,10 +1545,19 @@
         extra = { on, icon: c.button_icon || (bs && bs.attributes.icon) || ccIcon('bulb', 'mdi:toggle-switch-outline'), name: c.button_name || (bs ? this.nm(c.button_entity) : c.button_entity), na: !bs || bs.state === 'unavailable' };
         if (on) state = extra.name + ' on' + (lit && dims ? ' · ' + avg + '%' : '');
       }
-      return { extra, name: c.name || (st ? this.nm(c.entity) : c.entity), icon: c.icon || (st && st.attributes.icon) || ccIcon('home', 'mdi:home-outline'), state, lit, fill: lit ? (dims ? avg : 100) : 0, temp, na: !st || st.state === 'unavailable', open: c.popup || c.navigation_path || '' };
+      // doors, windows and locks that make the room need you
+      const PROBLEM = ['on', 'open', 'opening', 'unlocked', 'unlocking', 'jammed', 'triggered', 'problem'];
+      const bad = [].concat(c.alerts || []).map((id) => this.st(id)).filter((s) => s && PROBLEM.indexOf(s.state) >= 0);
+      let alert = false;
+      if (bad.length) {
+        alert = true;
+        const word = (x) => (x.entity_id.indexOf('binary_sensor.') === 0 && x.state === 'on' ? 'open' : this._hass.formatEntityState ? String(this.fmt(x)) : x.state).toLowerCase();
+        state = bad.length === 1 ? this.nm(bad[0].entity_id) + ' ' + word(bad[0]) : bad.length + ' things open';
+      }
+      return { alert, extra, name: c.name || (st ? this.nm(c.entity) : c.entity), icon: c.icon || (st && st.attributes.icon) || ccIcon('home', 'mdi:home-outline'), state, lit, fill: lit ? (dims ? avg : 100) : 0, temp, na: !st || st.state === 'unavailable', open: c.popup || c.navigation_path || '' };
     }
     view(m) {
-      return `<ha-card class="${m.na ? 'na' : ''}">
+      return `<ha-card class="${m.na ? 'na' : ''} ${m.alert ? 'alert' : ''}">
         <span class="fill" style="width:${m.fill}%"></span>
         <div class="row">
           <button type="button" class="tog" data-act="toggle" aria-pressed="${m.lit}" aria-label="Switch ${esc(m.name)} ${m.lit ? 'off' : 'on'}"
@@ -1688,7 +1706,7 @@
       ha-card { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
       ha-card.large { padding: 14px 14px 16px; gap: 14px; }
       ha-card.cran { background: var(--cc-c); color: var(--cc-on); }
-      ha-card.brick { background: var(--cc-b); color: #fff; }
+      ha-card.brick { background: var(--cc-b); color: var(--cc-on); }
       ha-card.cran .state, ha-card.brick .state { color: color-mix(in srgb, currentColor 82%, transparent); }
       .row { display: flex; align-items: center; gap: 10px; min-height: 40px; }
       .ic { width: 40px; height: 40px; }
@@ -1699,7 +1717,7 @@
       .act { height: 40px; padding: 0 14px; border-radius: var(--cc-r-ctl, 12px); display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; flex-shrink: 0; background: var(--cc-o); color: var(--cc-on); }
       .act ha-icon { --mdc-icon-size: 16px; }
       ha-card.cran .act { background: var(--cc-on); color: var(--cc-c); }
-      ha-card.brick .act { background: #fff; color: var(--cc-b); }
+      ha-card.brick .act { background: var(--cc-on); color: var(--cc-b); }
       .bar { position: relative; border-radius: 4px; overflow: hidden; background: color-mix(in srgb, currentColor 11%, transparent); height: 4px; }
       ha-card.large .bar { height: 8px; }
       .bar span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--fill); transition: width .6s ease; }
@@ -1891,7 +1909,7 @@
   // number is what you set, and one sentence says where the room is and what happens next.
   // Heat/cool stacks its two setpoints. Preset, fan and swing only show when supported.
   const CLIMATE = { TARGET: 1, RANGE: 2, HUMIDITY: 4, FAN: 8, PRESET: 16, SWING: 32 };
-  const THERMO_BG = { heating: '#514718', cooling: '#40606A', drying: '#7A5418', fan: '#545C5F', idle: '#2B2220', off: '#3A3634', na: '#3A3634' };
+  const THERMO_BG = { heating: '#514718', cooling: '#40606A', drying: '#8E6420', fan: '#545C5F', idle: '#3A2F2C', off: '#545C5F', na: '#545C5F' };
   const HVAC_NAMES = { off: 'Off', heat: 'Heat', cool: 'Cool', heat_cool: 'Heat/cool', auto: 'Auto', dry: 'Dry', fan_only: 'Fan' };
   class CranberryThermostatCard extends CranberryBase {
     static get styles() {
@@ -1922,7 +1940,7 @@
       .mode { height: 38px; font-size: 15px; font-weight: 700; opacity: .6; border-bottom: 2px solid transparent; }
       .mode[aria-pressed="true"] { opacity: 1; border-bottom-color: #F2ECE0; }
       .menu { position: absolute; left: 12px; right: 12px; z-index: 2; box-sizing: border-box; border-radius: 16px; background: #F2ECE0; color: #231C1A; box-shadow: 0 12px 32px rgba(0,0,0,.28); padding: 6px; display: flex; flex-direction: column; max-height: 300px; overflow-y: auto; animation: cc-in .2s ease both; }
-      .menu .t { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #545C5F; padding: 8px 10px 4px; }
+      .menu .t { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--cc-muted); padding: 8px 10px 4px; }
       .opt { height: 40px; border-radius: 10px; padding: 0 10px; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 500; text-align: left; }
       .opt[aria-selected="true"] { background: rgba(35,28,26,.08); font-weight: 700; }
       .opt ha-icon { --mdc-icon-size: 16px; }
@@ -2377,12 +2395,12 @@
       ha-card { display: flex; flex-direction: column; gap: 0; padding: 10px; }
       ha-card.large { gap: 10px; padding: 10px 10px 12px; }
       ha-card.urgent { background: var(--cc-c); color: var(--cc-on); }
-      ha-card.urgent .item .d { color: #E3CFCB; }
+      ha-card.urgent .item .d { color: color-mix(in srgb, var(--cc-on) 82%, var(--cc-c)); }
       ha-card.urgent .item.soon .d { color: var(--cc-on); }
       ha-card.urgent .item { border-top-color: rgba(255,255,255,0.14); }
       .head { display: flex; align-items: center; gap: 10px; min-height: 40px; border-radius: var(--cc-r-ctl, 12px); }
       .urgent .head { color: var(--cc-on); }
-      .urgent .head .state { color: #E3CFCB; }
+      .urgent .head .state { color: color-mix(in srgb, var(--cc-on) 82%, var(--cc-c)); }
       .bin { width: 40px; height: 40px; flex-shrink: 0; border-radius: var(--cc-r-ctl, 12px); display: flex; align-items: center; justify-content: center; gap: 1px; background: var(--cc-q-t); }
       .urgent .bin { background: var(--cc-on); }
       .out .bin { background: var(--cc-o-t); }
@@ -2532,14 +2550,15 @@
         { name: 'temperature', selector: { entity: { domain: ['sensor', 'weather'] } } },
         { name: 'popup', selector: { text: {} } },
         { name: 'lights', selector: { entity: { multiple: true, domain: ['light', 'switch'] } } },
+        { name: 'alerts', selector: { entity: { multiple: true, domain: ['binary_sensor', 'lock', 'cover'] } } },
         { type: 'expandable', name: 'extra_button', flatten: true, title: 'Extra button', icon: 'mdi:gesture-tap-button', schema: [
           { name: 'button_entity', selector: { entity: { domain: ['input_boolean', 'switch', 'light', 'script', 'scene'] } } },
           { name: 'button_name', selector: { text: {} } },
           { name: 'button_icon', selector: { icon: {} } }
         ] }
       ],
-      labels: { entity: 'Room lights (group, light or switch)', name: 'Name', icon: 'Icon', temperature: 'Temperature sensor', popup: 'Pop-up to open', lights: 'Lights to count', button_entity: 'Toggle', button_name: 'Name', button_icon: 'Icon' },
-      helpers: { popup: 'The Bubble pop-up hash, for example #living-room. Leave empty to open the details instead.', lights: 'Optional. Leave empty to use the members of the group.', button_entity: 'Optional. A toggle you want on the room card itself, like a Lego light. Olive while it is on.' }
+      labels: { entity: 'Room lights (group, light or switch)', name: 'Name', icon: 'Icon', temperature: 'Temperature sensor', popup: 'Pop-up to open', lights: 'Lights to count', alerts: 'Turn brick when open', button_entity: 'Toggle', button_name: 'Name', button_icon: 'Icon' },
+      helpers: { popup: 'The Bubble pop-up hash, for example #living-room. Leave empty to open the details instead.', lights: 'Optional. Leave empty to use the members of the group.', alerts: 'Optional. Doors, windows or locks in this room. While one is open or unlocked, the card turns brick and says which.', button_entity: 'Optional. A toggle you want on the room card itself, like a Lego light. Olive while it is on.' }
     },
     {
       tag: 'cranberry-scene-card', cls: CranberrySceneCard, name: 'Cranberry scene',
