@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.32.0 (2026-11-23)
+
+- People card, like Home Assistant's heading:
+  - A title on the left ("Home") and a round photo per person on the right.
+  - While someone is home it's just the photo; when they're away, "Away" or the zone ("Work") shows next to it in a pill.
+  - Without a photo, it shows their initial.
+  - The name is still read out by screen readers.
+
 ## 2.31.0 (2026-11-23)
 
 - New **people card**: a title row with a chip per person. Each chip has the person's photo, name and where they are ("Liam · Home", "Mylou · Work"); the photo fades while they're away.

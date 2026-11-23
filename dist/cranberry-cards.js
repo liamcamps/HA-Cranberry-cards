@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.31.0';
+  const VERSION = '2.32.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -2968,17 +2968,15 @@
     static get styles() {
       return `
       ha-card { background: none; box-shadow: none; border: 0; padding: 4px 0; }
-      .row { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; }
-      .title { font-size: 20px; font-weight: 600; margin-right: auto; padding-left: 4px; }
-      .chips { display: flex; gap: 8px; flex-wrap: wrap; }
-      .title + .chips { justify-content: flex-end; }
-      .chip { height: 40px; box-sizing: border-box; padding: 4px 14px 4px 4px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-card); display: flex; align-items: center; gap: 10px; font-size: 14px; white-space: nowrap; }
-      .pic { width: 32px; height: 32px; border-radius: var(--cc-r-chip, 8px); overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--tint); color: var(--ic); }
-      .pic img { width: 100%; height: 100%; object-fit: cover; display: block; transition: filter .3s ease, opacity .3s ease; }
-      .pic ha-icon { --mdc-icon-size: 18px; }
-      .away .pic img { filter: grayscale(.7); opacity: .7; }
-      .chip b { font-weight: 600; }
-      .chip span { color: var(--cc-muted); font-weight: 500; }
+      .row { display: flex; align-items: center; gap: 8px 12px; min-height: 56px; }
+      .title { font-size: 28px; font-weight: 500; letter-spacing: -0.01em; margin-right: auto; padding-left: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
+      /* home: just the photo; away: the photo and where, in a pill */
+      .chip { height: 48px; box-sizing: border-box; padding: 4px; border-radius: 24px; background: var(--cc-card); display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; white-space: nowrap; }
+      .chip.away { padding-right: 16px; }
+      .pic { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--cc-q-t); color: var(--cc-text); font-size: 16px; font-weight: 700; }
+      .pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .chip span.where { color: var(--cc-muted); font-weight: 600; }
     `;
     }
     getGridOptions() { return { columns: 'full', rows: 'auto' }; }
@@ -2994,14 +2992,16 @@
           id: p.entity, popup: p.popup || '', home,
           name: p.name || firstName(this.nm(p.entity)), where,
           picture: c.show_picture !== 'icon' && st && st.attributes.entity_picture ? st.attributes.entity_picture : '',
-          icon: p.icon || ccIcon('user', 'mdi:account-outline')
+          icon: p.icon || ''
         };
       });
-      return { title: c.title || '', people };
+      return { title: c.title == null ? '' : c.title, people };
     }
     view(m) {
-      const chip = (p) => `<button type="button" class="chip${p.home ? '' : ' away'}" data-act="open" data-arg="${esc(p.id)}" aria-label="${esc(p.name + ', ' + p.where)}" style="--ic:${p.home ? 'var(--cc-o)' : 'var(--cc-q)'};--tint:${p.home ? 'var(--cc-o-t)' : 'var(--cc-q-t)'}">
-          <span class="pic">${p.picture ? `<img src="${esc(p.picture)}" alt="">` : `<ha-icon icon="${esc(p.icon)}"></ha-icon>`}</span><b>${esc(p.name)}</b><span>${esc(p.where)}</span></button>`;
+      // without a photo: their icon if one is set, else their initial
+      const face = (p) => p.picture ? `<img src="${esc(p.picture)}" alt="">` : p.icon ? `<ha-icon icon="${esc(p.icon)}"></ha-icon>` : esc(p.name.charAt(0).toUpperCase());
+      const chip = (p) => `<button type="button" class="chip${p.home ? '' : ' away'}" data-act="open" data-arg="${esc(p.id)}" aria-label="${esc(p.name + ', ' + p.where)}" title="${esc(p.name + ' · ' + p.where)}">
+          <span class="pic">${face(p)}</span>${p.home ? '' : `<span class="where">${esc(p.where)}</span>`}</button>`;
       return `<ha-card><div class="row">${m.title ? `<div class="title">${esc(m.title)}</div>` : ''}<div class="chips">${m.people.map(chip).join('')}</div></div></ha-card>`;
     }
     act(a, arg) {
@@ -3187,7 +3187,7 @@
     },
     {
       tag: 'cranberry-people-card', cls: CranberryPeopleCard, name: 'Cranberry people',
-      description: 'A title row with a chip per person: photo, name and where they are.',
+      description: 'A title row with a round photo per person; "Away" or the zone next to the photo when they are not home.',
       stub: (ids) => ({ people: ids.filter((e) => e.startsWith('person.')).slice(0, 4) }),
       // in YAML a person with a pop-up becomes { entity, popup }
       io: {
@@ -3216,7 +3216,7 @@
         }] : []
       ],
       labels: { people: 'People', title: 'Title', show_picture: 'Picture' },
-      helpers: { title: 'Optional. Shown on the left, the chips on the right.', show_picture: 'The photo set for each person in Home Assistant. Without a photo the chip shows the icon.', popups: 'A Bubble pop-up hash per person, for example #liam. Leave empty to open the details instead.' }
+      helpers: { title: 'Optional, for example Home. Shown on the left, the people on the right.', show_picture: 'The photo set for each person in Home Assistant. Without a photo it shows their initial.', popups: 'A Bubble pop-up hash per person, for example #liam. Leave empty to open the details instead.' }
     },
     {
       tag: 'cranberry-calendar-card', cls: CranberryCalendarCard, name: 'Cranberry calendar',
