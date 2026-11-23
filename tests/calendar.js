@@ -110,6 +110,72 @@ const rowText = (r) => { const tw = r.ownerDocument.createTreeWalker(r, 4); cons
   el = await make({ calendars: ['calendar.family'], switcher: false });
   ok(!$(el, '.seg') && !$(el, '.top'), 'switch can be hidden');
 
+  // ---- who sees which calendar
+  const H2 = () => Object.assign(hass(), { user: { id: 'u-mylou' }, states: Object.assign(hass().states, {
+    'person.liam': { entity_id: 'person.liam', state: 'home', attributes: { user_id: 'u-liam' } },
+    'person.mylou': { entity_id: 'person.mylou', state: 'home', attributes: { user_id: 'u-mylou' } } }) });
+  const make2 = async (cfg, hs) => { const el = w.document.createElement('cranberry-calendar-card'); el.setConfig(Object.assign({ load_fonts: false }, cfg)); w.document.body.appendChild(el); el.hass = hs; await wait(); await wait(); return el; };
+  EV = { 'calendar.family': [{ summary: 'Dinner', start: { dateTime: at(1, 18) }, end: { dateTime: at(1, 20) } }], 'calendar.liam': [{ summary: 'Padel', start: { dateTime: at(1, 20) }, end: { dateTime: at(1, 21) } }] };
+  asked = [];
+  el = await make2({ calendars: ['calendar.family', { entity: 'calendar.liam', people: ['person.liam'] }] }, H2());
+  ok(asked.length === 1 && asked[0].indexOf('calendar.family') > 0 && !el.shadowRoot.textContent.includes('Padel'), 'Mylou does not see Liam’s calendar');
+  const asLiam = Object.assign(H2(), { user: { id: 'u-liam' } });
+  el = await make2({ calendars: ['calendar.family', { entity: 'calendar.liam', people: ['person.liam'] }] }, asLiam);
+  ok(el.shadowRoot.textContent.includes('Padel') && $$(el, '.legend .dot')[1].getAttribute('style').includes('#8C7F45'), 'Liam does, in the same colour');
+  const nobody = Object.assign(H2(), { user: { id: 'u-kiosk' } });
+  el = await make2({ calendars: ['calendar.family', { entity: 'calendar.liam', people: ['person.liam'] }] }, nobody);
+  ok(!el.shadowRoot.textContent.includes('Padel') && el.shadowRoot.textContent.includes('Dinner'), 'a user without a person sees only the shared calendars');
+
+  // ---- the editor keeps people next to the calendar in YAML
+  const ed = w.document.createElement('cranberry-calendar-card-editor');
+  let saved = null; ed.addEventListener('config-changed', (e) => { saved = e.detail.config; });
+  ed.setConfig({ calendars: ['calendar.family', { entity: 'calendar.liam', people: ['person.liam'] }] });
+  ok(ed._config.calendars.join() === 'calendar.family,calendar.liam' && ed._config['people:calendar.liam'][0] === 'person.liam', 'editor flattens people');
+  ed.hass = hass(); w.document.body.appendChild(ed);
+  const form = ed.querySelector('ha-form');
+  ok(form && form.schema.some((x) => x.name === 'who' && x.schema.length === 2), 'a who-sees field per calendar');
+  form.dispatchEvent(new w.CustomEvent('value-changed', { detail: { value: Object.assign({}, ed._config, { 'people:calendar.family': ['person.mylou'] }) } }));
+  ok(JSON.stringify(saved.calendars) === JSON.stringify([{ entity: 'calendar.family', people: ['person.mylou'] }, { entity: 'calendar.liam', people: ['person.liam'] }]) && !Object.keys(saved).some((k) => k.indexOf('people:') === 0), 'saved as entity + people: ' + JSON.stringify(saved));
+
+  // ---- new event
+  const calls = [];
+  const H3 = () => Object.assign(hass(), {
+    states: { 'calendar.family': { entity_id: 'calendar.family', state: 'off', attributes: { friendly_name: 'Family', supported_features: 7 } },
+      'calendar.liam': { entity_id: 'calendar.liam', state: 'off', attributes: { friendly_name: 'Liam', supported_features: 7 } },
+      'calendar.holidays': { entity_id: 'calendar.holidays', state: 'off', attributes: { friendly_name: 'Holidays', supported_features: 0 } } },
+    callService: async (d, sv, data) => { calls.push([d, sv, data]); } });
+  EV = {};
+  el = await make2({ calendars: ['calendar.family', 'calendar.liam', 'calendar.holidays'] }, H3());
+  ok($(el, '.add'), 'New event button');
+  $(el, '.add').click();
+  ok($(el, '.form') && $$(el, '.chip').map((c) => c.textContent).join() === 'Family,Liam' && $(el, '.chip').getAttribute('aria-pressed') === 'true', 'form: only calendars that accept events, the first picked');
+  const set = (f, v) => { const i = $(el, '[data-field="' + f + '"]'); i.value = v; i.dispatchEvent(new w.Event('input', { bubbles: true })); };
+  $(el, '[data-act="fsave"]').click(); await wait();
+  ok($(el, '.err').textContent === 'Give it a name.' && !calls.length, 'needs a name');
+  set('title', 'Dentist'); set('date', ymd(1)); set('start', '09:00'); set('end', '09:45'); set('loc', 'Tandarts');
+  $$(el, '.chip')[1].click();
+  ok($(el, '[data-field="title"]').value === 'Dentist', 'typing survives a redraw');
+  $(el, '[data-act="fsave"]').click(); await wait(); await wait();
+  ok(JSON.stringify(calls[0]) === JSON.stringify(['calendar', 'create_event', { entity_id: 'calendar.liam', summary: 'Dentist', start_date_time: ymd(1) + ' 09:00:00', end_date_time: ymd(1) + ' 09:45:00', location: 'Tandarts' }]), 'timed event: ' + JSON.stringify(calls[0]));
+  ok(!$(el, '.form'), 'form closes after adding');
+  $(el, '.add').click(); set('title', 'Holiday'); set('date', ymd(2)); $(el, '[data-act="fallday"]').click();
+  ok(!$(el, '[data-field="start"]'), 'all day hides the times');
+  $(el, '[data-act="fsave"]').click(); await wait();
+  ok(JSON.stringify(calls[1][2]) === JSON.stringify({ entity_id: 'calendar.family', summary: 'Holiday', start_date: ymd(2), end_date: ymd(3) }), 'all-day: ends the day after: ' + JSON.stringify(calls[1][2]));
+  $(el, '.add').click(); set('title', 'Night shift'); set('date', ymd(1)); set('start', '22:00'); set('end', '06:00');
+  $(el, '[data-act="fsave"]').click(); await wait();
+  ok(calls[2][2].end_date_time === ymd(2) + ' 06:00:00', 'an end before the start is the next day');
+  // a failing calendar keeps the form with a message
+  el._hass = Object.assign(H3(), { callService: async () => { throw new Error('Not allowed'); } });
+  $(el, '.add').click(); set('title', 'X'); $(el, '[data-act="fsave"]').click(); await wait(); await wait();
+  ok($(el, '.form') && /Could not add it: Not allowed/.test($(el, '.err').textContent), 'error shown');
+  $(el, '[data-act="fcancel"]').click();
+  ok(!$(el, '.form'), 'cancel');
+  el = await make2({ calendars: ['calendar.holidays'] }, H3());
+  ok(!$(el, '.add'), 'no button when no calendar accepts events');
+  el = await make2({ calendars: ['calendar.family'], add_events: false }, H3());
+  ok(!$(el, '.add'), 'button can be turned off');
+
   console.log(pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
 })();

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.26.0 (2026-11-23)
+
+- Calendar card: **New event**. The button under the list opens a form: what, which calendar, the day (or all day), from and until, and where. It adds the event through Home Assistant's `calendar.create_event`.
+  - Only calendars that accept new events can be picked (Local calendar, Google Calendar and others).
+  - An end time before the start runs past midnight.
+  - What you type survives the card's refresh every minute.
+  - Can be turned off with **Show “New event”**.
+- Calendar card: **who sees which calendar**. Per calendar, pick the people who see it, through the person linked to each Home Assistant user. Leave it empty and everyone sees it. In YAML:
+  `calendars: [calendar.family, { entity: calendar.liam, people: [person.liam] }]`.
+  A calendar keeps its colour whoever looks.
+
 ## 2.25.0 (2026-11-23)
 
 - Calendar card: **week view**. The next seven days side by side, each topped by a date block (today in cranberry). Events are tinted by calendar, and what's happening now is outlined.

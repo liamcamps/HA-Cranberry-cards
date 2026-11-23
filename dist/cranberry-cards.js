@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.25.0';
+  const VERSION = '2.26.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -1286,7 +1286,7 @@
  */
 (() => {
   // Use Lucide icons when the Lucide icons integration is installed, otherwise Home Assistant's own.
-  const LUCIDE = { vacation: 'plane', car: 'car', pin: 'map-pin', nav: 'navigation', plus: 'plus', minus: 'minus', chev: 'chevron-down', home: 'house', radiator: 'heater', thermometer: 'thermometer', evening: 'sunset', night: 'moon', walk: 'footprints', people: 'users', washer: 'washing-machine', alert: 'triangle-alert', check: 'check', 'chevron-right': 'chevron-right', info: 'info', lock: 'lock', 'lock-open': 'lock-open', shield: 'shield-check', 'shield-off': 'shield-off', play: 'play', pause: 'pause', stop: 'square', 'skip-next': 'skip-forward', 'skip-previous': 'skip-back', bulb: 'lightbulb', power: 'power' };
+  const LUCIDE = { vacation: 'plane', car: 'car', pin: 'map-pin', nav: 'navigation', plus: 'plus', minus: 'minus', chev: 'chevron-down', home: 'house', radiator: 'heater', thermometer: 'thermometer', evening: 'sunset', night: 'moon', walk: 'footprints', people: 'users', washer: 'washing-machine', alert: 'triangle-alert', check: 'check', 'chevron-right': 'chevron-right', info: 'info', lock: 'lock', 'lock-open': 'lock-open', shield: 'shield-check', 'shield-off': 'shield-off', play: 'play', pause: 'pause', stop: 'square', 'skip-next': 'skip-forward', 'skip-previous': 'skip-back', bulb: 'lightbulb', power: 'power', x: 'x' };
   const ccIcon = (name, fallback) => (window.customIcons && window.customIcons.lucide && LUCIDE[name] ? 'lucide:' + LUCIDE[name] : fallback);
   const { morph, MOTION } = window.CranberryMorph;
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -2541,6 +2541,34 @@
       .wev.now { box-shadow: inset 0 0 0 1.5px var(--cc-text); }
       .wev.now small { color: var(--cc-text); }
       .col .none { font-size: 12px; color: var(--cc-muted); padding: 6px 2px; }
+      .foot { display: flex; justify-content: flex-end; padding: 10px 0 6px; }
+      .add { height: 44px; padding: 0 18px 0 14px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-c); color: var(--cc-on); display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+      .add ha-icon { --mdc-icon-size: 18px; }
+      .form { display: flex; flex-direction: column; gap: 14px; padding: 12px 0 6px; }
+      .fhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      .fhead b { font-size: 17px; }
+      .x { width: 40px; height: 40px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-raise); display: flex; align-items: center; justify-content: center; }
+      .x ha-icon { --mdc-icon-size: 20px; }
+      .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+      .field > span { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--cc-muted); }
+      .in { height: 44px; box-sizing: border-box; width: 100%; padding: 0 14px; border: 0; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-raise); color: var(--cc-text); font: 500 15px Figtree, var(--ha-font-family-body, sans-serif); outline: none; color-scheme: light dark; }
+      .in.big { height: 52px; font-size: 18px; font-weight: 600; }
+      .in:focus { box-shadow: inset 0 0 0 2px var(--cc-c); }
+      .in::placeholder { color: var(--cc-muted); }
+      .row2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: end; }
+      .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+      .chip { height: 40px; padding: 0 14px 0 12px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-raise); display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+      .chip[aria-pressed="true"] { background: color-mix(in srgb, var(--tint) 30%, transparent); box-shadow: inset 0 0 0 2px var(--dot); }
+      .tog { height: 44px; padding: 0 14px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-raise); display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
+      .tog i { width: 36px; height: 22px; border-radius: 11px; background: color-mix(in srgb, var(--cc-text) 22%, transparent); position: relative; transition: background .2s ease; }
+      .tog i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 8px; background: var(--cc-card); transition: transform .2s ease; }
+      .tog[aria-pressed="true"] i { background: var(--cc-c); }
+      .tog[aria-pressed="true"] i::after { transform: translateX(14px); background: var(--cc-on); }
+      .err { font-size: 14px; font-weight: 600; color: var(--cc-b); }
+      .btns { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
+      .btn { height: 44px; padding: 0 18px; border-radius: var(--cc-r-ctl, 12px); font-size: 14px; font-weight: 700; background: var(--cc-raise); }
+      .btn.go { background: var(--cc-c); color: var(--cc-on); }
+      .btn[disabled] { opacity: .5; cursor: default; }
       .legend span { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--cc-muted); }
       .dot { width: 8px; height: 8px; border-radius: 4px; flex-shrink: 0; background: var(--dot); }
       .day { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; }
@@ -2568,19 +2596,44 @@
     getGridOptions() { return { columns: 12, rows: 'auto', min_columns: 6 }; }
     connectedCallback() {
       this._tick = setInterval(() => this._refresh(), 60000); this._refresh();
+      if (!this._typing) {
+        this._typing = true;
+        this.shadowRoot.addEventListener('input', () => this._read());
+        this.shadowRoot.addEventListener('change', () => this._read());
+      }
       // the week needs room: narrower than this, the card shows the agenda
       if (window.ResizeObserver && !this._ro) {
         this._ro = new ResizeObserver((en) => { const w = Math.round(en[0].contentRect.width); if (Math.abs(w - (this._w || 0)) > 8) { this._w = w; this._last = ''; this._update(); } });
       }
       if (this._ro) this._ro.observe(this);
     }
-    disconnectedCallback() { clearInterval(this._tick); if (this._ro) this._ro.disconnect(); this._view = null; }
+    disconnectedCallback() { clearInterval(this._tick); if (this._ro) this._ro.disconnect(); this._view = null; this._form = null; }
     setConfig(config) { super.setConfig(config); this._at = 0; this._events = null; this._refresh(); }
     set hass(h) { const first = !this._hass; this._hass = h; if (first) this._refresh(); this._update(); }
-    _ids() { return [].concat(this._config.calendars || []).map((x) => (typeof x === 'string' ? x : x && x.entity)).filter(Boolean); }
+    // calendars: "calendar.family" or { entity: calendar.liam, people: [person.liam] }
+    _cals() {
+      return [].concat(this._config.calendars || []).map((x) => (typeof x === 'string' ? { id: x, people: [] } : x && x.entity ? { id: x.entity, people: [].concat(x.people || []) } : null)).filter(Boolean);
+    }
+    // the people the logged-in user is: person entities linked to this user
+    _mine() {
+      const h = this._hass, me = h && h.user && h.user.id;
+      if (!me) return null;
+      return Object.keys(h.states).filter((k) => k.indexOf('person.') === 0 && h.states[k].attributes && h.states[k].attributes.user_id === me);
+    }
+    _shown(cal) {
+      if (!cal.people.length) return true;
+      const mine = this._mine();
+      return !!mine && cal.people.some((p) => mine.indexOf(p) >= 0);
+    }
+    _ids() { return this._cals().filter((c) => this._shown(c)).map((c) => c.id); }
+    _writable() {
+      // calendars that accept new events (supported_features & 1)
+      return this._ids().filter((id) => { const st = this.st(id); return st && (Number(st.attributes.supported_features) & 1); });
+    }
     _refresh() {
       // the clock moves every minute; the calendars are asked again every 10 minutes
       if (!this._hass || !this._config) return;
+      this._read();
       if (Date.now() - (this._at || 0) > 10 * 60000) this._fetch();
       this._last = ''; this._update();
     }
@@ -2611,7 +2664,7 @@
       const c = this._config, ids = this._ids(), now = new Date(), DAY = 86400000;
       const day0 = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x.getTime(); };
       const today = day0(now), n = this._days();
-      const colour = {}; ids.forEach((id, i) => { colour[id] = i % CAL_DOTS.length; });
+      const colour = {}; this._cals().forEach((cal, i) => { colour[cal.id] = i % CAL_DOTS.length; });
       const parse = (v) => {
         if (!v) return null;
         if (typeof v === 'object') return v.dateTime ? { d: new Date(v.dateTime), all: false } : (v.date ? { d: new Date(v.date + 'T00:00:00'), all: true } : null);
@@ -2662,7 +2715,14 @@
       });
       while (rows.length && rows[rows.length - 1].free) rows.pop();
       const legend = ids.length > 1 ? ids.map((id) => ({ name: this.nm(id), dot: CAL_DOTS[colour[id]] })) : [];
-      return { title: c.title || '', legend, rows, week, view, seg: c.switcher !== false && canWeek, loading: this._events == null && ids.length > 0, none: !ids.length };
+      const writable = c.add_events === false ? [] : this._writable();
+      let form = null;
+      if (this._form && writable.length) {
+        const f = this._form;
+        if (writable.indexOf(f.cal) < 0) f.cal = writable[0];
+        form = Object.assign({}, f, { cals: writable.map((id) => ({ id, name: this.nm(id), dot: CAL_DOTS[colour[id]], tint: CAL_COLOURS[colour[id]], on: id === f.cal })) });
+      }
+      return { title: c.title || '', legend, rows, week, view, form, canAdd: writable.length > 0, seg: c.switcher !== false && canWeek, loading: this._events == null && ids.length > 0, none: !ids.length };
     }
     view(m) {
       const ev = (e) => `<button type="button" class="ev${e.now ? ' now' : ''}" data-act="open" data-arg="${esc(e.id)}"><span class="when"><span class="dot" style="--dot:${e.dot}"></span>${esc(e.when)}</span><span class="what">${esc(e.what)}${e.loc ? ` <small>· ${esc(e.loc)}</small>` : ''}</span></button>`;
@@ -2677,23 +2737,88 @@
           : `<div class="day${r.today ? ' today' : ''}">${block(r)}<div class="evs">${r.evs.map(ev).join('')}</div></div>`).join('');
       const seg = m.seg ? `<span class="seg" role="group" aria-label="View">${['agenda', 'week'].map((v) => `<button type="button" data-act="view" data-arg="${v}" aria-pressed="${m.view === v}">${v === 'agenda' ? 'Agenda' : 'Week'}</button>`).join('')}</span>` : '';
       const legend = m.legend.length ? `<div class="legend">${m.legend.map((l) => `<span><span class="dot" style="--dot:${l.dot}"></span>${esc(l.name)}</span>`).join('')}</div>` : '';
+      if (m.form) return `<ha-card>${this._formView(m.form)}</ha-card>`;
       return `<ha-card>
         ${m.title ? `<div class="title">${esc(m.title)}</div>` : ''}
         ${legend || seg ? `<div class="top">${legend}${seg}</div>` : ''}
         ${body}
+        ${m.canAdd && !m.none && !m.loading ? `<div class="foot"><button type="button" class="add" data-act="new"><ha-icon icon="${ccIcon('plus', 'mdi:plus')}"></ha-icon>New event</button></div>` : ''}
       </ha-card>`;
+    }
+    _formView(f) {
+      const v = (k) => esc(f[k] == null ? '' : f[k]);
+      return `<div class="form" role="form" aria-label="New event">
+        <div class="fhead"><b>New event</b><button type="button" class="x" data-act="fcancel" aria-label="Close"><ha-icon icon="${ccIcon('x', 'mdi:close')}"></ha-icon></button></div>
+        <label class="field"><span>What</span><input class="in big" data-field="title" value="${v('title')}" placeholder="Dinner with Anna" autocomplete="off"></label>
+        ${f.cals.length > 1 ? `<div class="field"><span>Calendar</span><div class="chips">${f.cals.map((c) => `<button type="button" class="chip" data-act="fcal" data-arg="${esc(c.id)}" aria-pressed="${c.on}" style="--dot:${c.dot};--tint:${c.tint}"><span class="dot" style="--dot:${c.dot}"></span>${esc(c.name)}</button>`).join('')}</div></div>` : ''}
+        <div class="row2">
+          <label class="field"><span>Day</span><input class="in" type="date" data-field="date" value="${v('date')}"></label>
+          <button type="button" class="tog" data-act="fallday" aria-pressed="${!!f.allDay}"><i></i>All day</button>
+        </div>
+        ${f.allDay ? '' : `<div class="row2">
+          <label class="field"><span>From</span><input class="in" type="time" data-field="start" value="${v('start')}"></label>
+          <label class="field"><span>Until</span><input class="in" type="time" data-field="end" value="${v('end')}"></label>
+        </div>`}
+        <label class="field"><span>Where</span><input class="in" data-field="loc" value="${v('loc')}" placeholder="Optional" autocomplete="off"></label>
+        ${f.err ? `<div class="err" role="alert">${esc(f.err)}</div>` : ''}
+        <div class="btns"><button type="button" class="btn" data-act="fcancel">Cancel</button><button type="button" class="btn go" data-act="fsave" ${f.busy ? 'disabled' : ''}>${f.busy ? 'Adding…' : 'Add'}</button></div>
+      </div>`;
     }
     act(a, arg) {
       if (a === 'open' && arg) this.moreInfo(arg);
       if (a === 'view') { this._view = arg; this._last = ''; this._update(); }
+      if (a === 'new') {
+        const pad = (x) => String(x).padStart(2, '0'), d = new Date();
+        const h = Math.min(22, d.getHours() + 1);
+        this._form = { title: '', cal: this._writable()[0], date: d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()), allDay: false, start: pad(h) + ':00', end: pad(h + 1) + ':00', loc: '', err: '' };
+        this._redraw();
+        const t = this.shadowRoot.querySelector('[data-field="title"]'); if (t) t.focus();
+      }
+      if (!this._form) return;
+      if (a === 'fcancel') { this._form = null; this._redraw(); }
+      if (a === 'fcal') { this._form.cal = arg; this._redraw(); }
+      if (a === 'fallday') { this._form.allDay = !this._form.allDay; this._redraw(); }
+      if (a === 'fsave') this._save();
+    }
+    _redraw() { this._last = ''; this._update(); }
+    async _save() {
+      const f = this._form;
+      this._read();
+      const title = (f.title || '').trim();
+      f.err = !title ? 'Give it a name.' : !/^\d{4}-\d{2}-\d{2}$/.test(f.date || '') ? 'Pick a day.' : !f.allDay && !(/^\d{2}:\d{2}/.test(f.start || '') && /^\d{2}:\d{2}/.test(f.end || '')) ? 'Pick a start and end time.' : '';
+      if (f.err) { this._redraw(); return; }
+      const ymd = (dt) => dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+      const day = new Date(f.date + 'T00:00:00');
+      const data = { entity_id: f.cal, summary: title };
+      if (f.allDay) {
+        // the end of an all-day event is the day after
+        data.start_date = f.date; data.end_date = ymd(new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1));
+      } else {
+        // an end before the start runs past midnight
+        const endDay = f.end.slice(0, 5) <= f.start.slice(0, 5) ? ymd(new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1)) : f.date;
+        data.start_date_time = f.date + ' ' + f.start.slice(0, 5) + ':00'; data.end_date_time = endDay + ' ' + f.end.slice(0, 5) + ':00';
+      }
+      if ((f.loc || '').trim()) data.location = f.loc.trim();
+      f.busy = true; this._redraw();
+      try {
+        await this.call('calendar', 'create_event', data);
+        this._form = null; this._at = 0; this._fetch(); this._redraw();
+      } catch (e) {
+        f.busy = false; f.err = 'Could not add it: ' + ((e && e.message) || 'the calendar said no') + '.'; this._redraw();
+      }
+    }
+    // keep what was typed, so a redraw (every minute) never loses it
+    _read() {
+      if (!this._form) return;
+      this.shadowRoot.querySelectorAll('[data-field]').forEach((el) => { this._form[el.getAttribute('data-field')] = el.value; });
     }
   }
   CranberryCalendarCard.needsEntity = false;
-  CranberryCalendarCard.defaults = { days: 14, show_empty: 'fold', view: 'agenda', switcher: true };
+  CranberryCalendarCard.defaults = { days: 14, show_empty: 'fold', view: 'agenda', switcher: true, add_events: true };
 
   // ---------------------------------------------------------------- editors
-  const makeEditor = (schema, labels, helpers) => class extends HTMLElement {
-    setConfig(config) { this._config = Object.assign({}, config); this._render(); }
+  const makeEditor = (schema, labels, helpers, io) => class extends HTMLElement {
+    setConfig(config) { this._config = io ? io.toForm(config) : Object.assign({}, config); this._render(); }
     set hass(h) { this._hass = h; if (this._form) this._form.hass = h; else this._render(); }
     async connectedCallback() {
       if (!customElements.get('ha-form') && window.loadCardHelpers) {
@@ -2713,9 +2838,10 @@
         this._form.computeHelper = (s) => helpers[s.name];
         this._form.addEventListener('value-changed', (ev) => {
           ev.stopPropagation();
-          const config = Object.assign({}, ev.detail.value);
-          Object.keys(config).forEach((k) => { if (config[k] === '' || config[k] == null || (Array.isArray(config[k]) && !config[k].length)) delete config[k]; });
-          this._config = config;
+          const form = Object.assign({}, ev.detail.value);
+          Object.keys(form).forEach((k) => { if (form[k] === '' || form[k] == null || (Array.isArray(form[k]) && !form[k].length)) delete form[k]; });
+          this._config = form;
+          const config = io ? io.fromForm(form) : form;
           this.dispatchEvent(new CustomEvent('config-changed', { detail: { config }, bubbles: true, composed: true }));
           this._render();
         });
@@ -2865,16 +2991,38 @@
       tag: 'cranberry-calendar-card', cls: CranberryCalendarCard, name: 'Cranberry calendar',
       description: 'The coming days from your calendars, with the same date blocks as the home card.',
       stub: (ids) => ({ calendars: ids.filter((e) => e.startsWith('calendar.')).slice(0, 3) }),
-      schema: [
+      // the form is flat; in YAML a calendar with people becomes { entity, people }
+      io: {
+        toForm: (cfg) => {
+          const f = Object.assign({}, cfg);
+          f.calendars = [].concat(cfg.calendars || []).map((x) => {
+            if (x && typeof x === 'object') { if (x.people && x.people.length) f['people:' + x.entity] = [].concat(x.people); return x.entity; }
+            return x;
+          }).filter(Boolean);
+          return f;
+        },
+        fromForm: (f) => {
+          const cfg = {};
+          Object.keys(f).forEach((k) => { if (k.indexOf('people:') !== 0) cfg[k] = f[k]; });
+          if (f.calendars) cfg.calendars = f.calendars.map((id) => (f['people:' + id] && f['people:' + id].length ? { entity: id, people: f['people:' + id] } : id));
+          return cfg;
+        }
+      },
+      schema: (f) => [
         { name: 'calendars', selector: { entity: { multiple: true, domain: 'calendar' } } },
+        ...((f && f.calendars) || []).length ? [{
+          type: 'expandable', name: 'who', flatten: true, title: 'Who sees which calendar', icon: 'mdi:account-eye-outline',
+          schema: f.calendars.map((id) => ({ name: 'people:' + id, title: id.replace(/^calendar\./, '').replace(/_/g, ' ').replace(/^./, (ch) => ch.toUpperCase()), selector: { entity: { multiple: true, domain: 'person' } } }))
+        }] : [],
         { name: 'title', selector: { text: {} } },
         { name: 'days', selector: { number: { min: 7, max: 31, step: 1, mode: 'slider' } } },
         { name: 'show_empty', selector: { select: { mode: 'dropdown', options: [{ value: 'fold', label: 'Fold into one line' }, { value: 'hide', label: 'Leave out' }] } } },
         { name: 'view', selector: { select: { mode: 'box', options: [{ value: 'agenda', label: 'Agenda' }, { value: 'week', label: 'Week' }] } } },
-        { name: 'switcher', selector: { boolean: {} } }
+        { name: 'switcher', selector: { boolean: {} } },
+        { name: 'add_events', selector: { boolean: {} } }
       ],
-      labels: { calendars: 'Calendars', title: 'Title', days: 'Days to show in the agenda', show_empty: 'Days without plans', view: 'Start with', switcher: 'Show the Agenda / Week switch' },
-      helpers: { calendars: 'The colours follow this order: cranberry, olive, harbour, ochre, quail.', title: 'Optional. Leave empty inside a pop-up, which has its own title.', view: 'Week shows the next seven days side by side. On a narrow screen the card always shows the agenda.' }
+      labels: { calendars: 'Calendars', title: 'Title', days: 'Days to show in the agenda', show_empty: 'Days without plans', view: 'Start with', switcher: 'Show the Agenda / Week switch', add_events: 'Show “New event”' },
+      helpers: { calendars: 'The colours follow this order: cranberry, olive, harbour, ochre, quail.', title: 'Optional. Leave empty inside a pop-up, which has its own title.', view: 'Week shows the next seven days side by side. On a narrow screen the card always shows the agenda.', add_events: 'Only calendars that accept new events can be picked, like Local calendar and Google Calendar.', who: 'Pick the people who see a calendar. Leave it empty and everyone sees it.' }
     },
     {
       tag: 'cranberry-waste-card', cls: CranberryWasteCard, name: 'Cranberry waste collection',
@@ -2899,7 +3047,7 @@
     d.cls.getConfigElement = () => document.createElement(editorTag);
     d.cls.getStubConfig = (hass) => d.stub(Object.keys((hass && hass.states) || {}));
     if (!customElements.get(d.tag)) customElements.define(d.tag, d.cls);
-    if (!customElements.get(editorTag)) customElements.define(editorTag, makeEditor(d.schema, d.labels, d.helpers));
+    if (!customElements.get(editorTag)) customElements.define(editorTag, makeEditor(d.schema, d.labels, d.helpers, d.io));
     if (!window.customCards.some((x) => x.type === d.tag)) window.customCards.push({ type: d.tag, name: d.name, description: d.description, preview: true });
   });
 })();

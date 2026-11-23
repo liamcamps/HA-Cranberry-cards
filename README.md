@@ -87,11 +87,15 @@ popup: '#living-room'      # optional: tapping the room name opens this pop-up
 ```yaml
 # the calendar, for example inside a Bubble pop-up #calendar
 type: custom:cranberry-calendar-card
-calendars: [calendar.family, calendar.liam, calendar.mylou]   # colours follow this order
+calendars:                 # colours follow this order
+  - calendar.family          # everyone sees it
+  - entity: calendar.liam    # only these people see it
+    people: [person.liam]
 days: 14
 show_empty: fold           # fold | hide
 view: agenda               # agenda | week: the view it opens on
 switcher: true             # the Agenda / Week switch
+add_events: true           # the New event button, for calendars that accept events
 ```
 
 ```yaml
