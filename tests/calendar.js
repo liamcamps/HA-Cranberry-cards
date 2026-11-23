@@ -100,7 +100,7 @@ const rowText = (r) => { const tw = r.ownerDocument.createTreeWalker(r, 4); cons
   const cols = $$(el, '.col').map((c) => [...c.querySelectorAll('.wev')].map((x) => x.querySelector('small').textContent + ' ' + x.querySelector('b').textContent).join(' / ') || c.querySelector('.none').textContent);
   ok(cols[0] === 'Free' && cols[1] === '09:00 Dentist' && cols[2] === 'All day Holiday', 'week columns: ' + cols.slice(0, 3).join(' | '));
   ok(cols[3] === 'All day Holiday / 22:00 → Night shift' && cols[4] === 'Until 06:00 Night shift', 'all day first, overnight on both days: ' + cols[3] + ' | ' + cols[4]);
-  ok($$(el, '.wev')[0].getAttribute('style').includes('color-mix(in srgb, var(--cc-c) 24%'), 'tinted by calendar');
+  ok($$(el, '.wev')[0].getAttribute('style').includes('color-mix(in srgb, var(--cc-c) 24%, var(--cc-card))'), 'tinted by calendar');
   $$(el, '.seg button')[0].click();
   ok(!$(el, '.week') && $(el, '.day'), 'and back to the agenda');
   el = await make({ calendars: ['calendar.family'], view: 'week', week_layout: 'list' });

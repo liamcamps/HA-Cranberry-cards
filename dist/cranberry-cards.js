@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.27.0';
+  const VERSION = '2.27.1';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -2551,7 +2551,7 @@
       .hrs { position: relative; }
       .hrs span { position: absolute; right: 8px; transform: translateY(-50%); font-size: 11px; font-weight: 600; color: var(--cc-muted); font-variant-numeric: tabular-nums; }
       .dc { position: relative; background-image: repeating-linear-gradient(to bottom, var(--cc-rule) 0 1px, transparent 1px var(--hh)); border-top: 1px solid var(--cc-rule); }
-      .te { position: absolute; box-sizing: border-box; padding: 0 2px 2px; display: flex; }
+      .te { position: absolute; z-index: 1; box-sizing: border-box; padding: 0 2px 2px; display: flex; }
       .te .wev { height: 100%; overflow: hidden; padding: 4px 6px; border-radius: 8px; }
       .te .wev small { font-size: 10px; }
       .te .wev b { font-size: 12px; line-height: 1.2; }
@@ -2559,7 +2559,7 @@
       .te.short .wev b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .te.split .wev { padding-left: 5px; padding-right: 4px; }
       .te.split.short .wev small { display: none; }
-      .nowline { position: absolute; left: -1px; right: 0; height: 2px; background: var(--cc-c); z-index: 2; pointer-events: none; }
+      .nowline { position: absolute; left: -1px; right: 0; height: 2px; background: var(--cc-c); z-index: 0; pointer-events: none; }
       .nowline::before { content: ''; position: absolute; left: -4px; top: -3px; width: 8px; height: 8px; border-radius: 4px; background: var(--cc-c); }
       .ad .wev { padding: 4px 6px; }
       .ad .wev b { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -2773,7 +2773,7 @@
     }
     view(m) {
       const ev = (e) => `<button type="button" class="ev${e.now ? ' now' : ''}" data-act="open" data-arg="${esc(e.id)}"><span class="when"><span class="dot" style="--dot:${e.dot}"></span>${esc(e.when)}</span><span class="what">${esc(e.what)}${e.loc ? ` <small>· ${esc(e.loc)}</small>` : ''}</span></button>`;
-      const wev = (e) => `<button type="button" class="wev${e.now ? ' now' : ''}" style="--dot:${e.dot};--tint:color-mix(in srgb, ${e.tint} 24%, transparent)" data-act="open" data-arg="${esc(e.id)}" aria-label="${esc(e.what + ', ' + e.when)}"><small>${esc(e.short)}</small><b>${esc(e.what)}</b></button>`;
+      const wev = (e) => `<button type="button" class="wev${e.now ? ' now' : ''}" style="--dot:${e.dot};--tint:color-mix(in srgb, ${e.tint} 24%, var(--cc-card))" data-act="open" data-arg="${esc(e.id)}" aria-label="${esc(e.what + ', ' + e.when)}"><small>${esc(e.short)}</small><b>${esc(e.what)}</b></button>`;
       const block = (r) => `<span class="block"><small>${esc(r.wd)}</small><b>${r.n}</b></span>`;
       const body = m.none ? '<div class="empty">Pick one or more calendars in the editor.</div>'
         : m.loading ? '<div class="empty">Loading…</div>'
@@ -2797,7 +2797,7 @@
       const g = m.grid, HH = 40, px = (min) => ((min - g.from * 60) / 60) * HH;
       const hours = []; for (let h = g.from + 1; h < g.to; h++) hours.push(h);
       const lbl = (h) => this._time(new Date(2000, 0, 1, h, 0));
-      const wev = (e) => `<button type="button" class="wev${e.now ? ' now' : ''}" style="--dot:${e.dot};--tint:color-mix(in srgb, ${e.tint} 24%, transparent)" data-act="open" data-arg="${esc(e.id)}" aria-label="${esc(e.what + ', ' + e.when)}"><small>${esc(e.short)}</small><b>${esc(e.what)}</b></button>`;
+      const wev = (e) => `<button type="button" class="wev${e.now ? ' now' : ''}" style="--dot:${e.dot};--tint:color-mix(in srgb, ${e.tint} 24%, var(--cc-card))" data-act="open" data-arg="${esc(e.id)}" aria-label="${esc(e.what + ', ' + e.when)}"><small>${esc(e.short)}</small><b>${esc(e.what)}</b></button>`;
       const head = m.week.map((r) => `<div class="hd${r.today ? ' today' : ''}"><span class="block"><small>${esc(r.wd)}</small><b>${r.n}</b></span></div>`).join('');
       const allDay = g.hasAllDay ? `<div class="adl">All day</div>${g.cols.map((x) => `<div class="ad">${x.allDay.map(wev).join('')}</div>`).join('')}` : '';
       const cols = g.cols.map((x) => `<div class="dc" style="height:${(g.to - g.from) * HH}px">${x.timed.map((e) => {

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.27.1 (2026-11-23)
+
+- Calendar card: events in the week are solid. They use the same tint, mixed with the card's colour, so the hour lines no longer show through them. The current-time line runs behind the events instead of across them.
+
 ## 2.27.0 (2026-11-23)
 
 - Calendar card: the week sits on a **time grid**. Hours run down the side and each event is placed and sized by when it starts and ends. Events that overlap sit side by side; when they share a slot, they show just their title.
