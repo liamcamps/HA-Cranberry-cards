@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.30.0 (2026-11-23)
+
+- Status card for a person: shows the person's photo from Home Assistant by default, faded while they're away. **Picture → Icon** in the editor (`show_picture: icon`) shows the icon instead. Without a photo, the card shows the icon.
+
 ## 2.29.0 (2026-11-23)
 
 - Status card: **a person**. Shows the first name, and "Home", "Away" or the zone they're in ("Work") with since when ("Home · since 18:40", "Away · since yesterday"). Olive when home, quail when not.

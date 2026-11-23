@@ -7,7 +7,7 @@
  * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
  */
 (() => {
-  const VERSION = '2.29.0';
+  const VERSION = '2.30.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -1405,6 +1405,9 @@
       return `
       .row { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px 8px 8px 10px; box-sizing: border-box; height: 100%; }
       .ic { width: 38px; height: 38px; }
+      .ic.pic { overflow: hidden; background: var(--cc-q-t); }
+      .ic.pic img { width: 100%; height: 100%; object-fit: cover; display: block; transition: filter .3s ease, opacity .3s ease; }
+      .ic.pic.away img { filter: grayscale(.7); opacity: .7; }
       .btns { display: flex; gap: 6px; flex-shrink: 0; width: var(--btns-w, auto); }
       .btns button { flex: 1; min-width: 42px; height: 42px; border-radius: var(--cc-r-ctl, 12px); display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 600; background: var(--tint); color: var(--cc-text); padding: 0 10px; }
       .btns button[aria-pressed="true"] { background: var(--ic); color: var(--cc-on); }
@@ -1478,6 +1481,8 @@
           else if (days < 7) since = new Intl.DateTimeFormat(this._lang(), { weekday: 'long' }).format(t);
         }
         m.state = where + (since ? ' · since ' + since : '');
+        // the person's own photo, unless the card asks for the icon
+        if (c.show_picture !== 'icon' && st.attributes.entity_picture) { m.picture = st.attributes.entity_picture; m.away = !home; }
       } else if (domain === 'zone' || (c.people && c.people.length)) {
         const ids = c.people && c.people.length ? c.people : (a.persons || []);
         const ppl = ids.map((id) => ({ n: firstName(this.nm(id)), home: (this.st(id) || {}).state === 'home' }));
@@ -1503,7 +1508,7 @@
       const icStyle = m.alert ? 'background: rgba(242,236,224,.18); color: var(--cc-on)' : `background: ${tint}; color: ${ic}`;
       return `<ha-card class="${m.alert ? 'alert' : ''} ${m.na ? 'na' : ''}" style="--ic:${ic};--tint:${tint}">
         <div class="row">
-          <div class="ic" style="${icStyle}"><ha-icon icon="${esc(m.icon)}"></ha-icon></div>
+          ${m.picture ? `<div class="ic pic${m.away ? ' away' : ''}"><img src="${esc(m.picture)}" alt=""></div>` : `<div class="ic" style="${icStyle}"><ha-icon icon="${esc(m.icon)}"></ha-icon></div>`}
           <div class="txt tap" role="button" tabindex="0" data-act="more"><span class="name">${esc(m.name)}</span><span class="state">${esc(m.state)}</span></div>
           ${m.btns.length ? `<div class="btns" style="--btns-w:${m.btnsW || 'auto'}">${m.btns.map((b) => `<button type="button" data-act="${b.act}" data-arg="${esc(b.arg || '')}" aria-label="${esc(b.aria || b.label)}" aria-pressed="${b.pressed ? 'true' : 'false'}">${b.icon ? `<ha-icon icon="${b.icon}"></ha-icon>` : ''}${b.label ? esc(b.label) : ''}</button>`).join('')}</div>` : ''}
         </div></ha-card>`;
@@ -3004,11 +3009,12 @@
         const s = [{ name: 'entity', required: true, selector: { entity: {} } }, { name: 'name', selector: { text: {} } }, { name: 'icon', selector: { icon: {} } }, { name: 'popup', selector: { text: {} } }];
         if (d === 'lock') s.push({ name: 'alarm', selector: { entity: { domain: 'alarm_control_panel' } } }, { name: 'alert_when_unlocked', selector: { boolean: {} } });
         if (d === 'alarm_control_panel') s.push({ name: 'modes', selector: { select: { multiple: true, options: Object.keys(ALARM_MODES).map((k) => ({ value: k, label: ALARM_MODES[k].label })) } } }, { name: 'code', selector: { text: { type: 'password' } } });
+        if (d === 'person') s.push({ name: 'show_picture', selector: { select: { mode: 'box', options: [{ value: 'picture', label: 'Photo' }, { value: 'icon', label: 'Icon' }] } } });
         if (d === 'zone' || d === 'person') s.push({ name: 'people', selector: { entity: { multiple: true, domain: 'person' } } });
         return s;
       },
-      labels: { entity: 'Entity', name: 'Name', icon: 'Icon', popup: 'Pop-up to open', alarm: 'Alarm', alert_when_unlocked: 'Always warn when unlocked', modes: 'Alarm buttons', code: 'Alarm code', people: 'People' },
-      helpers: { popup: 'Optional. The Bubble pop-up hash, for example #liam, opened by tapping the card. Leave empty to open the details instead.', entity: 'Climate, lock, alarm, a person, or zone.home for who is home.', alarm: 'Turns the card red while the door is unlocked and this alarm is on.', people: 'Optional. Leave empty to use everyone in the zone.', code: 'Only if your alarm needs a code to arm or disarm.' }
+      labels: { entity: 'Entity', name: 'Name', icon: 'Icon', popup: 'Pop-up to open', show_picture: 'Picture', alarm: 'Alarm', alert_when_unlocked: 'Always warn when unlocked', modes: 'Alarm buttons', code: 'Alarm code', people: 'People' },
+      helpers: { show_picture: 'The photo set for this person in Home Assistant. Without a photo the card shows the icon.', popup: 'Optional. The Bubble pop-up hash, for example #liam, opened by tapping the card. Leave empty to open the details instead.', entity: 'Climate, lock, alarm, a person, or zone.home for who is home.', alarm: 'Turns the card red while the door is unlocked and this alarm is on.', people: 'Optional. Leave empty to use everyone in the zone.', code: 'Only if your alarm needs a code to arm or disarm.' }
     },
     {
       tag: 'cranberry-room-card', cls: CranberryRoomCard, name: 'Cranberry room',

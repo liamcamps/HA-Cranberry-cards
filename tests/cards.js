@@ -88,7 +88,16 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   states['person.liam'] = Object.assign(S('person.liam', 'work', { friendly_name: 'Liam Camps' }), { last_changed: new Date(Date.now() - 86400000).toISOString() });
   el = make('cranberry-status-card', { entity: 'person.liam', popup: '#liam' });
   ok(q(el, '.state').textContent.indexOf('Work · since ') === 0, 'person in a zone: ' + q(el, '.state').textContent);
-  let navTo = null; el.navigate = (p) => { navTo = p; };
+  // photo by default, icon on request, icon without a photo
+  states['person.liam'] = Object.assign(S('person.liam', 'not_home', { friendly_name: 'Liam', entity_picture: '/api/image/serve/abc/512x512' }), { last_changed: new Date().toISOString() });
+  el = make('cranberry-status-card', { entity: 'person.liam' });
+  ok(q(el, '.ic.pic img') && q(el, '.ic.pic img').getAttribute('src') === '/api/image/serve/abc/512x512' && q(el, '.ic.pic.away'), 'photo by default, faded when away');
+  el = make('cranberry-status-card', { entity: 'person.liam', show_picture: 'icon' });
+  ok(!q(el, '.ic.pic') && q(el, '.ic ha-icon'), 'icon when asked');
+  states['person.liam'] = S('person.liam', 'home', { friendly_name: 'Liam' });
+  el = make('cranberry-status-card', { entity: 'person.liam' });
+  ok(!q(el, '.ic.pic') && q(el, '.ic ha-icon'), 'icon without a photo');
+  let navTo = null; el = make('cranberry-status-card', { entity: 'person.liam', popup: '#liam' }); el.navigate = (p) => { navTo = p; };
   q(el, '.txt').click();
   ok(navTo === '#liam', 'tap opens the pop-up');
 
