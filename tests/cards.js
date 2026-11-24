@@ -35,7 +35,8 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
   // climate
   let el = make('cranberry-status-card', { entity: 'climate.living_room', name: 'Heating' });
-  ok(txt(el).includes('Heating to 21 °C · 20.6 °C'), 'climate state: ' + txt(el).slice(-120));
+  ok(txt(el).includes('Heating to 21° · 20.6°'), 'climate state: ' + txt(el).slice(-120));
+  el.setConfig({ entity: 'climate.living_room', short: false }); el.hass = hass(); ok(txt(el).includes('Heating to 21 °C · 20.6 °C'), 'climate state with unit: ' + txt(el).slice(-120)); el.setConfig({ entity: 'climate.living_room' }); el.hass = hass();
   let btns = el.shadowRoot.querySelectorAll('.btns button');
   ok(btns.length === 3 && btns[1].textContent.trim() === '21°' && btns[1].getAttribute('aria-pressed') === 'true', 'climate buttons');
   btns[2].click(); btns = el.shadowRoot.querySelectorAll('.btns button'); btns[2].click();

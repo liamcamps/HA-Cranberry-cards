@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.35.0 (2026-11-24)
+
+Every card checked at every width it can have (from half a column on a phone to a wide desktop), in English and Dutch. Nothing sticks out of a card any more, and rows no longer break onto a second line:
+
+- **Thermostat:** the modes stay on one row and scroll sideways when they don't fit, with a fade at the edge and the current mode in view. The full card now needs a whole column. Compact on a phone puts its sentence under the setpoint instead of cutting it off.
+- **Status card:** the buttons get smaller on a phone; a labelled button ("Lock") keeps only its icon; at half a column the round icon goes, and an alarm shows only its current mode (tap the card for the others). Temperatures read "21° · 19.4°" instead of "21 °C · 19.4 °C" (`short: false` brings the unit back).
+- **Washing machine:** the steps stay on one row; when narrow, only the current step shows.
+- **Music:** on a phone the buttons are smaller; at half a column only play or pause, then no cover.
+- **Room:** at half a column the temperature is shown instead of the brightness.
+- **Bins:** the reminder may take two lines instead of losing its end ("GFT en papier vanavond buiten zetten"); the button keeps only its icon when narrow.
+- **Car:** the place, layer and zone chips stay on one row and scroll sideways; "Parked at …" may take two lines.
+- **Calendar:** on a phone the time sits above the event, so the title gets the whole width instead of being cut off.
+
 ## 2.34.1 (2026-11-24)
 
 - Home card: the weather details always stay on one row. The columns are only as wide as their text; when the weather side is too narrow, sunrise or sunset is left out first, then wind. In Dutch the labels are shorter ("Zon onder").

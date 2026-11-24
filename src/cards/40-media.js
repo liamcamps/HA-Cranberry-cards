@@ -16,6 +16,11 @@
       ha-card.playing .ctl.main { background: var(--cc-on); color: var(--cc-o); }
       .ctl ha-icon { --mdc-icon-size: 20px; }
       .tap { cursor: pointer; }
+      /* narrow: smaller buttons, then only play or pause (skip from the details), then no cover */
+      ha-card { container-type: inline-size; }
+      @container (max-width: 380px) { .row { gap: 8px; } .ctl { width: 36px; height: 36px; } .ctl.main { width: 40px; height: 40px; } }
+      @container (max-width: 280px) { .ctl:not(.main) { display: none; } }
+      @container (max-width: 200px) { .art { display: none; } }
     `;
     }
     getGridOptions() { return { columns: 12, rows: 'auto', min_columns: 6 }; }

@@ -32,12 +32,17 @@
       .bar { position: relative; border-radius: 4px; overflow: hidden; background: color-mix(in srgb, currentColor 11%, transparent); height: 4px; }
       ha-card.large .bar { height: 8px; }
       .bar span { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--fill); transition: width .6s ease; }
-      .steps { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-      .step { height: 26px; padding: 0 10px 0 8px; border-radius: var(--cc-r-chip, 8px); display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; background: var(--chip); color: var(--cc-muted); }
+      .steps { display: flex; align-items: center; gap: 6px; min-width: 0; }
+      .step { height: 26px; padding: 0 10px 0 8px; border-radius: var(--cc-r-chip, 8px); display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; background: var(--chip); color: var(--cc-muted); min-width: 0; flex: 0 1 auto; overflow: hidden; white-space: nowrap; }
+      .step.now { flex-shrink: 0; }
       .step.done { color: inherit; }
       .step.now { background: var(--nowbg); color: var(--nowfg); font-weight: 700; }
       .step ha-icon { --mdc-icon-size: 13px; }
-      .pct { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--cc-muted); }
+      .pct { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--cc-muted); flex-shrink: 0; padding-left: 4px; }
+      /* narrow: the steps stay on one row; when they don't fit, only the current one shows */
+      ha-card { container-type: inline-size; }
+      @container (max-width: 300px) { .step:not(.now) { display: none; } }
+      @container (max-width: 240px) { .row > .ic { display: none; } .act .bl { display: none; } .act { padding: 0 11px; } }
       .meta { display: flex; flex-wrap: wrap; gap: 6px; }
       .meta span { height: 26px; padding: 0 10px; border-radius: var(--cc-r-chip, 8px); background: var(--chip); display: flex; align-items: center; font-size: 12px; font-weight: 600; }
       .tap { cursor: pointer; }
@@ -192,7 +197,7 @@
           <div class="ic" style="background:${icBg};color:${icFg}"><ha-icon icon="${m.icon}"></ha-icon></div>
           <div class="txt tap" role="button" tabindex="0" data-act="more"><span class="name">${esc(m.title)}</span><span class="state">${esc(m.text)}</span></div>
           ${m.big ? `<div class="time"><b>${esc(m.big)}</b><span>${esc(m.small)}</span></div>` : ''}
-          ${m.btn ? `<button type="button" class="act" data-act="${m.btn.act}"><ha-icon icon="${m.btn.icon}"></ha-icon>${esc(m.btn.label)}</button>` : ''}
+          ${m.btn ? `<button type="button" class="act" data-act="${m.btn.act}"><ha-icon icon="${m.btn.icon}"></ha-icon><span class="bl">${esc(m.btn.label)}</span></button>` : ''}
         </div>
         ${showBar ? `<div class="bar" role="progressbar" aria-valuenow="${m.pct}" aria-valuemin="0" aria-valuemax="100"><span style="width:${m.pct}%"></span></div>` : ''}
         ${large && m.steps.length ? `<div class="steps">${m.steps.map((x) => `<span class="step ${x.s}">${x.s === 'done' ? `<ha-icon icon="${ccIcon('check', 'mdi:check')}"></ha-icon>` : x.s === 'now' ? '<ha-icon icon="mdi:circle-medium"></ha-icon>' : ''}${esc(x.label)}</span>`).join('')}${m.pct >= 0 ? `<span class="pct">${m.pct}%</span>` : ''}</div>` : ''}

@@ -15,6 +15,13 @@
   const firstName = (s) => String(s || '').split(' ')[0];
 
   const BASE = `
+    /* a row of choices that scrolls sideways when it doesn't fit; a fade shows there is more */
+    .scrollrow { overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap !important; }
+    .scrollrow::-webkit-scrollbar { display: none; }
+    .scrollrow > * { flex-shrink: 0; white-space: nowrap; }
+    .scrollrow.more-r { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
+    .scrollrow.more-l { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); }
+    .scrollrow.more-l.more-r { -webkit-mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
     :host { display: block; height: 100%;
       ${window.CranberryTokens.css}
       --cc-c-t: color-mix(in srgb, var(--cc-c) 15%, transparent);
@@ -86,6 +93,25 @@
       }
       window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));
     }
+    // rows that scroll: show the chosen item, and fade the edge where there is more
+    _rows() {
+      const rows = this.shadowRoot.querySelectorAll('.scrollrow');
+      if (!rows.length) return;
+      const mark = (r) => {
+        r.classList.toggle('more-l', r.scrollLeft > 1);
+        r.classList.toggle('more-r', r.scrollLeft + r.clientWidth < r.scrollWidth - 1);
+      };
+      rows.forEach((r) => {
+        if (!r._ccRow) {
+          r._ccRow = true;
+          r.addEventListener('scroll', () => mark(r), { passive: true });
+          if (window.ResizeObserver) new ResizeObserver(() => mark(r)).observe(r);
+          const on = r.querySelector('[aria-pressed="true"]');
+          if (on && on.offsetLeft + on.offsetWidth > r.clientWidth) r.scrollLeft = on.offsetLeft - 24;
+        }
+        mark(r);
+      });
+    }
     _update() {
       if (!this._hass || !this._config) return;
       const m = this.model();
@@ -95,6 +121,7 @@
       this._m = m;
       this._setQuiet(!!m.quiet && this._config.hide_when_quiet !== false && !this._editing());
       morph(this.shadowRoot, `<style>${BASE}${this.constructor.styles || ''}${MOTION}</style>${this.view(m)}`);
+      this._rows();
       if (!this._wired) {
         this._wired = true;
         const find = (ev) => ev.composedPath().find((el) => el.getAttribute && el.hasAttribute('data-act'));

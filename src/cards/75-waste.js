@@ -20,10 +20,15 @@
       .item { display: flex; align-items: center; gap: 12px; min-height: 36px; border-top: 1px solid color-mix(in srgb, currentColor 8%, transparent); }
       .item:first-child { border-top: 0; }
       .mark { width: 8px; height: 22px; border-radius: 4px; flex-shrink: 0; }
-      .item .n { flex: 1; font-size: 14px; font-weight: 600; }
-      .item .d { font-size: 13px; font-weight: 500; color: var(--cc-muted); }
+      .item .n { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .item .d { font-size: 13px; font-weight: 500; color: var(--cc-muted); white-space: nowrap; flex-shrink: 0; }
       .item.soon .d { font-weight: 700; color: inherit; }
       .tap { cursor: pointer; }
+      /* the reminder is the point of the card: it may take two lines rather than lose its end */
+      .head .name, .head .state { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+      .head { padding: 2px 0; }
+      ha-card { container-type: inline-size; }
+      @container (max-width: 300px) { .act .bl { display: none; } .act { padding: 0 10px; } }
     `;
     }
     getGridOptions() { return { columns: 12, rows: 'auto', min_columns: 6 }; }
@@ -80,7 +85,7 @@
         <div class="head">
           <span class="bin">${m.colours.map((col) => binSvg(col, size)).join('')}</span>
           <span class="txt tap" role="button" tabindex="0" data-act="more"><span class="name">${esc(m.title)}</span><span class="state">${esc(m.text)}</span></span>
-          ${m.btn ? `<button type="button" class="act" data-act="out"><ha-icon icon="${ccIcon('check', 'mdi:check')}"></ha-icon>${esc(m.btn.label)}</button>` : (m.day ? `<span class="day">${esc(m.day)}</span>` : '')}
+          ${m.btn ? `<button type="button" class="act" data-act="out"><ha-icon icon="${ccIcon('check', 'mdi:check')}"></ha-icon><span class="bl">${esc(m.btn.label)}</span></button>` : (m.day ? `<span class="day">${esc(m.day)}</span>` : '')}
         </div>
         ${large && m.list.length ? `<div class="list">${m.list.map((x) => `<div class="item ${x.soon ? 'soon' : ''}"><span class="mark" style="background:${x.colour}"></span><span class="n">${esc(x.name)}</span><span class="d">${esc(x.date)}</span></div>`).join('')}</div>` : ''}
       </ha-card>`;

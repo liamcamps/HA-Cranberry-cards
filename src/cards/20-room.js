@@ -32,6 +32,8 @@
       /* as narrow as on a phone: the extra button gives its room to the name (it is in the pop-up too) */
       @container (max-width: 230px) {
         .extra { display: none; }
+        /* the temperature says more than the brightness */
+        .state:has(.tin) .lvl { display: none; }
       }
       ha-card.alert .chev { color: var(--cc-on); }
       ha-card.alert .extra { background: ${alpha('--cc-on', 16)}; color: var(--cc-on); }
@@ -50,7 +52,7 @@
       const dims = on.some((s) => s.entity_id.indexOf('light.') === 0 && s.attributes.brightness != null);
       let state;
       if (this.isNa(st)) state = this.t('Not responding');
-      else if (on.length) state = (members.length > 1 ? this.t('{n} of {total} on', { n: on.length, total: members.length }) : this.t('On')) + (dims ? ' · ' + avg + '%' : '');
+      else if (on.length) state = members.length > 1 ? this.t('{n} of {total} on', { n: on.length, total: members.length }) : this.t('On');
       else state = this.t(members.length > 1 ? 'All off' : 'Off');
       if (offline && st) state += ' · ' + this.t('{n} offline', { n: offline });
       const tst = this.st(c.temperature);
@@ -66,7 +68,7 @@
         const bs = this.st(c.button_entity);
         const on = !!bs && ['on', 'open', 'playing', 'home'].indexOf(bs.state) >= 0;
         extra = { on, icon: c.button_icon || (bs && bs.attributes.icon) || ccIcon('bulb', 'mdi:toggle-switch-outline'), name: c.button_name || (bs ? this.nm(c.button_entity) : c.button_entity), na: !bs || bs.state === 'unavailable' };
-        if (on) state = this.t('{name} on', { name: extra.name }) + (lit && dims ? ' · ' + avg + '%' : '');
+        if (on) state = this.t('{name} on', { name: extra.name });
       }
       // doors, windows and locks that make the room need you
       const PROBLEM = ['on', 'open', 'opening', 'unlocked', 'unlocking', 'jammed', 'triggered', 'problem'];
@@ -77,7 +79,7 @@
         const word = (x) => (x.entity_id.indexOf('binary_sensor.') === 0 && x.state === 'on' ? this.t('open') : this._hass.formatEntityState ? String(this.fmt(x)) : x.state).toLowerCase();
         state = bad.length === 1 ? this.t('{name} {state}', { name: this.nm(bad[0].entity_id), state: word(bad[0]) }) : this.t('{n} things open', { n: bad.length });
       }
-      return { alert, extra, name: c.name || (st ? this.nm(c.entity) : c.entity), icon: c.icon || (st && st.attributes.icon) || ccIcon('home', 'mdi:home-outline'), state, lit, fill: lit ? (dims ? avg : 100) : 0, temp, na: this.isNa(st), open: c.popup || c.navigation_path || '' };
+      return { alert, extra, name: c.name || (st ? this.nm(c.entity) : c.entity), icon: c.icon || (st && st.attributes.icon) || ccIcon('home', 'mdi:home-outline'), state, level: (!this.isNa(st) && (on.length || (extra && extra.on)) && dims && lit && !alert ? avg + '%' : ''), lit, fill: lit ? (dims ? avg : 100) : 0, temp, na: this.isNa(st), open: c.popup || c.navigation_path || '' };
     }
     view(m) {
       return `<ha-card class="${m.na ? 'na' : ''} ${m.alert ? 'alert' : ''}">
@@ -86,7 +88,7 @@
           <button type="button" class="tog" data-act="toggle" aria-pressed="${m.lit}" aria-label="${esc(this.t(m.lit ? 'Switch {name} off' : 'Switch {name} on', { name: m.name }))}"
             style="background:${m.lit ? 'var(--cc-c)' : 'var(--cc-q-t)'};color:${m.lit ? 'var(--cc-on)' : 'var(--cc-q)'}"><ha-icon icon="${esc(m.icon)}"></ha-icon></button>
           <button type="button" class="open" data-act="open" aria-label="${esc(this.t('Open {name}', { name: m.name }))}">
-            <span class="txt"><span class="name">${esc(m.name)}</span><span class="state">${esc(m.state)}${m.temp ? `<span class="tin"> · ${esc(m.temp)}</span>` : ''}</span></span>
+            <span class="txt"><span class="name">${esc(m.name)}</span><span class="state">${esc(m.state)}${m.level ? `<span class="lvl"> · ${esc(m.level)}</span>` : ''}${m.temp ? `<span class="tin"> · ${esc(m.temp)}</span>` : ''}</span></span>
             ${m.temp ? `<span class="temp"><ha-icon icon="${ccIcon('thermometer', 'mdi:thermometer')}"></ha-icon>${esc(m.temp)}</span>` : ''}
             ${m.open ? `<ha-icon class="chev" icon="${ccIcon('chevron-right', 'mdi:chevron-right')}"></ha-icon>` : ''}
           </button>

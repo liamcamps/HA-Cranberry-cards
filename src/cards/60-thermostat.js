@@ -31,8 +31,8 @@
       .meta { font-size: 13px; font-weight: 500; opacity: .75; }
       .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
       .chips .chip { height: 34px; border-radius: 10px; }
-      .modes { display: flex; flex-wrap: wrap; column-gap: 16px; margin-top: 8px; padding-top: 6px; border-top: 1px solid ${alpha('--cc-on', 20)}; }
-      .mode { height: 38px; font-size: 15px; font-weight: 700; opacity: .6; border-bottom: 2px solid transparent; }
+      .modes { display: flex; column-gap: 16px; margin-top: 8px; padding-top: 6px; border-top: 1px solid ${alpha('--cc-on', 20)}; }
+      .mode { height: 38px; font-size: 15px; font-weight: 700; opacity: .6; border-bottom: 2px solid transparent; flex-shrink: 0; white-space: nowrap; }
       .mode[aria-pressed="true"] { opacity: 1; border-bottom-color: var(--cc-on); }
       .menu { position: absolute; left: 12px; right: 12px; z-index: 2; box-sizing: border-box; border-radius: 16px; background: var(--cc-on); color: var(--cv-on-cream); box-shadow: 0 12px 32px ${alpha('--cv-shadow', 28)}; padding: 6px; display: flex; flex-direction: column; max-height: 300px; overflow-y: auto; animation: cc-in .2s ease both; }
       .menu .t { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--cc-muted); padding: 8px 10px 4px; }
@@ -62,11 +62,20 @@
       .mini .step ha-icon { --mdc-icon-size: 16px; }
       .on { height: 40px; flex-shrink: 0; border-radius: var(--cc-r-control, 12px); padding: 0 14px 0 10px; background: var(--cc-on); color: var(--cv-on-cream); font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
       .on ha-icon { --mdc-icon-size: 16px; }
+      /* compact and narrow: the sentence moves under the setpoint and buttons, so it isn't cut short */
+      ha-card { container-type: inline-size; }
+      @container (max-width: 360px) {
+        .line { flex-wrap: wrap; row-gap: 6px; }
+        .line .lead { min-width: 0; }
+        .line .steps, .line .on { margin-left: auto; }
+        .line .short { order: 3; flex: 1 0 100%; }
+      }
+      @container (max-width: 240px) { .on .bl { display: none; } .on { padding: 0 11px; } }
       .on:focus-visible { outline-color: var(--cv-on-cream); }
       @media (prefers-reduced-motion: reduce) { ha-card, .row, .mini { transition: none; } .menu { animation: none; } }
     `;
     }
-    getGridOptions() { return this._config && this._config.size === 'compact' ? { columns: 12, rows: 'auto', min_columns: 6, min_rows: 2 } : { columns: 12, rows: 'auto', min_columns: 6 }; }
+    getGridOptions() { return this._config && this._config.size === 'compact' ? { columns: 12, rows: 'auto', min_columns: 6, min_rows: 2 } : { columns: 12, rows: 'auto', min_columns: 12 }; }
     _update() {
       super._update();
       if (!this._escWired && this.shadowRoot.firstChild) {
@@ -268,7 +277,7 @@
         <p class="say">${esc(m.say)}</p>
         ${m.meta ? `<span class="meta">${esc(m.meta)}</span>` : ''}
         ${m.chips.length ? `<div class="chips">${m.chips.map((x) => `<button type="button" class="chip" data-act="menu" data-arg="${x.k}" aria-haspopup="listbox" aria-expanded="${x.open}"><small>${esc(x.label)}</small>${esc(x.value)}${ic('chev', 'mdi:chevron-down')}</button>`).join('')}</div>` : ''}
-        ${m.modes.length ? `<div class="modes" role="group" aria-label="${this.t('Mode')}">${m.modes.map((x) => `<button type="button" class="mode" data-act="mode" data-arg="${x.k}" aria-pressed="${x.on}" ${m.na ? 'disabled' : ''}>${esc(x.label)}</button>`).join('')}</div>` : ''}
+        ${m.modes.length ? `<div class="modes scrollrow" role="group" aria-label="${this.t('Mode')}">${m.modes.map((x) => `<button type="button" class="mode" data-act="mode" data-arg="${x.k}" aria-pressed="${x.on}" ${m.na ? 'disabled' : ''}>${esc(x.label)}</button>`).join('')}</div>` : ''}
         ${m.menu ? `<div class="menu" role="listbox" aria-label="${esc(m.menu.title)}" style="${m.menu.top ? 'top:52px' : 'bottom:' + (m.modes.length ? 62 : 14) + 'px'}"><span class="t">${esc(m.menu.title)}</span>${m.menu.opts.map((o) => `<button type="button" class="opt" role="option" data-act="pick" data-arg="${esc(o.value)}" aria-selected="${o.on}"><span>${esc(o.label)}</span>${o.on ? ic('check', 'mdi:check') : ''}</button>`).join('')}</div>` : ''}
       </ha-card>`;
     }
@@ -288,7 +297,7 @@
             : `<span class="lead"><span class="lbl">${esc(m.label)}</span><span class="big" style="font-size:${big}px">${esc(m.big)}</span></span>`}
           <span class="short">${esc(m.short)}</span>
           ${m.steps && !m.dual ? `<span class="steps">${step(m.steps, -1, this.t(fan ? 'Slower' : 'Lower'))}${step(m.steps, 1, this.t(fan ? 'Faster' : 'Raise'))}</span>` : ''}
-          ${m.canOn ? `<button type="button" class="on" data-act="on">${ic('power', 'mdi:power')}${this.t('Turn on')}</button>` : ''}
+          ${m.canOn ? `<button type="button" class="on" data-act="on">${ic('power', 'mdi:power')}<span class="bl">${this.t('Turn on')}</span></button>` : ''}
         </div>
       </ha-card>`;
     }

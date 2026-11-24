@@ -22,6 +22,19 @@
       ha-card.alert .state { color: color-mix(in srgb, var(--cc-on) 82%, var(--cc-b)); }
       ha-card.alert .btns button { background: var(--cc-on); color: var(--cc-b); }
       .tap { cursor: pointer; }
+      /* narrow (half a column on a phone): buttons get smaller, a labelled button keeps only its icon,
+         the round icon goes when there are buttons, and an alarm shows only its current mode */
+      ha-card { container-type: inline-size; }
+      @container (max-width: 380px) {
+        .btns { width: auto; gap: 4px; }
+        .btns button { min-width: 36px; padding: 0 6px; flex: 0 0 auto; }
+        .btns button.hasic .bl { display: none; }
+      }
+      @container (max-width: 250px) {
+        .row:has(.btns) .ic { display: none; }
+        .btns.many button:not([aria-pressed="true"]) { display: none; }
+        .btns button { min-width: 32px; }
+      }
     `;
     }
     getGridOptions() { return { columns: 12, rows: 1, min_columns: 6 }; }
@@ -33,7 +46,7 @@
       if (!st) return m;
       const a = st.attributes;
       const unit = (this._hass.config && this._hass.config.unit_system && this._hass.config.unit_system.temperature) || '°C';
-      const t = (v) => (v == null ? '–' : (Math.round(v * 10) / 10).toLocaleString(this._lang()) + (c.short ? '°' : ' ' + unit));
+      const t = (v) => (v == null ? '–' : (Math.round(v * 10) / 10).toLocaleString(this._lang()) + (c.short === false ? ' ' + unit : '°'));
       if (domain === 'climate') {
         m.icon = m.icon || ccIcon('radiator', 'mdi:radiator');
         const target = this._pending != null ? this._pending : a.temperature;
@@ -116,7 +129,7 @@
         <div class="row">
           ${m.picture ? `<div class="ic pic${m.away ? ' away' : ''}"><img src="${esc(m.picture)}" alt=""></div>` : `<div class="ic" style="${icStyle}"><ha-icon icon="${esc(m.icon)}"></ha-icon></div>`}
           <div class="txt tap" role="button" tabindex="0" data-act="more"><span class="name">${esc(m.name)}</span><span class="state">${esc(m.state)}</span></div>
-          ${m.btns.length ? `<div class="btns" style="--btns-w:${m.btnsW || 'auto'}">${m.btns.map((b) => `<button type="button" data-act="${b.act}" data-arg="${esc(b.arg || '')}" aria-label="${esc(b.aria || b.label)}" aria-pressed="${b.pressed ? 'true' : 'false'}">${b.icon ? `<ha-icon icon="${b.icon}"></ha-icon>` : ''}${b.label ? esc(b.label) : ''}</button>`).join('')}</div>` : ''}
+          ${m.btns.length ? `<div class="btns${m.btns.length > 3 && m.btns.some((b) => b.pressed) ? ' many' : ''}" style="--btns-w:${m.btnsW || 'auto'}">${m.btns.map((b) => `<button type="button" class="${b.icon && b.label ? 'hasic' : ''}" data-act="${b.act}" data-arg="${esc(b.arg || '')}" aria-label="${esc(b.aria || b.label)}" aria-pressed="${b.pressed ? 'true' : 'false'}">${b.icon ? `<ha-icon icon="${b.icon}"></ha-icon>` : ''}${b.label ? `<span class="bl">${esc(b.label)}</span>` : ''}</button>`).join('')}</div>` : ''}
         </div></ha-card>`;
     }
     act(a, arg) {

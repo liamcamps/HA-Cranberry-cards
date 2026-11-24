@@ -9,8 +9,9 @@
       .head .ic { width: 40px; height: 40px; background: var(--cc-c); color: var(--cc-on); }
       .group { display: flex; flex-direction: column; gap: 6px; padding: 0 2px; }
       .label { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--cc-muted); padding-left: 2px; }
-      .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-      .chip { height: 36px; padding: 0 14px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-q-t); font-size: 14px; font-weight: 600; display: flex; align-items: center; }
+      .chips { display: flex; gap: 6px; }
+      .head .state { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+      .chip { height: 36px; padding: 0 14px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-q-t); font-size: 14px; font-weight: 600; display: flex; align-items: center; flex-shrink: 0; white-space: nowrap; }
       .chip.sq { width: 40px; padding: 0; justify-content: center; }
       .chip[aria-pressed="true"] { background: var(--cc-c); color: var(--cc-on); }
       .note { height: 40px; width: 100%; box-sizing: border-box; padding: 0 14px; border: 0; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-bgc); color: var(--cc-text); font: 500 14px Figtree, var(--ha-font-family-body, sans-serif); outline: none; }
@@ -54,7 +55,7 @@
       };
     }
     view(m) {
-      const chips = (list, act, sq) => `<div class="chips">${list.map((x) => `<button type="button" class="chip ${sq ? 'sq' : ''}" data-act="${act}" data-arg="${esc(x.o)}" aria-pressed="${x.on}">${esc(x.o)}</button>`).join('')}</div>`;
+      const chips = (list, act, sq) => `<div class="chips scrollrow">${list.map((x) => `<button type="button" class="chip ${sq ? 'sq' : ''}" data-act="${act}" data-arg="${esc(x.o)}" aria-pressed="${x.on}">${esc(x.o)}</button>`).join('')}</div>`;
       return `<ha-card class="${m.na ? 'na' : ''}">
         <div class="head">
           <span class="ic"><ha-icon icon="${ccIcon('car', 'mdi:car-outline')}"></ha-icon></span>

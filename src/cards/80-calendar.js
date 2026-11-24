@@ -50,7 +50,7 @@
       .ad .wev { padding: 4px 6px; }
       .ad .wev b { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .foot { display: flex; justify-content: flex-end; padding: 10px 0 6px; }
-      .add { height: 44px; padding: 0 18px 0 14px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-c); color: var(--cc-on); display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+      .add { height: 44px; padding: 0 18px 0 14px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-c); color: var(--cc-on); display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700;  white-space: nowrap; }
       .add ha-icon { --mdc-icon-size: 18px; }
       .form { display: flex; flex-direction: column; gap: 14px; padding: 12px 0 6px; }
       .fhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -114,7 +114,14 @@
       .free.range b { width: auto; min-width: 48px; }
       .empty { padding: 16px 2px; font-size: 15px; color: var(--cc-muted); }
       ha-card { --cc-rule: color-mix(in srgb, var(--cc-text) 12%, transparent); --cc-raise: color-mix(in srgb, var(--cc-text) 7%, transparent); }
-      @media (max-width: 480px) { .when { width: 104px; } }
+      /* narrow (a phone): the time goes above the title, so the title gets the whole width */
+      ha-card { container-type: inline-size; }
+      @container (max-width: 460px) {
+        .ev { flex-direction: column; align-items: stretch; gap: 0; padding: 3px 0; }
+        .when { width: auto; font-size: 13px; }
+        .what { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; padding-left: 16px; }
+        .what small { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      }
     `;
     }
     getGridOptions() { return { columns: 12, rows: 'auto', min_columns: 6 }; }
