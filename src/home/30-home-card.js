@@ -79,9 +79,13 @@
     .ev .when { font-size: 13px; font-weight: 500; color: var(--chc-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .agenda .none { font-size: 16px; font-weight: 500; color: var(--chc-sub); }
     /* weather details: a row of facts, and a chart that uses the height */
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 12px; padding: 12px 0 2px; border-top: 1px solid var(--chc-rule); }
-    .stat { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    /* always one row: the columns shrink to their content, and the last one goes when it doesn't fit */
+    .stats { display: flex; justify-content: space-between; gap: 10px; padding: 12px 0 2px; border-top: 1px solid var(--chc-rule); container-type: inline-size; }
+    .stat { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 0 1 auto; }
+    .stat .k { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .stat b { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    @container (max-width: 340px) { .stat:nth-child(4) { display: none; } }
+    @container (max-width: 250px) { .stat:nth-child(3) { display: none; } }
     .weather.fill .chart { flex: 1; justify-content: flex-end; min-height: 0; }
     .weather.fill .plot { flex: 1; position: relative; min-height: 34px; max-height: 220px; }
     .weather.fill .plot svg { position: absolute; inset: 0; width: 100%; height: 100%; }

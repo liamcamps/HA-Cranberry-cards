@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.34.1 (2026-11-24)
+
+- Home card: the weather details always stay on one row. The columns are only as wide as their text; when the weather side is too narrow, sunrise or sunset is left out first, then wind. In Dutch the labels are shorter ("Zon onder").
+
 ## 2.34.0 (2026-11-24)
 
 - **Dutch.** Every card and its editor speaks Dutch when your Home Assistant language is Dutch ("Verwarmt naar 21° · 19,5°", "GFT en papier vanavond buiten zetten", "Alles rustig."). Any other language stays English. The home card's own weather warnings and advice follow too, and the wind direction reads ZW instead of SW.
