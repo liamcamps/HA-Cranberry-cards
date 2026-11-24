@@ -2,8 +2,8 @@
   // The coming days from one or more calendars, with the same date blocks as the home card:
   // one block per day, today in cranberry, days without plans folded into one line.
   const CAL_COLOURS = ['var(--cc-c)', 'var(--cc-o)', 'var(--cc-h)', 'var(--cc-ochre)', 'var(--cc-q)'];
-  // the same colours, lifted so a small dot still shows on a dark card
-  const CAL_DOTS = ['#B8565B', '#8C7F45', '#8FA1A6', '#C99A4A', '#A9AFB1'];
+  // the dots: the theme's calendar colours (cc-calendar-1 … cc-calendar-5), light enough for a dark card
+  const CAL_DOTS = ['var(--cv-cal-1)', 'var(--cv-cal-2)', 'var(--cv-cal-3)', 'var(--cv-cal-4)', 'var(--cv-cal-5)'];
   class CranberryCalendarCard extends CranberryBase {
     static get styles() {
       return `
@@ -13,7 +13,7 @@
       .legend { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 0 2px; }
       .seg { display: flex; gap: 2px; padding: 4px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-raise); flex-shrink: 0; margin-left: auto; }
       .seg button { height: 32px; padding: 0 14px; border-radius: var(--cc-r-chip, 8px); font-size: 13px; font-weight: 700; color: var(--cc-muted); }
-      .seg button[aria-pressed="true"] { background: var(--cc-card); color: var(--cc-text); box-shadow: 0 1px 2px rgba(35, 28, 26, .12); }
+      .seg button[aria-pressed="true"] { background: var(--cc-card); color: var(--cc-text); box-shadow: 0 1px 2px ${alpha('--cv-on-cream', 12)}; }
       .week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); margin: 0 -5px; padding: 10px 0 8px; }
       .col { min-width: 0; padding: 0 5px; display: flex; flex-direction: column; gap: 6px; min-height: 200px; }
       .col + .col { border-left: 1px solid var(--cc-rule); }

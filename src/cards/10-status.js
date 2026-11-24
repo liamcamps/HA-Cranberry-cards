@@ -111,7 +111,7 @@
     view(m) {
       const ic = m.tone === 'olive' ? 'var(--cc-o)' : 'var(--cc-q)';
       const tint = m.tone === 'olive' ? 'var(--cc-o-t)' : 'var(--cc-q-t)';
-      const icStyle = m.alert ? 'background: rgba(242,236,224,.18); color: var(--cc-on)' : `background: ${tint}; color: ${ic}`;
+      const icStyle = m.alert ? `background: ${alpha('--cc-on', 18)}; color: var(--cc-on)` : `background: ${tint}; color: ${ic}`;
       return `<ha-card class="${m.alert ? 'alert' : ''} ${m.na ? 'na' : ''}" style="--ic:${ic};--tint:${tint}">
         <div class="row">
           ${m.picture ? `<div class="ic pic${m.away ? ' away' : ''}"><img src="${esc(m.picture)}" alt=""></div>` : `<div class="ic" style="${icStyle}"><ha-icon icon="${esc(m.icon)}"></ha-icon></div>`}

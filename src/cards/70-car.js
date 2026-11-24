@@ -20,7 +20,7 @@
       .map { height: 168px; pointer-events: none; --ha-card-border-radius: 0; --ha-card-border-width: 0; --ha-card-box-shadow: none; }
       .map > * { display: block; height: 100%; }
       .mapbtn { position: absolute; inset: 0; display: flex; align-items: flex-end; padding: 10px; }
-      .go { height: 36px; padding: 0 12px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-c); color: var(--cc-on); display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; box-shadow: 0 2px 8px rgba(35, 28, 26, 0.18); }
+      .go { height: 36px; padding: 0 12px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-c); color: var(--cc-on); display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; box-shadow: 0 2px 8px ${alpha('--cv-on-cream', 18)}; }
       .go ha-icon { --mdc-icon-size: 16px; }
       .nomap { font-size: 13px; color: var(--cc-muted); padding: 0 4px; }
     `;
@@ -93,7 +93,7 @@
           const helpers = window.loadCardHelpers ? await window.loadCardHelpers() : null;
           if (!helpers) return;
           this._map = helpers.createCardElement({
-            type: 'map', entities: [{ entity: spot, label_mode: 'icon', color: '#591E21' }],
+            type: 'map', entities: [{ entity: spot, label_mode: 'icon', color: getComputedStyle(this).getPropertyValue('--cv-fill-c').trim() || 'var(--cc-c)' }],
             default_zoom: 16, theme_mode: 'auto', map_style: 'muted'
           });
           this._mapFor = spot;

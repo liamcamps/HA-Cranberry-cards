@@ -2,6 +2,7 @@
   const LUCIDE = { vacation: 'plane', car: 'car', pin: 'map-pin', nav: 'navigation', plus: 'plus', minus: 'minus', chev: 'chevron-down', home: 'house', radiator: 'heater', thermometer: 'thermometer', evening: 'sunset', night: 'moon', walk: 'footprints', people: 'users', washer: 'washing-machine', alert: 'triangle-alert', check: 'check', 'chevron-right': 'chevron-right', info: 'info', lock: 'lock', 'lock-open': 'lock-open', shield: 'shield-check', 'shield-off': 'shield-off', play: 'play', pause: 'pause', stop: 'square', 'skip-next': 'skip-forward', 'skip-previous': 'skip-back', bulb: 'lightbulb', power: 'power', x: 'x', 'chevron-left': 'chevron-left', clock: 'clock', pin: 'map-pin', user: 'user' };
   const ccIcon = (name, fallback) => (window.customIcons && window.customIcons.lucide && LUCIDE[name] ? 'lucide:' + LUCIDE[name] : fallback);
   const { morph, MOTION } = window.CranberryMorph;
+  const { alpha } = window.CranberryTokens;
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
   const loadFonts = () => {
     if (document.getElementById('cranberry-home-card-fonts')) return;
@@ -15,11 +16,7 @@
 
   const BASE = `
     :host { display: block; height: 100%;
-      --cc-c: var(--cc-cranberry, #591E21); --cc-o: var(--cc-olive, #514718); --cc-q: var(--cc-quail, #7D8689); --cc-b: var(--cc-brick, #A8352F);
-      --cc-h: var(--cc-harbour, #40606A); --cc-ochre: var(--cc-ochre-tone, #8E6420);
-      --cc-card: var(--ha-card-background, var(--card-background-color, #EEE9DF));
-      --cc-text: var(--primary-text-color, #231C1A); --cc-muted: var(--secondary-text-color, #6E6560);
-      --cc-bgc: var(--primary-background-color, #E3DDCF); --cc-on: #F2ECE0;
+      ${window.CranberryTokens.css}
       --cc-c-t: color-mix(in srgb, var(--cc-c) 15%, transparent);
       --cc-o-t: color-mix(in srgb, var(--cc-o) 18%, transparent);
       --cc-q-t: color-mix(in srgb, var(--cc-q) 20%, transparent); }

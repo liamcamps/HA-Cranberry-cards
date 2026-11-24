@@ -6,7 +6,7 @@
       ha-card.urgent { background: var(--cc-c); color: var(--cc-on); }
       ha-card.urgent .item .d { color: color-mix(in srgb, var(--cc-on) 82%, var(--cc-c)); }
       ha-card.urgent .item.soon .d { color: var(--cc-on); }
-      ha-card.urgent .item { border-top-color: rgba(255,255,255,0.14); }
+      ha-card.urgent .item { border-top-color: ${alpha('--cc-on', 14)}; }
       .head { display: flex; align-items: center; gap: 10px; min-height: 40px; border-radius: var(--cc-r-ctl, 12px); }
       .urgent .head { color: var(--cc-on); }
       .urgent .head .state { color: color-mix(in srgb, var(--cc-on) 82%, var(--cc-c)); }

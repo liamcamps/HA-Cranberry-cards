@@ -1,4 +1,4 @@
-  const VERSION = '2.32.0';
+  const VERSION = '2.33.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -46,9 +46,10 @@
     wind: 'M8 22h30a7 7 0 1 0-7-7M8 42h38a7 7 0 1 1-7 7M8 32h20',
     alert: 'M32 10 8 54h48zM32 28v12M32 47v.01'
   };
-  const CREAM = '#F2ECE0', AMBER = '#F0B85A', BLUE = '#9CC3D6', ICE = BLUE, DUSK = '#B5ABA0', BOLT = AMBER;
+  // the weather art takes its colours from the theme
+  const CREAM = 'var(--cc-on)', AMBER = 'var(--cv-sun)', BLUE = 'var(--cv-mist)', ICE = BLUE, DUSK = 'var(--cv-taupe)', BOLT = AMBER;
   const ART = {
-    'clear-night': [[A.moon, CREAM], [A.stars, '#E3DDCF'], null],
+    'clear-night': [[A.moon, CREAM], [A.stars, 'var(--cv-canvas)'], null],
     sunny: [[A.sun, AMBER], null, [A.rays, AMBER]],
     partlycloudy: [[A.smallSun, AMBER], [A.cloud, CREAM], null],
     'partlycloudy-night': [[A.smallMoon, CREAM], [A.cloud, DUSK], null],
@@ -76,14 +77,14 @@
   const DONE_STATES = ['on', 'true', 'done', 'finished', 'complete', 'completed', 'ready', 'klaar', 'gereed'];
   const PROBLEM_STATES = ['on', 'open', 'opening', 'unlocked', 'unlocking', 'jammed', 'triggered', 'problem'];
 
-  // Temperature colour, light enough to read on cranberry (stops in °C)
-  const TS = [[-5, [185, 215, 232]], [3, [196, 214, 222]], [9, [226, 220, 200]], [14, [238, 196, 128]], [22, [242, 160, 92]]];
+  // Temperature colour, light enough to read on cranberry: the theme's five temperature colours
+  // (cc-temp-freezing … cc-temp-hot) at these temperatures in °C, blended in between
+  const TS = [-5, 3, 9, 14, 22];
   const tempColour = (c) => {
     let i = 0;
-    while (i < TS.length - 2 && c > TS[i + 1][0]) i++;
-    const [t0, c0] = TS[i], [t1, c1] = TS[i + 1];
-    const f = Math.max(0, Math.min(1, (c - t0) / (t1 - t0)));
-    return 'rgb(' + c0.map((v, j) => Math.round(v + (c1[j] - v) * f)).join(',') + ')';
+    while (i < TS.length - 2 && c > TS[i + 1]) i++;
+    const f = Math.max(0, Math.min(1, (c - TS[i]) / (TS[i + 1] - TS[i])));
+    return `color-mix(in srgb, var(--cv-temp-${i + 1}) ${Math.round((1 - f) * 1000) / 10}%, var(--cv-temp-${i + 2}))`;
   };
 
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));

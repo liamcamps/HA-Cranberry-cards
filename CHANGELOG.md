@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.33.0 (2026-11-24)
+
+- **Every colour comes from the theme.** The cards no longer contain their own colour values: the thermostat states, the hero, the weather art, the temperature line, the bins, the calendar dots and the translucent layers on coloured cards all use the Cranberry Canvas theme's tokens. The fallbacks for when the theme isn't installed are in one place, `src/home/05-tokens.js`. Use with theme 4.1.0 or newer; with an older theme the cards look the same through those fallbacks.
+- Bin colours follow the theme per mode, instead of the card checking for dark mode itself.
+- The washer card's "now" step is cream instead of white, like the rest of the palette.
+- **Built from source:** the cards are written in `src/`, one file per card, and built into `dist/cranberry-cards.js` with esbuild. It's minified now: 60 → 50 KB to download. CI checks the build matches the source.
+
 ## 2.32.0 (2026-11-23)
 
 - People card, like Home Assistant's heading:

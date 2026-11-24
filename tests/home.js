@@ -92,7 +92,7 @@ const wait = () => new Promise((r) => setTimeout(r, 10));
   t = card.shadowRoot.textContent;
   ok(t.includes('Freezing, down to −3°'), 'freezing insight: ' + t.replace(/\s+/g, ' '));
   ok(card.shadowRoot.querySelector('ha-card').className.includes('stacked'), 'stacked layout');
-  ok(card.shadowRoot.querySelector('.chip .serif').getAttribute('style').includes('rgb(1'), 'icy temp colour');
+  ok(card.shadowRoot.querySelector('.chip .serif').getAttribute('style').includes('var(--cv-temp-1)'), 'icy temp colour');
 
   // 6. missing entity, bad config, stub, editor
   w = setup(); card = w.document.createElement('cranberry-home-card');

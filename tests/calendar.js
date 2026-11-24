@@ -58,7 +58,7 @@ const rowText = (r) => { const tw = r.ownerDocument.createTreeWalker(r, 4); cons
   // no trailing free lines after the last event
   ok(!$$(el, '.day').slice(-1)[0].classList.contains('free'), 'no free line at the end');
   // dots follow the order of the calendars
-  ok($(el, '.legend .dot').getAttribute('style').includes('#B8565B') && $$(el, '.legend .dot')[1].getAttribute('style').includes('#8C7F45'), 'cranberry then olive');
+  ok($(el, '.legend .dot').getAttribute('style').includes('var(--cv-cal-1)') && $$(el, '.legend .dot')[1].getAttribute('style').includes('var(--cv-cal-2)'), 'cranberry then olive');
 
   // folding runs of free days into one line
   EV = { 'calendar.family': [{ summary: 'A', start: { dateTime: at(0, 23, 59) }, end: { dateTime: at(0, 23, 59) } }, { summary: 'B', start: { dateTime: at(4, 10) }, end: { dateTime: at(4, 11) } }] };
@@ -167,7 +167,7 @@ const rowText = (r) => { const tw = r.ownerDocument.createTreeWalker(r, 4); cons
   ok(asked.length === 1 && asked[0].indexOf('calendar.family') > 0 && !el.shadowRoot.textContent.includes('Padel'), 'Mylou does not see Liam’s calendar');
   const asLiam = Object.assign(H2(), { user: { id: 'u-liam' } });
   el = await make2({ calendars: ['calendar.family', { entity: 'calendar.liam', people: ['person.liam'] }] }, asLiam);
-  ok(el.shadowRoot.textContent.includes('Padel') && $$(el, '.legend .dot')[1].getAttribute('style').includes('#8C7F45'), 'Liam does, in the same colour');
+  ok(el.shadowRoot.textContent.includes('Padel') && $$(el, '.legend .dot')[1].getAttribute('style').includes('var(--cv-cal-2)'), 'Liam does, in the same colour');
   const nobody = Object.assign(H2(), { user: { id: 'u-kiosk' } });
   el = await make2({ calendars: ['calendar.family', { entity: 'calendar.liam', people: ['person.liam'] }] }, nobody);
   ok(!el.shadowRoot.textContent.includes('Padel') && el.shadowRoot.textContent.includes('Dinner'), 'a user without a person sees only the shared calendars');

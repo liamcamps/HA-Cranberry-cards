@@ -31,7 +31,7 @@
       .bar span, .bars span { transition: width .8s cubic-bezier(.2, .8, .2, 1), height .6s cubic-bezier(.2, .8, .2, 1), opacity .3s ease; }
       .issue, .bins, .warn, .act, .step.now, .insight, .item.soon { animation: cc-in .35s ease both; }
       ha-card.running .bar span { overflow: hidden; }
-      ha-card.running .bar span::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent); animation: cc-sheen 2.6s ease-in-out infinite; }
+      ha-card.running .bar span::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--cc-on) 28%, transparent), transparent); animation: cc-sheen 2.6s ease-in-out infinite; }
     }
   `;
   window.CranberryMorph = { morph, MOTION };

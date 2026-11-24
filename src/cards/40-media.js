@@ -11,7 +11,7 @@
       .art span { width: 16px; height: 16px; border-radius: var(--cc-r-chip, 8px); background: var(--cc-c); }
       .name { font-size: 15px; font-weight: 700; }
       .ctl { width: 40px; height: 40px; border-radius: var(--cc-r-ctl, 12px); display: flex; align-items: center; justify-content: center; background: var(--cc-q-t); flex-shrink: 0; }
-      ha-card.playing .ctl { background: rgba(255,255,255,.14); }
+      ha-card.playing .ctl { background: ${alpha('--cc-on', 14)}; }
       .ctl.main { width: 44px; height: 44px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-o); color: var(--cc-on); }
       ha-card.playing .ctl.main { background: var(--cc-on); color: var(--cc-o); }
       .ctl ha-icon { --mdc-icon-size: 20px; }

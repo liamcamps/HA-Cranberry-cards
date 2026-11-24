@@ -5,16 +5,13 @@
     ['textiel', 'Textiles', 'rest'], ['glas', 'Glass', 'paper'], ['kca', 'Chemical waste', 'rest'], ['grofvuil', 'Bulky waste', 'rest'], ['rest', 'Residual', 'rest']
   ];
   const WASTE_SKIP = /_(today|tomorrow|day_after_tomorrow|next_[a-z_]+|notification[s]?|formatted)$/;
-  const BIN_COLOURS = {
-    light: { gft: '#5E7A34', paper: '#3F6585', plastic: '#C2702A', rest: '#4E5457' },
-    dark: { gft: '#86A45A', paper: '#7FA3C2', plastic: '#E09A55', rest: '#9AA0A3' }
-  };
+  // the theme sets these per mode (cc-bin-green, cc-bin-paper, cc-bin-plastic, cc-bin-rest)
+  const BIN_COLOURS = { gft: 'var(--cv-bin-green)', paper: 'var(--cv-bin-paper)', plastic: 'var(--cv-bin-plastic)', rest: 'var(--cv-bin-rest)' };
   const SHORT = { 'Green (GFT)': 'green', 'Plastic (PMD)': 'plastic', 'Plastic (PBD)': 'plastic' };
   const parseHM = (v, d) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(v || d)); return m ? Number(m[1]) * 60 + Number(m[2]) : 0; };
   const wasteState = (hass, cfg, nowDate) => {
     const now = nowDate || new Date();
-    const dark = !!(hass.themes && hass.themes.darkMode);
-    const C = BIN_COLOURS[dark ? 'dark' : 'light'];
+    const C = BIN_COLOURS;
     let ids = [].concat(cfg.waste || []).filter(Boolean);
     if (!ids.length || ids[0] === 'auto') {
       ids = Object.keys(hass.states).filter((id) => id.indexOf('sensor.afvalwijzer') === 0 && !WASTE_SKIP.test(id) && 'days_until_collection_date' in (hass.states[id].attributes || {}));

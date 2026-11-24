@@ -43,7 +43,7 @@
     }
     view(m) {
       return `<ha-card class="${m.na ? 'na' : ''} ${m.active ? 'active' : ''}"><button type="button" class="btn" data-act="run" aria-pressed="${m.active}" aria-label="${esc(m.name)}${m.active ? ', active' : ''}">
-        <span class="ic" style="background:${m.active ? 'rgba(255,255,255,0.16)' : 'var(--cc-q-t)'};color:${m.active ? 'var(--cc-on)' : 'var(--cc-q)'}"><ha-icon icon="${esc(m.icon)}"></ha-icon></span>
+        <span class="ic" style="background:${m.active ? alpha('--cc-on', 16) : 'var(--cc-q-t)'};color:${m.active ? 'var(--cc-on)' : 'var(--cc-q)'}"><ha-icon icon="${esc(m.icon)}"></ha-icon></span>
         <span class="name">${esc(m.name)}</span></button></ha-card>`;
     }
     act() {

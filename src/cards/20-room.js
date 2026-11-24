@@ -19,8 +19,8 @@
       ha-card.alert { background: var(--cc-b); color: var(--cc-on); }
       ha-card.alert .fill { display: none; }
       ha-card.alert .state { color: color-mix(in srgb, var(--cc-on) 82%, var(--cc-b)); font-weight: 600; }
-      ha-card.alert .tog { background: rgba(242, 236, 224, 0.16) !important; color: var(--cc-on) !important; }
-      ha-card.alert .temp { background: rgba(242, 236, 224, 0.16); }
+      ha-card.alert .tog { background: ${alpha('--cc-on', 16)} !important; color: var(--cc-on) !important; }
+      ha-card.alert .temp { background: ${alpha('--cc-on', 16)}; }
       /* a narrow card (two side by side on a phone) keeps room for the name */
       ha-card { container-type: inline-size; }
       .tin { display: none; }
@@ -34,7 +34,7 @@
         .extra { display: none; }
       }
       ha-card.alert .chev { color: var(--cc-on); }
-      ha-card.alert .extra { background: rgba(242, 236, 224, 0.16); color: var(--cc-on); }
+      ha-card.alert .extra { background: ${alpha('--cc-on', 16)}; color: var(--cc-on); }
     `;
     }
     getGridOptions() { return { columns: 6, rows: 'auto', min_columns: 4 }; }

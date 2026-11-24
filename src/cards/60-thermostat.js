@@ -3,23 +3,24 @@
   // number is what you set, and one sentence says where the room is and what happens next.
   // Heat/cool stacks its two setpoints. Preset, fan and swing only show when supported.
   const CLIMATE = { TARGET: 1, RANGE: 2, HUMIDITY: 4, FAN: 8, PRESET: 16, SWING: 32 };
-  const THERMO_BG = { heating: '#514718', cooling: '#40606A', drying: '#8E6420', fan: '#545C5F', idle: '#3A2F2C', off: '#545C5F', na: '#545C5F' };
+  // the card's colour per state, from the theme's fill tokens
+  const THERMO_BG = { heating: 'var(--cv-fill-o)', cooling: 'var(--cv-fill-h)', drying: 'var(--cv-fill-ochre)', fan: 'var(--cv-fill-q)', idle: 'var(--cv-fill-ember)', off: 'var(--cv-fill-q)', na: 'var(--cv-fill-q)' };
   const HVAC_NAMES = { off: 'Off', heat: 'Heat', cool: 'Cool', heat_cool: 'Heat/cool', auto: 'Auto', dry: 'Dry', fan_only: 'Fan' };
   class CranberryThermostatCard extends CranberryBase {
     static get styles() {
       return `
-      ha-card { position: relative; color: #F2ECE0; padding: 16px 16px 12px 20px; display: flex; flex-direction: column; gap: 6px; transition: background-color .4s ease; }
+      ha-card { position: relative; color: var(--cc-on); padding: 16px 16px 12px 20px; display: flex; flex-direction: column; gap: 6px; transition: background-color .4s ease; }
       .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; }
       .room { font-size: 14px; font-weight: 600; opacity: .85; text-align: left; }
-      .chip { height: 32px; border-radius: var(--cc-r-chip, 8px); padding: 0 8px 0 10px; background: rgba(242,236,224,.14); display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; }
-      .chip[aria-expanded="true"] { background: rgba(242,236,224,.28); }
+      .chip { height: 32px; border-radius: var(--cc-r-chip, 8px); padding: 0 8px 0 10px; background: ${alpha('--cc-on', 14)}; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; }
+      .chip[aria-expanded="true"] { background: ${alpha('--cc-on', 28)}; }
       .chip small { font-size: 12px; font-weight: 600; opacity: .75; }
       .chip ha-icon { --mdc-icon-size: 14px; }
       .one { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; min-height: 122px; }
       .one .lbl, .row .lbl { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .72; min-height: 16px; display: block; }
       .big { font-family: Fraunces, Georgia, serif; font-variation-settings: 'SOFT' 100; font-weight: 400; line-height: .95; letter-spacing: -.05em; margin-left: -4px; white-space: nowrap; }
       .steps { display: flex; flex-direction: column; gap: 6px; padding-bottom: 8px; }
-      .step { width: 52px; height: 52px; border-radius: 16px; background: rgba(242,236,224,.16); display: flex; align-items: center; justify-content: center; }
+      .step { width: 52px; height: 52px; border-radius: 16px; background: ${alpha('--cc-on', 16)}; display: flex; align-items: center; justify-content: center; }
       .step ha-icon { --mdc-icon-size: 24px; }
       .rows { display: flex; flex-direction: column; gap: 2px; padding-top: 2px; }
       .row { display: flex; align-items: center; gap: 8px; transition: opacity .3s ease; }
@@ -30,21 +31,21 @@
       .meta { font-size: 13px; font-weight: 500; opacity: .75; }
       .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
       .chips .chip { height: 34px; border-radius: 10px; }
-      .modes { display: flex; flex-wrap: wrap; column-gap: 16px; margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(242,236,224,.2); }
+      .modes { display: flex; flex-wrap: wrap; column-gap: 16px; margin-top: 8px; padding-top: 6px; border-top: 1px solid ${alpha('--cc-on', 20)}; }
       .mode { height: 38px; font-size: 15px; font-weight: 700; opacity: .6; border-bottom: 2px solid transparent; }
-      .mode[aria-pressed="true"] { opacity: 1; border-bottom-color: #F2ECE0; }
-      .menu { position: absolute; left: 12px; right: 12px; z-index: 2; box-sizing: border-box; border-radius: 16px; background: #F2ECE0; color: #231C1A; box-shadow: 0 12px 32px rgba(0,0,0,.28); padding: 6px; display: flex; flex-direction: column; max-height: 300px; overflow-y: auto; animation: cc-in .2s ease both; }
+      .mode[aria-pressed="true"] { opacity: 1; border-bottom-color: var(--cc-on); }
+      .menu { position: absolute; left: 12px; right: 12px; z-index: 2; box-sizing: border-box; border-radius: 16px; background: var(--cc-on); color: var(--cv-on-cream); box-shadow: 0 12px 32px ${alpha('--cv-shadow', 28)}; padding: 6px; display: flex; flex-direction: column; max-height: 300px; overflow-y: auto; animation: cc-in .2s ease both; }
       .menu .t { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--cc-muted); padding: 8px 10px 4px; }
       .opt { height: 40px; border-radius: 10px; padding: 0 10px; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 500; text-align: left; }
-      .opt[aria-selected="true"] { background: rgba(35,28,26,.08); font-weight: 700; }
+      .opt[aria-selected="true"] { background: ${alpha('--cv-on-cream', 8)}; font-weight: 700; }
       .opt ha-icon { --mdc-icon-size: 16px; }
-      button:focus-visible { outline-color: #F2ECE0; }
-      .menu button:focus-visible { outline-color: #231C1A; }
+      button:focus-visible { outline-color: var(--cc-on); }
+      .menu button:focus-visible { outline-color: var(--cv-on-cream); }
       ha-card.compact { padding: 12px 12px 14px 18px; }
       .compact .top { min-height: 28px; }
       .compact .room { font-size: 13px; display: flex; align-items: center; gap: 2px; }
       .compact .room ha-icon { --mdc-icon-size: 14px; }
-      .compact .tag { height: 26px; padding: 0 8px; border-radius: var(--cc-r-chip, 8px); background: rgba(242,236,224,.14); font-size: 12px; font-weight: 700; display: flex; align-items: center; }
+      .compact .tag { height: 26px; padding: 0 8px; border-radius: var(--cc-r-chip, 8px); background: ${alpha('--cc-on', 14)}; font-size: 12px; font-weight: 700; display: flex; align-items: center; }
       .line { display: flex; align-items: center; gap: 12px; min-height: 72px; }
       .line .lead { display: flex; flex-direction: column; flex-shrink: 0; min-width: 92px; }
       .line .lbl, .mini .lbl { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .72; min-height: 14px; }
@@ -59,9 +60,9 @@
       .mini .big { width: 56px; font-size: 28px; line-height: 34px; letter-spacing: -.04em; margin: 0; }
       .mini .step { width: 34px; height: 34px; border-radius: 10px; }
       .mini .step ha-icon { --mdc-icon-size: 16px; }
-      .on { height: 40px; flex-shrink: 0; border-radius: var(--cc-r-control, 12px); padding: 0 14px 0 10px; background: #F2ECE0; color: #231C1A; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+      .on { height: 40px; flex-shrink: 0; border-radius: var(--cc-r-control, 12px); padding: 0 14px 0 10px; background: var(--cc-on); color: var(--cv-on-cream); font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
       .on ha-icon { --mdc-icon-size: 16px; }
-      .on:focus-visible { outline-color: #231C1A; }
+      .on:focus-visible { outline-color: var(--cv-on-cream); }
       @media (prefers-reduced-motion: reduce) { ha-card, .row, .mini { transition: none; } .menu { animation: none; } }
     `;
     }

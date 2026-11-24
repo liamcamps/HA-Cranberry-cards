@@ -177,13 +177,13 @@
       const c = this._config;
       const large = c.size !== 'row';
       const tone = m.tone;
-      const icBg = tone === 'cran' || tone === 'brick' ? 'rgba(255,255,255,.16)' : tone === 'olive' ? 'var(--cc-o-t)' : 'var(--cc-q-t)';
+      const icBg = tone === 'cran' || tone === 'brick' ? alpha('--cc-on', 16) : tone === 'olive' ? 'var(--cc-o-t)' : 'var(--cc-q-t)';
       const icFg = tone === 'cran' || tone === 'brick' ? 'currentColor' : tone === 'olive' ? 'var(--cc-o)' : 'var(--cc-q)';
       const coloured = tone === 'cran' || tone === 'brick';
       const vars = [
         '--fill:' + (coloured ? 'currentColor' : tone === 'olive' ? 'var(--cc-o)' : 'var(--cc-q)'),
-        '--chip:' + (coloured ? 'rgba(255,255,255,.12)' : 'color-mix(in srgb, var(--cc-bgc) 70%, transparent)'),
-        '--nowbg:' + (coloured ? '#fff' : tone === 'olive' ? 'var(--cc-o)' : 'var(--cc-q)'),
+        '--chip:' + (coloured ? alpha('--cc-on', 12) : 'color-mix(in srgb, var(--cc-bgc) 70%, transparent)'),
+        '--nowbg:' + (coloured ? 'var(--cc-on)' : tone === 'olive' ? 'var(--cc-o)' : 'var(--cc-q)'),
         '--nowfg:' + (tone === 'brick' ? 'var(--cc-b)' : tone === 'cran' ? 'var(--cc-c)' : 'var(--cc-on)')
       ].join(';');
       const showBar = m.pct >= 0;

@@ -143,5 +143,5 @@ node build.mjs --plain   # an unminified build, for reading or debugging
 
 `src/home/` is the home card; `src/cards/` holds the other cards, with the shared base in
 `00-base.js` and the card registrations in `90-editors.js`. Files are joined in name order.
-Colours come from the theme's `cc-` tokens; the fallbacks for when the theme isn't
-installed live in one place, `src/cards/00-base.js` and `src/home/00-shared.js`.
+Colours come from the theme's `cc-` tokens; the only colour values in the cards are the
+fallbacks for when the theme isn't installed, all in `src/home/05-tokens.js`.
