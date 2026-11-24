@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.37.2 (2026-11-24)
+
+- The partly cloudy icon is a sun peeking out from behind a cloud again, instead of a sun drawn through the cloud. Same for the moon at night. In the weather card and the home card's hourly chart (without the Lucide icons integration).
+
 ## 2.37.1 (2026-11-24)
 
 - Weather card: the same weather icons as the home card. Lucide icons (cloud-sun, cloud-rain, moon, …) when the Lucide icons integration is installed, the cards’ own drawn icons otherwise.

@@ -268,7 +268,7 @@ const wait = () => new Promise((r) => setTimeout(r, 10));
     const art = card.shadowRoot.querySelector('.head svg').innerHTML;
     ok(art.includes('M34 25A12') && !art.includes('M24 10a11'), 'big icon is moon at night');
     const icons = [...card.shadowRoot.querySelectorAll('.hour svg path')].map((p) => p.getAttribute('d').slice(0, 8));
-    ok(icons[0] === 'M11.5 7.' && icons[1] === 'M11.5 7.' && icons[3] === 'M8 4a4 4', 'hours switch to sun after sunrise: ' + icons.join(' | '));
+    ok(icons[0] === 'M13 16a3' && icons[1] === 'M13 16a3' && icons[3] === 'M12 2v2M', 'hours switch to sun after sunrise: ' + icons.join(' | '));
     h.states['sun.sun'] = { entity_id: 'sun.sun', state: 'above_horizon', attributes: { next_rising: at(20), next_setting: at(3) } };
     card.hass = Object.assign({}, h); await wait();
     ok(card.shadowRoot.querySelector('.head svg').innerHTML.includes('M24 10a11'), 'big icon is sun by day');

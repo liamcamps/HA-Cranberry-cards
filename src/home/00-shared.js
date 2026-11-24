@@ -1,4 +1,4 @@
-  const VERSION = '2.37.1';
+  const VERSION = '2.37.2';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -12,8 +12,9 @@
     moon: 'M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z',
     sun: 'M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
     cloud: 'M7 18a4 4 0 0 1-.5-8 6 6 0 0 1 11.5 1.5A3.5 3.5 0 0 1 17.5 18z',
-    partly: 'M8 4a4 4 0 0 1 6.4 1.6M3.5 9.5l1.2.4M6 2.5l.5 1.2M7 19a4 4 0 0 1-.5-8 6 6 0 0 1 11.5 1.5A3.5 3.5 0 0 1 17.5 19z',
-    partlyNight: 'M11.5 7.5A4.5 4.5 0 0 1 6 2.5a4.5 4.5 0 1 0 5.5 5zM7 19a4 4 0 0 1-.5-8 6 6 0 0 1 11.5 1.5A3.5 3.5 0 0 1 17.5 19z',
+    // sun or moon peeking out from behind a cloud: only the part not behind it is drawn (shapes from Lucide, ISC licence)
+    partly: 'M12 2v2M4.93 4.93l1.41 1.41M20 12h2M19.07 4.93l-1.41 1.41M15.95 12.65a4 4 0 0 0-5.93-4.13M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6z',
+    partlyNight: 'M13 16a3 3 0 0 1 0 6H7a5 5 0 1 1 4.9-6zM18.38 14.51a6 6 0 0 0 3.46-4.13c.15-.62-.66-.97-1.25-.71a4 4 0 0 1-5.26-5.26c.26-.59-.09-1.4-.72-1.25a6 6 0 0 0-4.59 5.36',
     rain: 'M7 15a4 4 0 0 1-.5-8 6 6 0 0 1 11.5 1.5A3.5 3.5 0 0 1 17.5 15zM9 18l-1 3M13 18l-1 3M17 18l-1 3',
     storm: 'M7 15a4 4 0 0 1-.5-8 6 6 0 0 1 11.5 1.5A3.5 3.5 0 0 1 17.5 15zM13 13l-2 4h3l-2 4',
     snow: 'M7 15a4 4 0 0 1-.5-8 6 6 0 0 1 11.5 1.5A3.5 3.5 0 0 1 17.5 15zM8 19h.01M12 18h.01M16 19h.01M10 22h.01M14 22h.01',
