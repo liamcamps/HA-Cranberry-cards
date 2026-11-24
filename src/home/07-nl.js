@@ -515,7 +515,9 @@
     'The temperature (or rain) over the coming hours. Desktop only leaves it out on a phone, so the card becomes a short strip.': 'De temperatuur (of regen) in de komende uren. Alleen desktop laat hem weg op een telefoon, zodat de kaart een korte strook wordt.',
     'Scenes': 'Scènes',
     'Cranberry scene pills': 'Cranberry scène-knoppen',
-    'In YAML each can be { entity, name, icon } to set its name and icon.': 'In YAML kan elke scène { entity, name, icon } zijn om naam en pictogram te kiezen.'
+    'In YAML each can be { entity, name, icon } to set its name and icon.': 'In YAML kan elke scène { entity, name, icon } zijn om naam en pictogram te kiezen.',
+    'Weather pop-up': 'Weer-pop-up',
+    'Optional. The Bubble pop-up hash, for example #weather, opened by tapping the weather. Leave empty to open the weather’s details instead.': 'Optioneel. De Bubble-pop-uphash, bijvoorbeeld #weather, die opent als je op het weer tikt. Laat leeg om de details van het weer te openen.'
   };
   window.CranberryI18n = { tr, isNl, trSchema, NL };
 

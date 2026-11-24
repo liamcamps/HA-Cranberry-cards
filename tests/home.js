@@ -104,7 +104,7 @@ const wait = () => new Promise((r) => setTimeout(r, 10));
   const ed = C.getConfigElement(); ok(ed.tagName.toLowerCase() === 'cranberry-home-card-editor', 'editor element');
   w.customElements.define('ha-form', class extends w.HTMLElement {});
   w.document.body.appendChild(ed); ed.setConfig(base); ed.hass = hass(); await wait();
-  const form = ed.querySelector('ha-form'); ok(form && form.schema.length === 14 && form.data.weather === 'weather.home', 'editor renders ha-form');
+  const form = ed.querySelector('ha-form'); ok(form && form.schema.length === 15 && form.data.weather === 'weather.home', 'editor renders ha-form');
   let changed = null; ed.addEventListener('config-changed', (e) => changed = e.detail.config);
   form.dispatchEvent(new w.CustomEvent('value-changed', { detail: { value: Object.assign({}, base, { home_text: '', lights: [] }) } }));
   ok(changed && !('home_text' in changed) && !('lights' in changed), 'editor emits cleaned config');
@@ -392,6 +392,17 @@ const wait = () => new Promise((r) => setTimeout(r, 10));
     card.setConfig(Object.assign({}, base, { layout: 'wide', issues: ['binary_sensor.back_door', 'lock.front'] })); card.hass = Object.assign({}, h); await wait();
     ok($('.issue .it').textContent === 'Back door open · Front door unlocked' && !$('.issue .more'), 'desktop: unchanged: ' + $('.issue').textContent);
     ok($('.chart'), 'desktop: the chart stays');
+  }
+
+  // the weather opens its pop-up
+  {
+    const w = setup();
+    const card = w.document.createElement('cranberry-home-card'); w.document.body.appendChild(card);
+    card.setConfig(Object.assign({}, base, { weather_popup: '#weather' })); card.hass = hass({}, hourly([7, 6, 6, 5, 5, 4])); await wait();
+    let pushed = ''; const realPush = w.history.pushState; w.history.pushState = (a, b, url) => { pushed = url; };
+    let info = null; card.addEventListener('hass-more-info', (e) => { info = e.detail.entityId; });
+    card.shadowRoot.querySelector('.weather').click(); w.history.pushState = realPush;
+    ok(/#weather$/.test(pushed) && !info, 'tapping the weather opens #weather: ' + pushed);
   }
 
   // scene pills

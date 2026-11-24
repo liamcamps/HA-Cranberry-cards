@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.39.1 (2026-11-24)
+
+- Home card: new option *Weather pop-up* (for example `#weather`). Tapping the weather opens that Bubble pop-up instead of the weather's details.
+
 ## 2.39.0 (2026-11-24)
 
 - **Home card on a phone: the glance strip.**

@@ -811,7 +811,7 @@
                   <span class="date">${esc(m.date)}</span>
                   <span class="time serif">${esc(m.time)}</span>
                 </div>
-                <button class="chip" data-entity="${esc(c.weather)}" aria-label="${esc(this.t('{label}, {temp} degrees', { label: m.label, temp: round(m.temp) }))}">
+                <button class="chip" ${c.weather_popup ? `data-nav="${esc(c.weather_popup)}"` : `data-entity="${esc(c.weather)}"`} aria-label="${esc(this.t('{label}, {temp} degrees', { label: m.label, temp: round(m.temp) }))}">
                   ${this._art(m.cond, 44)}<span class="serif" style="color:${m.tempCol}">${round(m.temp)}°</span>
                 </button>
               </div>
@@ -822,7 +822,7 @@
                 ${m.insight ? `<p class="insight">${this._icon(m.icon)}<span>${esc(m.insight)}</span></p>` : ''}
               </div>
             </div>
-            <div class="weather${m.details ? ' fill' : ''}${m.wna ? ' na' : ''}${!showChart && !(m.stats && m.stats.length) ? ' gone' : ''}" role="button" tabindex="0" data-entity="${esc(c.weather)}" aria-label="${esc(this.t('{label}, {temp} degrees', { label: m.label, temp: round(m.temp) }))}">
+            <div class="weather${m.details ? ' fill' : ''}${m.wna ? ' na' : ''}${!showChart && !(m.stats && m.stats.length) ? ' gone' : ''}" role="button" tabindex="0" ${c.weather_popup ? `data-nav="${esc(c.weather_popup)}"` : `data-entity="${esc(c.weather)}"`} aria-label="${esc(this.t('{label}, {temp} degrees', { label: m.label, temp: round(m.temp) }))}">
               <div class="head">
                 ${this._art(m.cond, 64)}
                 <span class="names"><span class="label">${esc(m.label)}</span><span class="feels">${esc(m.feels)}</span></span>

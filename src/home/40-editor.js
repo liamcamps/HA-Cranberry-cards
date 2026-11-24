@@ -2,6 +2,7 @@
   const SHOW_OPTS = [{ value: 'show', label: 'Show' }, { value: 'wide', label: 'Desktop only (side-by-side layout)' }, { value: 'hide', label: 'Hide' }];
   const SCHEMA = [
     { name: 'weather', required: true, selector: { entity: { domain: 'weather' } } },
+    { name: 'weather_popup', selector: { text: {} } },
     { name: 'issues', selector: { entity: { multiple: true } } },
     { name: 'lights', selector: { entity: { multiple: true, domain: ['light', 'switch'] } } },
     { name: 'weather_now', selector: { entity: { domain: 'weather' } } },
@@ -72,6 +73,7 @@
     calendars: 'Calendars',
     coming_up_count: 'How many days to show',
     calendar_popup: 'Pop-up to open',
+    weather_popup: 'Weather pop-up',
     show_clock: 'Show the clock',
     insight: 'Show the weather tip',
     match_row: 'As tall as the cards next to it',
@@ -95,6 +97,7 @@
     weather_details: 'High and low, rain chance, wind and sunrise or sunset, and a chart that uses the full height of the card. Desktop only leaves it out when the card stacks on a phone.',
     coming_up: 'The next events from your calendars under the clock, and the next bin collection. Desktop only leaves it out when the card stacks on a phone.',
     calendars: 'One or more calendars. Events from the coming week.',
+    weather_popup: 'Optional. The Bubble pop-up hash, for example #weather, opened by tapping the weather. Leave empty to open the weather’s details instead.',
     calendar_popup: 'Optional. The Bubble pop-up hash, for example #calendar, opened by tapping Coming up. Leave empty to open the calendar’s details instead.',
     laundry_done: 'Shows a reminder while this is on or done.',
     laundry_done_at: 'Optional. A timestamp sensor or date-time helper. Without it, the card uses the moment the done sensor changed.',
