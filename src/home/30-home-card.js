@@ -40,6 +40,23 @@
     .mbtn { width: 34px; height: 34px; flex-shrink: 0; border-radius: var(--cc-r-ctl, 12px); background: ${alpha('--cc-on', 12)}; display: flex; align-items: center; justify-content: center; }
     .alloff { align-self: flex-start; height: 40px; padding: 0 16px 0 12px; border-radius: var(--cc-r-ctl, 12px); background: var(--chc-fg); color: var(--chc-bg); display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
     @media (prefers-reduced-motion: reduce) { .menu { animation: none; } }
+    /* Needs you: the problems, one per row, with a button where there is one obvious thing to do */
+    .mlist.one { grid-template-columns: minmax(0, 1fr); }
+    .mname.col { flex-direction: column; align-items: flex-start; gap: 1px; padding: 4px 0; }
+    .mact { height: 34px; padding: 0 12px 0 10px; flex-shrink: 0; border-radius: var(--cc-r-ctl, 12px); background: ${alpha('--cc-on', 12)}; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; }
+    .issue .it { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .issue .more { flex-shrink: 0; margin-left: -4px; opacity: .75; font-weight: 700; }
+    .weather.gone { display: none; }
+    /* a phone: the menus take the card's place, and the card grows to fit them */
+    ha-card.menu-open .body, ha-card.menu-open .warn { display: none; }
+    ha-card.menu-open .menu { position: relative; inset: auto; flex: 1; }
+    /* a phone: smaller chips, side by side; when they need more than two rows the lights, then the bins,
+       keep only their icon and count */
+    ha-card.stacked .issue, ha-card.stacked .bins, ha-card.stacked .lamps { min-height: 36px; padding: 4px 12px 4px 4px; gap: 8px; font-size: 13px; }
+    ha-card.stacked .lamps { padding-right: 8px; }
+    ha-card.stacked .issue .n { width: 28px; height: 28px; }
+    .chips.tight1 .lamps .lbl, .chips.tight1 .lamps > svg, .chips.tight2 .bins .lbl { display: none; }
+    .chips.tight1 .lamps, .chips.tight2 .bins { padding-right: 4px; }
     .issue .n { width: 28px; height: 28px; flex-shrink: 0; border-radius: var(--cc-r-chip, 8px); background: var(--cc-b); color: var(--cc-on); display: flex; align-items: center; justify-content: center; font-weight: 700; }
     p { margin: 0; font-size: 17px; font-weight: 500; line-height: 1.3; }
     .insight { display: flex; align-items: flex-start; gap: 8px; align-self: flex-start; max-width: 100%; font-size: 15px; color: var(--chc-sub); }
@@ -376,7 +393,9 @@
         const st = id && h.states[id];
         if (st && PROBLEM_STATES.indexOf(st.state) >= 0) {
           const label = (item && item.name) || names[id] || this._name(id);
-          issues.push({ id, text: this.t('{name} {state}', { name: label, state: String(this._stateText(st)).toLowerCase() }) });
+          const stText = String(this._stateText(st));
+          const act = id.indexOf('lock.') === 0 && st.state === 'unlocked' ? { svc: 'lock.lock', label: this.t('Lock'), icon: 'lock' } : null;
+          issues.push({ id, text: this.t('{name} {state}', { name: label, state: stText.toLowerCase() }), name: label, state: capital(stText), act });
         }
       });
       if (c.laundry_done) {
@@ -390,7 +409,8 @@
             if (!isNaN(d)) at = d;
           }
           if (!at) at = new Date(ds.last_changed || ds.last_updated || now);
-          issues.push({ id: c.laundry_done, text: this.t('{name} done {ago}', { name: c.laundry_name || this.t('Washing machine'), ago: this._ago(at, now) }) });
+          issues.push({ id: c.laundry_done, text: this.t('{name} done {ago}', { name: c.laundry_name || this.t('Washing machine'), ago: this._ago(at, now) }),
+            name: c.laundry_name || this.t('Washing machine'), state: capital(this.t('Done {ago}', { ago: this._ago(at, now) })), act: { svc: 'homeassistant.turn_off', label: this.t('Emptied'), icon: 'check' } });
         }
       }
       let warning = null;
@@ -522,7 +542,7 @@
       let bins = null;
       if (c.waste) {
         const ws = wasteState(h, c, now);
-        if (ws.chip && !ws.out) bins = { text: ws.chip, colours: ws.colours, id: (c.waste_out || ws.due[0].id) };
+        if (ws.chip && !ws.out) bins = { text: ws.chip, short: this.t(ws.when === 'tonight' ? '{bins} tonight' : '{bins} today', { bins: label(h, ws.due) }), colours: ws.colours, id: (c.waste_out || ws.due[0].id) };
       }
       const layout = this._layout || 'wide';
       const model = {
@@ -749,7 +769,8 @@
       this._layout = layout;
       if (this._on(c.coming_up, layout) && (c.calendars || []).length && Date.now() - (this._calAt || 0) > 15 * 60000) this._fetchCal();
       const m = this._model();
-      if (this._menu && !m.menu.length) this._menu = false;
+      if (this._menu === 'lights' && !m.menu.length) this._menu = false;
+      if (this._menu === 'issues' && !m.issues.length) this._menu = false;
       const key = JSON.stringify([m, layout, c, !!this._menu]);
       if (!force && key === this._last) return;
       this._last = key;
@@ -773,10 +794,15 @@
              <div class="hours" style="grid-template-columns: repeat(${m.hours.length}, minmax(0,1fr))">${m.hours.map((x) => `<span class="hour"><b style="color:${x.col}">${round(x.temp)}°</b>${this._icon(HOUR_ICON[x.cond] || I.cloud)}<span>${esc(x.label)}</span></span>`).join('')}</div>
            </div>` : '');
 
-      const issueText = m.issues.map((x) => x.text).join(' · ');
+      // a phone: the problem chip names the first problem and counts the rest; tapping lists them all
+      const stacked = layout === 'stacked';
+      const issueText = stacked && m.issues.length > 1 ? m.issues[0].text : m.issues.map((x) => x.text).join(' · ');
+      const issueMore = stacked && m.issues.length > 1 ? `<b class="more">+${m.issues.length - 1}</b>` : '';
+      const showChart = c.hourly_chart == null || this._on(c.hourly_chart, layout);
+      const ICON = { lock: 'M5 11h14a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM7 11V7a5 5 0 0 1 10 0v4', check: I.check };
       this._m = m;
       morph(this.shadowRoot, `<style>${STYLE}${MOTION}</style>
-        <ha-card class="${cls}">
+        <ha-card class="${cls}${this._menu && stacked ? ' menu-open' : ''}">
           ${m.warning ? `<button class="warn" data-entity="${esc(m.warning.entity)}">${this._icon(I.alert, 16)}${esc(m.warning.strip)}</button>` : ''}
           <div class="body">
             <div class="home">
@@ -791,22 +817,29 @@
               </div>
               ${m.agenda ? `<div class="agenda">${c.calendar_popup ? `<button class="k" data-nav="${esc(c.calendar_popup)}" aria-label="${this.t('Open the calendar')}">${this.t('Coming up')}</button>` : `<span class="k">${this.t('Coming up')}</span>`}${m.agenda.length ? m.agenda.map((e) => `<button class="ev" ${c.calendar_popup ? `data-nav="${esc(c.calendar_popup)}"` : `data-entity="${esc(e.id)}"`} aria-label="${esc(e.aria)}"><span class="day"><small>${esc(e.wd)}</small><span class="serif">${e.n}</span></span><span class="txt"><span class="what">${esc(e.what)}</span><span class="when">${esc(e.when)}</span></span></button>`).join('') : (c.calendar_popup ? `<button class="none" data-nav="${esc(c.calendar_popup)}">${this.t('Nothing planned this week.')}</button>` : `<span class="none">${this.t('Nothing planned this week.')}</span>`)}</div>` : ''}
               <div class="stack">
-                ${m.issues.length || m.bins || m.lamps ? `<div class="chips">${m.issues.length ? `<button class="issue" data-entity="${esc(m.issues[0].id)}"><span class="n">${m.issues.length}</span><span>${esc(issueText)}</span></button>` : ''}${m.bins ? `<button class="bins" data-bins="1" aria-label="${esc(m.bins.text)}"><span class="n">${m.bins.colours.map((col) => `<svg width="${m.bins.colours.length > 1 ? 17 : 20}" height="${m.bins.colours.length > 1 ? 17 : 20}" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 13a1.5 1.5 0 0 1-1.5 1.4h-7A1.5 1.5 0 0 1 7 20zM4.5 5h15M10 3h4" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:${col}"></path><path d="M7.4 10h9.2l-.7 10H8.1z" style="fill:${col}"></path></svg>`).join('')}</span><span>${esc(m.bins.text)}</span></button>` : ''}${m.lamps ? `<button class="lamps" data-lights aria-haspopup="dialog" aria-expanded="${!!this._menu}"><span class="n">${this._icon(I.bulb, 16)}${m.lamps.n}</span><span>${esc(m.lamps.text)}</span>${this._icon(I.chev, 16)}</button>` : ''}</div>` : ''}
+                ${m.issues.length || m.bins || m.lamps ? `<div class="chips">${m.issues.length ? `<button class="issue" ${issueMore ? 'data-issues aria-haspopup="dialog"' : `data-entity="${esc(m.issues[0].id)}"`}><span class="n">${m.issues.length}</span><span class="it">${esc(issueText)}</span>${issueMore}</button>` : ''}${m.bins ? `<button class="bins" data-bins="1" aria-label="${esc(m.bins.text)}"><span class="n">${m.bins.colours.map((col) => `<svg width="${m.bins.colours.length > 1 ? 17 : 20}" height="${m.bins.colours.length > 1 ? 17 : 20}" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 13a1.5 1.5 0 0 1-1.5 1.4h-7A1.5 1.5 0 0 1 7 20zM4.5 5h15M10 3h4" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:${col}"></path><path d="M7.4 10h9.2l-.7 10H8.1z" style="fill:${col}"></path></svg>`).join('')}</span><span class="lbl">${esc(stacked ? m.bins.short : m.bins.text)}</span></button>` : ''}${m.lamps ? `<button class="lamps" data-lights aria-haspopup="dialog" aria-expanded="${this._menu === 'lights'}" aria-label="${esc(m.lamps.text)}"><span class="n">${this._icon(I.bulb, 16)}${m.lamps.n}</span><span class="lbl">${esc(stacked ? this.t('lights on') : m.lamps.text)}</span>${this._icon(I.chev, 16)}</button>` : ''}</div>` : ''}
                 ${c.home_text ? `<p>${esc(m.homeText)}</p>` : ''}
                 ${m.insight ? `<p class="insight">${this._icon(m.icon)}<span>${esc(m.insight)}</span></p>` : ''}
               </div>
             </div>
-            <div class="weather${m.details ? ' fill' : ''}${m.wna ? ' na' : ''}" role="button" tabindex="0" data-entity="${esc(c.weather)}" aria-label="${esc(this.t('{label}, {temp} degrees', { label: m.label, temp: round(m.temp) }))}">
+            <div class="weather${m.details ? ' fill' : ''}${m.wna ? ' na' : ''}${!showChart && !(m.stats && m.stats.length) ? ' gone' : ''}" role="button" tabindex="0" data-entity="${esc(c.weather)}" aria-label="${esc(this.t('{label}, {temp} degrees', { label: m.label, temp: round(m.temp) }))}">
               <div class="head">
                 ${this._art(m.cond, 64)}
                 <span class="names"><span class="label">${esc(m.label)}</span><span class="feels">${esc(m.feels)}</span></span>
                 <span class="temp serif" style="color:${m.tempCol}">${round(m.temp)}<small>°${esc(m.unit)}</small></span>
               </div>
               ${m.stats && m.stats.length ? `<div class="stats">${m.stats.map((x) => `<span class="stat"><span class="k">${esc(x.k)}</span><b>${esc(x.v)}</b></span>`).join('')}</div>` : ''}
-              ${chart}
+              ${showChart ? chart : ''}
             </div>
           </div>
-          ${this._menu ? `<div class="menu" role="dialog" aria-label="${this.t('Lights that are on')}">
+          ${this._menu === 'issues' ? `<div class="menu" role="dialog" aria-label="${this.t('Needs you')}">
+            <div class="mhead"><span class="mtitle">${this.t('Needs you')}</span><button class="mbtn" data-close aria-label="${this.t('Close')}">${this._icon(I.close)}</button></div>
+            <div class="mlist one">${m.issues.map((x) => `<div class="mrow">
+                <button class="mname col" data-entity="${esc(x.id)}"><span>${esc(x.name || x.text)}</span>${x.state ? `<small>${esc(x.state)}</small>` : ''}</button>
+                ${x.act ? `<button class="mact" data-do="${esc(x.act.svc)}" data-id="${esc(x.id)}">${this._icon(ICON[x.act.icon] || I.check, 16)}${esc(x.act.label)}</button>` : ''}
+              </div>`).join('')}</div>
+          </div>` : ''}
+          ${this._menu === 'lights' ? `<div class="menu" role="dialog" aria-label="${this.t('Lights that are on')}">
             <div class="mhead"><span class="mtitle">${this.t('Lights on')}</span><button class="mbtn" data-close aria-label="${this.t('Close')}">${this._icon(I.close)}</button></div>
             <div class="mlist">${m.menu.map((g) => `<div class="mgroup">
               <span class="mlabel">${g.items.length > 1 || g.items[0].id !== g.id ? esc(g.name) : (esc(this._area(g.id) || '') || '&nbsp;')}</span>
@@ -817,11 +850,17 @@
             <button class="alloff" data-alloff>${this._icon(I.power, 16)}${this.t('All off')}</button>
           </div>` : ''}
         </ha-card>`);
+      const chipsEl = this.shadowRoot.querySelector('.chips');
+      if (chipsEl && stacked) {
+        chipsEl.classList.remove('tight1', 'tight2');
+        const tall = () => chipsEl.getBoundingClientRect().height > 88;
+        if (tall()) { chipsEl.classList.add('tight1'); if (tall()) chipsEl.classList.add('tight2'); }
+      }
       this._fit();
       if (!this._wired) {
         this._wired = true;
         // one set of listeners for the whole card; they survive in-place updates
-        const find = (ev) => ev.composedPath().find((el) => el.getAttribute && ['data-bins', 'data-entity', 'data-lights', 'data-close', 'data-off', 'data-alloff', 'data-nav'].some((a) => el.hasAttribute(a)));
+        const find = (ev) => ev.composedPath().find((el) => el.getAttribute && ['data-bins', 'data-entity', 'data-lights', 'data-issues', 'data-do', 'data-close', 'data-off', 'data-alloff', 'data-nav'].some((a) => el.hasAttribute(a)));
         const run = (el) => {
           const cfg = this._config, mm = this._m || {};
           if (el.hasAttribute('data-nav')) {
@@ -831,7 +870,13 @@
             window.dispatchEvent(new CustomEvent('location-changed', { detail: { replace: false } }));
             return;
           }
-          if (el.hasAttribute('data-lights')) { this._menu = !this._menu; this._render(true); return; }
+          if (el.hasAttribute('data-lights')) { this._menu = this._menu === 'lights' ? false : 'lights'; this._render(true); return; }
+          if (el.hasAttribute('data-issues')) { this._menu = this._menu === 'issues' ? false : 'issues'; this._render(true); return; }
+          if (el.hasAttribute('data-do')) {
+            const [dom, svc] = el.getAttribute('data-do').split('.');
+            this._hass.callService(dom, svc, { entity_id: el.getAttribute('data-id') });
+            return;
+          }
           if (el.hasAttribute('data-close')) { this._menu = false; this._render(true); return; }
           if (el.hasAttribute('data-off')) { this._hass.callService('homeassistant', 'turn_off', { entity_id: el.getAttribute('data-off') }); return; }
           if (el.hasAttribute('data-alloff')) {

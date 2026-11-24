@@ -362,6 +362,56 @@ const wait = () => new Promise((r) => setTimeout(r, 10));
     ok($('.agenda .none') && $('.agenda .none').textContent === 'Nothing planned this week.', 'empty calendar: ' + ($('.agenda') ? $('.agenda').textContent : 'no agenda'));
   }
 
+  // the glance strip on a phone: problems summarised, Needs you over the card, no chart
+  {
+    const w = setup();
+    const card = w.document.createElement('cranberry-home-card'); w.document.body.appendChild(card);
+    const $ = (q) => card.shadowRoot.querySelector(q), $$ = (q) => [...card.shadowRoot.querySelectorAll(q)];
+    const calls = [];
+    const h = hass({ 'lock.front': { entity_id: 'lock.front', state: 'unlocked', attributes: { friendly_name: 'Front door' } },
+      'binary_sensor.window': { entity_id: 'binary_sensor.window', state: 'on', attributes: { friendly_name: 'Bedroom window' } } }, hourly([7, 6, 6, 5, 5, 4]));
+    h.callService = (d, s2, data) => calls.push([d, s2, data]);
+    card.setConfig(Object.assign({}, base, { layout: 'stacked', hourly_chart: 'wide', issues: ['binary_sensor.back_door', 'lock.front', 'binary_sensor.window'] }));
+    card.hass = h; await wait(); await wait();
+    ok($('.issue .n').textContent === '3' && $('.issue .it').textContent === 'Back door open' && $('.issue .more').textContent === '+2', 'phone: the first problem and +2: ' + $('.issue').textContent);
+    ok($('.lamps .lbl').textContent === 'lights on', 'phone: a short lights chip: ' + $('.lamps .lbl').textContent);
+    ok($('.weather.gone') && !$('.chart'), 'phone: no hourly chart with hourly_chart: wide');
+    $('.issue').click(); await wait();
+    ok($('ha-card.menu-open') && $('.menu .mtitle').textContent === 'Needs you' && $$('.menu .mrow').length === 3, 'Needs you opens over the card with every problem');
+    const rows = $$('.menu .mrow');
+    ok(rows[1].querySelector('.mname span').textContent === 'Front door' && rows[1].querySelector('small').textContent === 'Unlocked' && rows[1].querySelector('.mact'), 'a row: name, state, and Lock for an unlocked door');
+    ok(!rows[0].querySelector('.mact'), 'an open door has no button');
+    rows[1].querySelector('.mact').click();
+    ok(calls.some((c) => c[0] === 'lock' && c[1] === 'lock' && c[2].entity_id === 'lock.front'), 'Lock locks it: ' + JSON.stringify(calls));
+    let info = null; card.addEventListener('hass-more-info', (e) => { info = e.detail.entityId; });
+    rows[0].querySelector('.mname').click();
+    ok(info === 'binary_sensor.back_door', 'a name opens its details');
+    $('.menu [data-close]').click(); await wait();
+    ok(!$('.menu') && !$('ha-card.menu-open'), 'closes');
+    // on the desktop layout the chip still lists them all
+    card.setConfig(Object.assign({}, base, { layout: 'wide', issues: ['binary_sensor.back_door', 'lock.front'] })); card.hass = Object.assign({}, h); await wait();
+    ok($('.issue .it').textContent === 'Back door open · Front door unlocked' && !$('.issue .more'), 'desktop: unchanged: ' + $('.issue').textContent);
+    ok($('.chart'), 'desktop: the chart stays');
+  }
+
+  // scene pills
+  {
+    const w = setup();
+    const t0 = Date.now();
+    const st = (id, ago) => ({ entity_id: id, state: new Date(t0 - ago).toISOString(), attributes: { friendly_name: id.split('.')[1], entity_id: [] } });
+    const calls = [];
+    const el = w.document.createElement('cranberry-scenes-card'); w.document.body.appendChild(el);
+    el.setConfig({ scenes: ['scene.soho', { entity: 'scene.bright', name: 'Bright', icon: 'mdi:sun' }, 'scene.zen'] });
+    el.hass = { states: { 'scene.soho': st('scene.soho', 60000), 'scene.bright': st('scene.bright', 3600000), 'scene.zen': st('scene.zen', 7200000) }, language: 'en', entities: {}, callService: (d, s2, data) => calls.push([d, s2, data]) };
+    const pills = [...el.shadowRoot.querySelectorAll('.pill')];
+    ok(pills.length === 3 && pills[1].textContent.trim() === 'Bright' && el.shadowRoot.querySelector('.row.scrollrow'), 'pills, one row that scrolls');
+    ok(pills[0].getAttribute('aria-pressed') === 'true' && pills[1].getAttribute('aria-pressed') === 'false', 'the one picked last is pressed');
+    pills[2].click();
+    ok(calls.length === 1 && calls[0][0] === 'scene' && calls[0][2].entity_id === 'scene.zen', 'tap turns it on');
+    let err = null; try { w.document.createElement('cranberry-scenes-card').setConfig({}); } catch (e) { err = e; }
+    ok(err, 'asks for scenes');
+  }
+
   console.log(pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
 })();

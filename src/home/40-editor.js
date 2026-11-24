@@ -45,6 +45,7 @@
           { value: 'stacked', label: 'Stacked' }
         ] } } },
         { name: 'weather_details', selector: { select: { mode: 'dropdown', options: SHOW_OPTS } } },
+        { name: 'hourly_chart', selector: { select: { mode: 'dropdown', options: SHOW_OPTS } } },
         { name: 'hour_step', selector: { number: { min: 1, max: 3, step: 1, mode: 'slider' } } },
         { name: 'show_clock', selector: { boolean: {} } },
         { name: 'insight', selector: { boolean: {} } },
@@ -66,6 +67,7 @@
     layout: 'Layout',
     hour_step: 'Hours between points on the chart',
     weather_details: 'Weather details',
+    hourly_chart: 'Hourly chart',
     coming_up: 'Show coming up',
     calendars: 'Calendars',
     coming_up_count: 'How many days to show',
@@ -89,6 +91,7 @@
     rain_nowcast: 'A sensor with a 5-minute rain forecast in its forecast attribute, such as NL Weather’s Precipitation forecasted. Shows rain to the minute.',
     weather_now: 'Optional. A second weather entity for the current temperature, such as the NL Weather observations. The forecast still comes from Weather.',
     home_text: 'Leave empty to write it automatically.',
+    hourly_chart: 'The temperature (or rain) over the coming hours. Desktop only leaves it out on a phone, so the card becomes a short strip.',
     weather_details: 'High and low, rain chance, wind and sunrise or sunset, and a chart that uses the full height of the card. Desktop only leaves it out when the card stacks on a phone.',
     coming_up: 'The next events from your calendars under the clock, and the next bin collection. Desktop only leaves it out when the card stacks on a phone.',
     calendars: 'One or more calendars. Events from the coming week.',

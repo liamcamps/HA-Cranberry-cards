@@ -8,6 +8,23 @@
     const t = Date.parse(raw);
     return isNaN(t) ? 0 : t;
   };
+  // whether a scene is the one picked last: c holds compare, active_entity and active_state
+  const sceneActive = (h, c, id, nm) => {
+    const st = h.states[id];
+    if (c.active_entity) {
+      const a = h.states[c.active_entity];
+      if (a) return a.state === (c.active_state != null ? String(c.active_state) : 'on') || a.state === nm || a.state === id;
+    }
+    const mine = activatedAt(st);
+    if (!mine) return false;
+    const pool = c.compare && c.compare.length ? c.compare : Object.keys(h.states).filter((x) => x.indexOf('scene.') === 0);
+    if (pool.some((x) => x !== id && activatedAt(h.states[x]) > mine)) return false;
+    const members = (st.attributes && st.attributes.entity_id) || [];
+    return !members.some((x) => {
+      const s = h.states[x];
+      return s && Date.parse(s.last_changed) > mine + SETTLE_MS;
+    });
+  };
   class CranberrySceneCard extends CranberryBase {
     static get styles() {
       return `
@@ -25,22 +42,7 @@
     getGridOptions() { return { columns: 3, rows: 2, min_columns: 2 }; }
     connectedCallback() { this._tick = setInterval(() => this._update(), 10000); }
     disconnectedCallback() { clearInterval(this._tick); }
-    isActive() {
-      const c = this._config, h = this._hass, st = this.st(c.entity);
-      if (c.active_entity) {
-        const a = this.st(c.active_entity);
-        if (a) return a.state === (c.active_state != null ? String(c.active_state) : 'on') || a.state === this.nm(c.entity) || a.state === c.entity;
-      }
-      const mine = activatedAt(st);
-      if (!mine) return false;
-      const pool = c.compare && c.compare.length ? c.compare : Object.keys(h.states).filter((id) => id.indexOf('scene.') === 0);
-      if (pool.some((id) => id !== c.entity && activatedAt(h.states[id]) > mine)) return false;
-      const members = (st.attributes && st.attributes.entity_id) || [];
-      return !members.some((id) => {
-        const s = h.states[id];
-        return s && Date.parse(s.last_changed) > mine + SETTLE_MS;
-      });
-    }
+    isActive() { return sceneActive(this._hass, this._config, this._config.entity, this.nm(this._config.entity)); }
     model() {
       const c = this._config, st = this.st(c.entity);
       return { name: c.name || (st ? this.nm(c.entity) : c.entity), icon: c.icon || (st && st.attributes.icon) || ccIcon('evening', 'mdi:palette-outline'), active: !!st && this.isActive(), na: this.isNa(st) };
@@ -57,3 +59,45 @@
   }
   CranberrySceneCard.defaults = {};
 
+
+  // ---------------------------------------------------------------- scene pills
+  // Several scenes as one row of pills, for a phone: the picked one in cranberry. The row
+  // scrolls sideways when the pills don't fit.
+  class CranberryScenesCard extends CranberryBase {
+    static get needsEntity() { return false; }
+    static get styles() {
+      return `
+      ha-card { background: none; overflow: visible; }
+      .row { display: flex; gap: 8px; }
+      .pill { height: 44px; padding: 0 16px 0 12px; border-radius: 22px; background: var(--cc-card); color: var(--cc-muted); display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; transition: background .25s ease, color .25s ease; }
+      .pill ha-icon { --mdc-icon-size: 18px; display: flex; }
+      .pill[aria-pressed="true"] { background: var(--cv-fill-c); color: var(--cc-on); }
+      .pill.na { opacity: .6; }
+    `;
+    }
+    getGridOptions() { return { columns: 12, rows: 'auto', min_columns: 6 }; }
+    connectedCallback() { this._tick = setInterval(() => this._update(), 10000); }
+    disconnectedCallback() { clearInterval(this._tick); }
+    setConfig(config) {
+      if (!config || !Array.isArray(config.scenes) || !config.scenes.length) throw new Error('Add one or more scenes');
+      super.setConfig(config);
+    }
+    model() {
+      const h = this._hass, c = this._config;
+      const list = c.scenes.map((x) => (typeof x === 'string' ? { entity: x } : x)).filter((x) => x && x.entity);
+      // the scenes on this row are compared with each other, unless compare says otherwise
+      const cmp = Object.assign({}, c, { compare: c.compare && c.compare.length ? c.compare : list.map((x) => x.entity) });
+      return { pills: list.map((x) => {
+        const st = this.st(x.entity), name = x.name || (st ? this.nm(x.entity) : x.entity);
+        return { id: x.entity, name, icon: x.icon || (st && st.attributes.icon) || ccIcon('evening', 'mdi:palette-outline'), on: !!st && sceneActive(h, Object.assign({}, cmp, x), x.entity, name), na: this.isNa(st) };
+      }) };
+    }
+    view(m) {
+      return `<ha-card><div class="row scrollrow" role="group" aria-label="${esc(this.t('Scenes'))}">${m.pills.map((p) => `<button type="button" class="pill${p.na ? ' na' : ''}" data-act="run" data-arg="${esc(p.id)}" aria-pressed="${p.on}"><ha-icon icon="${esc(p.icon)}"></ha-icon>${esc(p.name)}</button>`).join('')}</div></ha-card>`;
+    }
+    act(a, id) {
+      if (a !== 'run' || !id) return;
+      this.call(id.split('.')[0] === 'script' ? 'script' : 'scene', 'turn_on', { entity_id: id });
+    }
+  }
+  CranberryScenesCard.defaults = {};

@@ -506,7 +506,16 @@
     'The card remembers the view picked last on each device.': 'De kaart onthoudt per apparaat welke weergave het laatst gekozen is.',
     'The strip scrolls sideways.': 'De strook scrolt opzij.',
     'max {temp}': 'max {temp}',
-    'Humidity@short': 'Vocht'
+    'Humidity@short': 'Vocht',
+    'Needs you': 'Vraagt aandacht',
+    'lights on': 'lampen aan',
+    '{bins} tonight': '{bins} vanavond',
+    'Done {ago}': 'Klaar {ago}',
+    'Hourly chart': 'Grafiek per uur',
+    'The temperature (or rain) over the coming hours. Desktop only leaves it out on a phone, so the card becomes a short strip.': 'De temperatuur (of regen) in de komende uren. Alleen desktop laat hem weg op een telefoon, zodat de kaart een korte strook wordt.',
+    'Scenes': 'Scènes',
+    'Cranberry scene pills': 'Cranberry scène-knoppen',
+    'In YAML each can be { entity, name, icon } to set its name and icon.': 'In YAML kan elke scène { entity, name, icon } zijn om naam en pictogram te kiezen.'
   };
   window.CranberryI18n = { tr, isNl, trSchema, NL };
 

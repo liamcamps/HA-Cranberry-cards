@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.39.0 (2026-11-24)
+
+- **Home card on a phone: the glance strip.**
+  - New option *Hourly chart* (show, desktop only, hide). With *desktop only* the card on a phone is a short strip: the date, the clock and the weather, the chips and the tip.
+  - On a phone the chips are smaller and sit side by side. With more than one problem, the problem chip names the first and adds “+2”; the badge counts them all. When the chips would need more than two rows, the lights and then the bins chip keep only their icon and count. Shorter words too: “GFT tonight”, “lights on”.
+  - **Needs you:** tapping the problem chip (with more than one problem) opens a list over the card, the way Lights on does: each problem with its state, tap a name for its details, and a button where there is one obvious thing to do (Lock for an unlocked door, Emptied for the washing machine). On a phone both lists take the card's place and the card grows to fit them.
+  - On a tablet or desktop nothing changes.
+- **New: scene pills** (`custom:cranberry-scenes-card`): several scenes as one row of pills that scrolls sideways (drag it with a mouse); the one picked last in cranberry.
+
 ## 2.38.4 (2026-11-24)
 
 - A flick with the mouse keeps a scrolling row gliding and slowing down, like on a phone. Stopping before letting go means no glide; a click or the scroll wheel stops it.

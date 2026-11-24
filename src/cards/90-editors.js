@@ -24,7 +24,7 @@
           const form = Object.assign({}, ev.detail.value);
           Object.keys(form).forEach((k) => { if (form[k] === '' || form[k] == null || (Array.isArray(form[k]) && !form[k].length)) delete form[k]; });
           this._config = form;
-          const config = io ? io.fromForm(form) : form;
+          const config = io ? io.fromForm(form, this._config) : form;
           this.dispatchEvent(new CustomEvent('config-changed', { detail: { config }, bubbles: true, composed: true }));
           this._render();
         });
@@ -72,6 +72,23 @@
       ],
       labels: { entity: 'Room lights (group, light or switch)', name: 'Name', icon: 'Icon', temperature: 'Temperature sensor', popup: 'Pop-up to open', lights: 'Lights to count', alerts: 'Turn brick when open', button_entity: 'Toggle', button_name: 'Name', button_icon: 'Icon' },
       helpers: { popup: 'The Bubble pop-up hash, for example #living-room. Leave empty to open the details instead.', lights: 'Optional. Leave empty to use the members of the group.', alerts: 'Optional. Doors, windows or locks in this room. While one is open or unlocked, the card turns brick and says which.', button_entity: 'Optional. A toggle you want on the room card itself, like a Lego light. Olive while it is on. Left out when the card is as narrow as on a phone, so keep it in the room’s pop-up too.' }
+    },
+    {
+      tag: 'cranberry-scenes-card', cls: CranberryScenesCard, name: 'Cranberry scene pills',
+      description: 'Several scenes as one row of pills that scrolls sideways; the one picked last in cranberry. Made for phones.',
+      stub: (ids) => ({ scenes: ids.filter((e) => e.startsWith('scene.')).slice(0, 4) }),
+      schema: [{ name: 'scenes', required: true, selector: { entity: { multiple: true, domain: ['scene', 'script'] } } }],
+      labels: { scenes: 'Scenes' },
+      helpers: { scenes: 'In YAML each can be { entity, name, icon } to set its name and icon.' },
+      // a scene with its own name or icon is kept as it is
+      io: {
+        toForm: (cfg) => Object.assign({}, cfg, { scenes: [].concat(cfg.scenes || []).map((x) => (x && typeof x === 'object' ? x.entity : x)).filter(Boolean) }),
+        fromForm: (f, cfg) => {
+          const was = {};
+          [].concat((cfg && cfg.scenes) || []).forEach((x) => { if (x && typeof x === 'object') was[x.entity] = x; });
+          return Object.assign({}, f, { scenes: (f.scenes || []).map((id) => was[id] || id) });
+        }
+      }
     },
     {
       tag: 'cranberry-scene-card', cls: CranberrySceneCard, name: 'Cranberry scene',
