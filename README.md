@@ -128,3 +128,20 @@ npm test
 Releases are automatic: raise `VERSION` in `dist/cranberry-cards.js` and `version` in
 `package.json`, add a `## <version>` section to `CHANGELOG.md`, and push to `main`. When the
 tests and the HACS check pass, CI publishes release `v<version>` and HACS offers the update.
+
+## Development
+
+The cards are written in `src/`, one file per card, and built into the single
+`dist/cranberry-cards.js` that HACS installs:
+
+```sh
+npm install        # once: jsdom for the tests, esbuild for the build
+npm run build      # src/ → dist/cranberry-cards.js (minified)
+npm test           # checks dist/ is up to date, then runs the tests on it
+node build.mjs --plain   # an unminified build, for reading or debugging
+```
+
+`src/home/` is the home card; `src/cards/` holds the other cards, with the shared base in
+`00-base.js` and the card registrations in `90-editors.js`. Files are joined in name order.
+Colours come from the theme's `cc-` tokens; the fallbacks for when the theme isn't
+installed live in one place, `src/cards/00-base.js` and `src/home/00-shared.js`.

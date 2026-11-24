@@ -4,9 +4,12 @@
   "private": true,
   "description": "Cranberry Canvas: dashboard cards and theme for Home Assistant",
   "scripts": {
-    "test": "for t in tests/*.js; do node \"$t\" || exit 1; done"
+    "build": "node build.mjs",
+    "check": "node build.mjs --check",
+    "test": "node build.mjs --check && for t in tests/*.js; do node \"$t\" || exit 1; done"
   },
   "devDependencies": {
+    "esbuild": "0.24.2",
     "jsdom": "^24.0.0"
   }
 }

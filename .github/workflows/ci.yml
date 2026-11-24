@@ -1,5 +1,5 @@
 # Tests and the HACS check on every push and pull request.
-# On main, when the VERSION in dist/cranberry-cards.js has no release yet, it publishes one
+# On main, when the VERSION in src/home/00-shared.js has no release yet, it publishes one
 # (tag v<version>, notes from CHANGELOG.md), so HACS offers the update by itself.
 name: CI
 
@@ -21,9 +21,11 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-audit --no-fund
+      - name: dist/ is built from src/
+        run: node build.mjs --check
       - name: Versions match
         run: |
-          JS=$(grep -oP "const VERSION = '\K[^']+" dist/cranberry-cards.js | head -1)
+          JS=$(grep -oP "const VERSION = '\K[^']+" src/home/00-shared.js | head -1)
           PKG=$(node -p "require('./package.json').version")
           echo "cranberry-cards.js $JS, package.json $PKG"
           test "$JS" = "$PKG"
@@ -51,7 +53,7 @@ jobs:
       - name: Find the version
         id: v
         run: |
-          VER=$(grep -oP "const VERSION = '\K[^']+" dist/cranberry-cards.js | head -1)
+          VER=$(grep -oP "const VERSION = '\K[^']+" src/home/00-shared.js | head -1)
           echo "version=$VER" >> "$GITHUB_OUTPUT"
           if git rev-parse -q --verify "refs/tags/v$VER" >/dev/null; then
             echo "new=false" >> "$GITHUB_OUTPUT"; echo "v$VER is already released"

@@ -1,0 +1,8 @@
+/*
+ * Cranberry home card for Home Assistant
+ * One card that combines the time, what needs attention at home, and the weather.
+ * The card stays cranberry; the temperature and the hourly line carry the colour
+ * (icy blue when cold, amber when warm) and rain bars are blue.
+ *
+ * Add to resources as a JavaScript module, then pick "Cranberry home card" in the card picker.
+ */

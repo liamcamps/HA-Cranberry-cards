@@ -1,0 +1,6 @@
+
+/*
+ * Cranberry cards: status, room, scene and music.
+ * Each is its own card with a visual editor. They follow the Cranberry Canvas theme
+ * (cc-cranberry, cc-olive, cc-quail, cc-brick) and fall back to the light palette.
+ */
