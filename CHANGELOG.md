@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.38.3 (2026-11-24)
+
+- Rows that scroll sideways can be dragged with a mouse: the weather card's hours, the car card's choices and the thermostat's modes. The cursor shows a hand when there is more to see. A drag never counts as a tap, so dragging the car's chips doesn't pick one. Touch scrolls as before.
+
 ## 2.38.2 (2026-11-24)
 
 - Scene card: the icon stands on its own, without the box behind it. Icon and name are muted until the scene is picked, then cream on cranberry.

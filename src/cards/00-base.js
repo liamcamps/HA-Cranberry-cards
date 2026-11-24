@@ -19,6 +19,9 @@
     .scrollrow { overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap !important; }
     .scrollrow::-webkit-scrollbar { display: none; }
     .scrollrow > * { flex-shrink: 0; white-space: nowrap; }
+    /* with a mouse: drag the row sideways */
+    .scrollrow.more-l, .scrollrow.more-r { cursor: grab; }
+    .scrollrow.dragging { cursor: grabbing; user-select: none; }
     .scrollrow.more-r { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
     .scrollrow.more-l { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); }
     .scrollrow.more-l.more-r { -webkit-mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
@@ -106,11 +109,34 @@
           r._ccRow = true;
           r.addEventListener('scroll', () => mark(r), { passive: true });
           if (window.ResizeObserver) new ResizeObserver(() => mark(r)).observe(r);
+          this._drag(r);
           const on = r.querySelector('[aria-pressed="true"]');
           if (on && on.offsetLeft + on.offsetWidth > r.clientWidth) r.scrollLeft = on.offsetLeft - 24;
         }
         mark(r);
       });
+    }
+    // a mouse can drag a scrolling row; touch scrolls it natively. A drag doesn't count as a tap.
+    _drag(r) {
+      let x0 = 0, s0 = 0, moved = false, id = null;
+      r.addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'mouse' || e.button !== 0 || r.scrollWidth <= r.clientWidth) return;
+        x0 = e.clientX; s0 = r.scrollLeft; moved = false; id = e.pointerId;
+      });
+      r.addEventListener('pointermove', (e) => {
+        if (id !== e.pointerId) return;
+        const dx = e.clientX - x0;
+        if (!moved && Math.abs(dx) > 4) { moved = true; r.classList.add('dragging'); try { r.setPointerCapture(id); } catch (err) { /* */ } }
+        if (moved) { r.scrollLeft = s0 - dx; e.preventDefault(); }
+      });
+      const end = (e) => {
+        if (id !== e.pointerId) return;
+        id = null; r.classList.remove('dragging');
+        if (moved) { const stop = (ev) => { ev.stopPropagation(); ev.preventDefault(); }; r.addEventListener('click', stop, { capture: true, once: true }); setTimeout(() => r.removeEventListener('click', stop, { capture: true }), 0); }
+      };
+      r.addEventListener('pointerup', end);
+      r.addEventListener('pointercancel', end);
+      r.addEventListener('dragstart', (e) => e.preventDefault());
     }
     _update() {
       if (!this._hass || !this._config) return;
