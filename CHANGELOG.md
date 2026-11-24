@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.37.1 (2026-11-24)
+
+- Weather card: the same weather icons as the home card. Lucide icons (cloud-sun, cloud-rain, moon, …) when the Lucide icons integration is installed, the cards’ own drawn icons otherwise.
+- 2.37.0 was not released (its build check failed); this release includes it.
+
 ## 2.37.0 (2026-11-24)
 
 - **New: weather card**, for a balcony or garden pop-up. The temperature now, the condition and "Feels like 6° · max 10°", with a switch between two views:

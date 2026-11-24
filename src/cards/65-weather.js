@@ -16,7 +16,8 @@
       .cond { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
       .cond b { font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .cond span { font-size: 13px; color: var(--cc-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .cond svg { flex-shrink: 0; }
+      .cond .wi { flex-shrink: 0; }
+      ha-icon.wi { display: inline-flex; }
       .seg { display: flex; padding: 3px; border-radius: var(--cc-r-ctl, 12px); background: color-mix(in srgb, var(--cc-text) 7%, transparent); flex-shrink: 0; }
       .seg button { height: 34px; padding: 0 12px; border-radius: 9px; font-size: 13px; font-weight: 700; color: var(--cc-muted); }
       .seg button[aria-pressed="true"] { background: var(--cv-fill-c); color: var(--cc-on); }
@@ -132,7 +133,8 @@
         if (k === 'sunny' && dark) k = 'clear-night';
         const d = cnd === 'partlycloudy' && dark ? WX.I.partlyNight : (WX.HOUR_ICON[k] || WX.I.cloud);
         const cls = k === 'sunny' || k === 'partlycloudy' ? (cnd === 'partlycloudy' && dark ? 'dim' : 'sun') : WX.RAINY.indexOf(k) >= 0 ? 'wet' : 'dim';
-        return { d, cls };
+        const lu = WX.HOUR_LUCIDE[cnd === 'partlycloudy' && dark ? 'partlycloudy-night' : k] || 'cloud';
+        return { d, cls, lu };
       };
 
       const hourly = (this._fc && this._fc.hourly || []).filter((f) => Date.parse(f.datetime) > nowT - 3600000);
@@ -229,7 +231,11 @@
 
     view(m) {
       if (m.na) return `<ha-card class="na"><div class="empty">${esc(m.text)}</div></ha-card>`;
-      const svg = (ic, size) => `<svg class="${ic.cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ic.d}"></path></svg>`;
+      // Lucide icons when the Lucide icons integration is installed, else the cards' own drawn ones
+      const lucide = !!(window.customIcons && window.customIcons.lucide);
+      const svg = (ic, size) => (lucide
+        ? `<ha-icon class="wi ${ic.cls}" icon="lucide:${ic.lu}" style="--mdc-icon-size:${size}px;width:${size}px;height:${size}px" aria-hidden="true"></ha-icon>`
+        : `<svg class="wi ${ic.cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ic.d}"></path></svg>`);
       const seg = m.switcher ? `<span class="seg" role="group" aria-label="${esc(this.t('View'))}">${['hours', 'days'].map((v) => `<button type="button" data-act="view" data-arg="${v}" aria-pressed="${m.view === v}">${esc(this.t(v === 'hours' ? 'Hours' : 'Days'))}</button>`).join('')}</span>` : '';
       const top = `<div class="top"><button type="button" class="now tap" data-act="more" aria-label="${esc(m.temp + '°, ' + m.label)}"><span class="big">${esc(m.temp)}°</span><span class="cond"><b>${svg(m.icon, 20)}${esc(m.label)}</b>${m.feels ? `<span>${esc(m.feels)}</span>` : ''}</span></button>${seg}</div>`;
       let body = '';

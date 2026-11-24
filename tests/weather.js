@@ -79,6 +79,13 @@ const txt = (el, s) => (q(el, s) || {}).textContent || '';
   await wait(20);
   ok(txt(nl, '.say') === 'Droog tot ongeveer ' + wetAt + ', dan zo’n 2 uur regen.' && txt(nl, '.seg').includes('Uren') && qa(nl, '.stat')[0].textContent === 'WindZW 18 km/h', 'Dutch: ' + txt(nl, '.say'));
 
+  // Lucide icons when the integration is there
+  w.customIcons = { lucide: {} };
+  const lu = make({});
+  await wait(20);
+  ok(q(lu, '.cond ha-icon.wi').getAttribute('icon') === 'lucide:cloud-sun' && qa(lu, '.h ha-icon')[5].getAttribute('icon') === 'lucide:cloud-rain' && qa(lu, '.h ha-icon')[5].classList.contains('wet') && !q(lu, '.h svg'), 'Lucide icons: ' + q(lu, '.cond ha-icon.wi').getAttribute('icon'));
+  delete w.customIcons;
+
   // no switch without a daily forecast; not responding
   states['weather.home'].attributes.supported_features = 2;
   const only = make({});
