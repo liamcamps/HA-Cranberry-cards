@@ -121,17 +121,17 @@
     _eta(action, from, to) {
       const m = this._etaMin(action, from, to);
       if (m == null) return null;
-      return m < 90 ? m + ' minutes' : (Math.round(m / 30) / 2).toLocaleString(this._lang()) + ' hours';
+      return m < 90 ? this.t('{n} minutes', { n: m }) : this.t('{n} hours', { n: (Math.round(m / 30) / 2).toLocaleString(this._lang()) });
     }
     _etaShort(action, from, to) {
       const m = this._etaMin(action, from, to);
       if (m == null) return null;
-      return m < 90 ? '~' + m + ' min' : '~' + (Math.round(m / 30) / 2).toLocaleString(this._lang()) + ' h';
+      return m < 90 ? this.t('~{n} min', { n: m }) : this.t('~{n} h', { n: (Math.round(m / 30) / 2).toLocaleString(this._lang()) });
     }
 
     model() {
       const c = this._config, st = this.st(c.entity);
-      const na = !st || st.state === 'unavailable' || st.state === 'unknown';
+      const na = this.isNa(st) || st.state === 'unknown';
       const a = st ? st.attributes : {};
       const f = Number(a.supported_features) || 0;
       const mode = na ? 'off' : st.state;
@@ -167,82 +167,83 @@
 
       // the big value and what −/+ change
       if (na) m.big = '—';
-      else if (mode === 'off') m.big = this._hass.formatEntityState ? this.fmt(st) : 'Off';
+      else if (mode === 'off') m.big = this._hass.formatEntityState ? this.fmt(st) : this.t('Off');
       else if (dual) {
         m.rows = [
-          { k: 'target_temp_low', label: 'Heat below', value: deg(low), dim: action === 'cooling' },
-          { k: 'target_temp_high', label: 'Cool above', value: deg(high), dim: action === 'heating' }
+          { k: 'target_temp_low', label: this.t('Heat below'), value: deg(low), dim: action === 'cooling' },
+          { k: 'target_temp_high', label: this.t('Cool above'), value: deg(high), dim: action === 'heating' }
         ];
       } else if (mode === 'dry') {
-        if (humT != null && (f & CLIMATE.HUMIDITY)) { m.big = humT + '%'; m.label = 'Dry to'; m.steps = 'humidity'; }
-        else { m.big = hum != null ? hum + '%' : this.fmt(st); m.label = 'Humidity'; }
+        if (humT != null && (f & CLIMATE.HUMIDITY)) { m.big = humT + '%'; m.label = this.t('Dry to'); m.steps = 'humidity'; }
+        else { m.big = hum != null ? hum + '%' : this.fmt(st); m.label = this.t('Humidity'); }
       } else if (mode === 'fan_only') {
         const fans = a.fan_modes || [];
-        m.big = a.fan_mode ? this._attr(st, 'fan_mode', a.fan_mode) : 'Fan';
-        m.label = 'Fan';
+        m.big = a.fan_mode ? this._attr(st, 'fan_mode', a.fan_mode) : this.t('Fan');
+        m.label = this.t('Fan');
         if (fans.length > 1 && (f & CLIMATE.FAN)) m.steps = 'fan';
       } else if (target != null) {
         m.big = deg(target);
-        m.label = { heat: 'Heat to', cool: 'Cool to', auto: 'Around' }[mode] || 'Target';
+        m.label = this.t({ heat: 'Heat to', cool: 'Cool to', auto: 'Around' }[mode] || 'Target');
         m.steps = 'temperature';
-      } else { m.big = room || this.fmt(st); m.label = 'Now'; }
+      } else { m.big = room || this.fmt(st); m.label = this.t('Now'); }
       m.bigSize = m.big.length > 5 ? 96 : 132;
 
       // one sentence about what is going on
       const eta = (to) => this._eta(action, cur, to);
       const preset = a.preset_mode && !['none', 'None', 'comfort', 'home'].includes(a.preset_mode) && !na && mode !== 'off' ? this._attr(st, 'preset_mode', a.preset_mode) : '';
+      const T = (text, vars) => this.t(text, Object.assign({ room, target: target != null ? deg(target) : '', hum, humT }, vars || {}));
       let s;
-      if (na) s = 'The thermostat isn’t responding. Check its power or connection.';
-      else if (mode === 'off') s = 'Off.' + (room ? ' It’s ' + room + ' in the ' + m.name.toLowerCase() + '.' : '');
-      else if (dual) s = action === 'heating' ? room + ' now, below ' + deg(low) + '. Heating up' + (eta(low) ? ', warm in about ' + eta(low) : '') + '.'
-        : action === 'cooling' ? room + ' now, above ' + deg(high) + '. Cooling down' + (eta(high) ? ', cool in about ' + eta(high) : '') + '.'
-        : room + ' now: comfortable, so it’s resting.';
-      else if (mode === 'dry') s = 'Drying the air' + (hum != null ? ': ' + hum + '% now' + (humT != null ? ', down to ' + humT + '%' : '') : '') + '.';
-      else if (mode === 'fan_only') s = 'Just moving air.' + (room ? ' It’s ' + room + ' in the room.' : '');
-      else if (action === 'heating') s = 'Heating from ' + room + '.' + (target != null && eta(target) ? ' Warm in about ' + eta(target) + '.' : '');
-      else if (action === 'cooling') s = 'Cooling from ' + room + '.' + (target != null && eta(target) ? ' Cool in about ' + eta(target) + '.' : '');
-      else if (target != null && mode !== 'auto') s = 'Holding at ' + deg(target) + '.' + (room ? ' It’s ' + room + ' now.' : '');
-      else s = room ? 'It’s ' + room + '. ' + (mode === 'auto' ? 'Auto is keeping it there.' : 'Resting.') : 'Resting.';
-      if (mode === 'auto' && (action === 'heating' || action === 'cooling') && target != null) s = s.replace(/\.$/, '') + '; auto keeps it around ' + deg(target) + '.';
+      if (na) s = T('The thermostat isn’t responding. Check its power or connection.');
+      else if (mode === 'off') s = room ? T('Off. It’s {room} in the {place}.', { place: m.name.toLowerCase() }) : T('Off.');
+      else if (dual) s = action === 'heating' ? T(eta(low) ? '{room} now, below {low}. Heating up, warm in about {eta}.' : '{room} now, below {low}. Heating up.', { low: deg(low), eta: eta(low) })
+        : action === 'cooling' ? T(eta(high) ? '{room} now, above {high}. Cooling down, cool in about {eta}.' : '{room} now, above {high}. Cooling down.', { high: deg(high), eta: eta(high) })
+        : T('{room} now: comfortable, so it’s resting.');
+      else if (mode === 'dry') s = T(hum == null ? 'Drying the air.' : humT != null ? 'Drying the air: {hum}% now, down to {humT}%.' : 'Drying the air: {hum}% now.');
+      else if (mode === 'fan_only') s = T(room ? 'Just moving air. It’s {room} in the room.' : 'Just moving air.');
+      else if (action === 'heating') s = T(target != null && eta(target) ? 'Heating from {room}. Warm in about {eta}.' : 'Heating from {room}.', { eta: target != null && eta(target) });
+      else if (action === 'cooling') s = T(target != null && eta(target) ? 'Cooling from {room}. Cool in about {eta}.' : 'Cooling from {room}.', { eta: target != null && eta(target) });
+      else if (target != null && mode !== 'auto') s = T(room ? 'Holding at {target}. It’s {room} now.' : 'Holding at {target}.');
+      else s = T(!room ? 'Resting.' : mode === 'auto' ? 'It’s {room}. Auto is keeping it there.' : 'It’s {room}. Resting.');
+      if (mode === 'auto' && (action === 'heating' || action === 'cooling') && target != null) s = T('{s}; auto keeps it around {target}.', { s: s.replace(/\.$/, '') });
       if (preset) s = preset + ': ' + s.charAt(0).toLowerCase() + s.slice(1);
       m.say = say(s);
       // the compact sentence: shorter, at most two lines
       const etaS = (to) => this._etaShort(action, cur, to);
       let t;
-      if (na) t = 'Not responding.';
-      else if (mode === 'off') t = room ? 'It’s ' + room + ' in the room.' : 'Off.';
-      else if (dual) t = action === 'heating' ? room + ' now. Heating up.' : action === 'cooling' ? room + ' now. Cooling down.' : room + ' now. Comfortable.';
-      else if (mode === 'dry') t = hum != null ? hum + '% now. Drying the air.' : 'Drying the air.';
-      else if (mode === 'fan_only') t = 'Moving air.' + (room ? ' ' + room + ' in the room.' : '');
-      else if (action === 'heating') t = 'Heating from ' + room + '.' + (target != null && etaS(target) ? ' Warm in ' + etaS(target) + '.' : '');
-      else if (action === 'cooling') t = 'Cooling from ' + room + '.' + (target != null && etaS(target) ? ' Cool in ' + etaS(target) + '.' : '');
-      else if (mode === 'auto') t = room ? room + ' now. Auto is on it.' : 'Auto is on it.';
-      else t = room ? 'Holding. It’s ' + room + ' now.' : 'Holding.';
+      if (na) t = T('Not responding.');
+      else if (mode === 'off') t = T(room ? 'It’s {room} in the room.' : 'Off.');
+      else if (dual) t = T(action === 'heating' ? '{room} now. Heating up.' : action === 'cooling' ? '{room} now. Cooling down.' : '{room} now. Comfortable.');
+      else if (mode === 'dry') t = T(hum != null ? '{hum}% now. Drying the air.' : 'Drying the air.');
+      else if (mode === 'fan_only') t = T(room ? 'Moving air. {room} in the room.' : 'Moving air.');
+      else if (action === 'heating') t = T(target != null && etaS(target) ? 'Heating from {room}. Warm in {eta}.' : 'Heating from {room}.', { eta: target != null && etaS(target) });
+      else if (action === 'cooling') t = T(target != null && etaS(target) ? 'Cooling from {room}. Cool in {eta}.' : 'Cooling from {room}.', { eta: target != null && etaS(target) });
+      else if (mode === 'auto') t = T(room ? '{room} now. Auto is on it.' : 'Auto is on it.');
+      else t = T(room ? 'Holding. It’s {room} now.' : 'Holding.');
       m.short = t;
       m.tag = preset;
       m.canOn = !na && mode === 'off';
-      m.meta = na ? '' : mode === 'dry' ? (room ? 'It’s ' + room + ' in the room' : '') : (hum != null ? hum + '% humidity' : '');
+      m.meta = na ? '' : mode === 'dry' ? (room ? T('It’s {room} in the room') : '') : (hum != null ? T('{hum}% humidity') : '');
 
       // options, only what the thermostat supports
       const open = this._menu;
-      m.preset = !na && mode !== 'off' && (f & CLIMATE.PRESET) && (a.preset_modes || []).length ? { value: a.preset_mode && !['none', 'None'].includes(a.preset_mode) ? this._attr(st, 'preset_mode', a.preset_mode) : 'No preset', open: open === 'preset' } : null;
+      m.preset = !na && mode !== 'off' && (f & CLIMATE.PRESET) && (a.preset_modes || []).length ? { value: a.preset_mode && !['none', 'None'].includes(a.preset_mode) ? this._attr(st, 'preset_mode', a.preset_mode) : this.t('No preset'), open: open === 'preset' } : null;
       m.chips = [];
       if (!na && mode !== 'off') {
-        if ((f & CLIMATE.FAN) && (a.fan_modes || []).length && mode !== 'fan_only') m.chips.push({ k: 'fan', label: 'Fan', value: this._attr(st, 'fan_mode', a.fan_mode), open: open === 'fan' });
-        if ((f & CLIMATE.SWING) && (a.swing_modes || []).length) m.chips.push({ k: 'swing', label: 'Swing', value: this._attr(st, 'swing_mode', a.swing_mode), open: open === 'swing' });
-        if (c.show_humidity !== false && (f & CLIMATE.HUMIDITY) && humT != null && mode !== 'dry') m.chips.push({ k: 'humidity', label: 'Humidity', value: humT + '%', open: open === 'humidity' });
+        if ((f & CLIMATE.FAN) && (a.fan_modes || []).length && mode !== 'fan_only') m.chips.push({ k: 'fan', label: this.t('Fan'), value: this._attr(st, 'fan_mode', a.fan_mode), open: open === 'fan' });
+        if ((f & CLIMATE.SWING) && (a.swing_modes || []).length) m.chips.push({ k: 'swing', label: this.t('Swing'), value: this._attr(st, 'swing_mode', a.swing_mode), open: open === 'swing' });
+        if (c.show_humidity !== false && (f & CLIMATE.HUMIDITY) && humT != null && mode !== 'dry') m.chips.push({ k: 'humidity', label: this.t('Humidity'), value: humT + '%', open: open === 'humidity' });
       }
-      const LISTS = { preset: ['Preset', 'preset_mode', a.preset_modes], fan: ['Fan speed', 'fan_mode', a.fan_modes], swing: ['Swing', 'swing_mode', a.swing_modes] };
+      const LISTS = { preset: [this.t('Preset'), 'preset_mode', a.preset_modes], fan: [this.t('Fan speed'), 'fan_mode', a.fan_modes], swing: [this.t('Swing'), 'swing_mode', a.swing_modes] };
       if (open === 'humidity') {
         const lo = Number(a.min_humidity) || 30, hi = Number(a.max_humidity) || 70;
         const opts = []; for (let x = Math.ceil(lo / 5) * 5; x <= hi; x += 5) opts.push(x);
-        m.menu = { title: 'Target humidity', top: false, opts: opts.map((x) => ({ value: String(x), label: x + '%', on: x === humT })) };
+        m.menu = { title: this.t('Target humidity'), top: false, opts: opts.map((x) => ({ value: String(x), label: x + '%', on: x === humT })) };
       } else if (open && LISTS[open] && (LISTS[open][2] || []).length) {
         const [title, key, list] = LISTS[open];
         m.menu = { title, top: open === 'preset', opts: list.map((x) => ({ value: x, label: this._attr(st, key, x), on: x === a[key] })) };
       } else m.menu = null;
       const shown = (c.modes && c.modes.length ? c.modes : (a.hvac_modes || [])).filter((x) => (a.hvac_modes || []).includes(x));
-      m.modes = c.show_modes === false ? [] : shown.map((k) => ({ k, label: HVAC_NAMES[k] || this._attr(st, 'hvac_mode', k), on: k === mode && !na }));
+      m.modes = c.show_modes === false ? [] : shown.map((k) => ({ k, label: HVAC_NAMES[k] ? this.t(HVAC_NAMES[k]) : this._attr(st, 'hvac_mode', k), on: k === mode && !na }));
       return m;
     }
 
@@ -257,17 +258,17 @@
         </div>
         ${m.dual ? `<div class="rows">${m.rows.map((r) => `<div class="row" style="opacity:${r.dim ? 0.5 : 1}">
             <span class="v"><span class="lbl">${esc(r.label)}</span><span class="big">${esc(r.value)}</span></span>
-            <button type="button" class="step" data-act="step" data-arg="${r.k}:-1" aria-label="Lower ${esc(r.label.toLowerCase())}"><ha-icon icon="${minus}"></ha-icon></button>
-            <button type="button" class="step" data-act="step" data-arg="${r.k}:1" aria-label="Raise ${esc(r.label.toLowerCase())}"><ha-icon icon="${plus}"></ha-icon></button>
+            <button type="button" class="step" data-act="step" data-arg="${r.k}:-1" aria-label="${esc(this.t('Lower {what}', { what: r.label.toLowerCase() }))}"><ha-icon icon="${minus}"></ha-icon></button>
+            <button type="button" class="step" data-act="step" data-arg="${r.k}:1" aria-label="${esc(this.t('Raise {what}', { what: r.label.toLowerCase() }))}"><ha-icon icon="${plus}"></ha-icon></button>
           </div>`).join('')}</div>`
         : `<div class="one">
             <span><span class="lbl">${esc(m.label)}</span><span class="big" style="font-size:${m.bigSize}px">${esc(m.big)}</span></span>
-            ${m.steps ? `<span class="steps"><button type="button" class="step" data-act="step" data-arg="${m.steps}:1" aria-label="Raise"><ha-icon icon="${plus}"></ha-icon></button><button type="button" class="step" data-act="step" data-arg="${m.steps}:-1" aria-label="Lower"><ha-icon icon="${minus}"></ha-icon></button></span>` : ''}
+            ${m.steps ? `<span class="steps"><button type="button" class="step" data-act="step" data-arg="${m.steps}:1" aria-label="${this.t('Raise')}"><ha-icon icon="${plus}"></ha-icon></button><button type="button" class="step" data-act="step" data-arg="${m.steps}:-1" aria-label="${this.t('Lower')}"><ha-icon icon="${minus}"></ha-icon></button></span>` : ''}
           </div>`}
         <p class="say">${esc(m.say)}</p>
         ${m.meta ? `<span class="meta">${esc(m.meta)}</span>` : ''}
         ${m.chips.length ? `<div class="chips">${m.chips.map((x) => `<button type="button" class="chip" data-act="menu" data-arg="${x.k}" aria-haspopup="listbox" aria-expanded="${x.open}"><small>${esc(x.label)}</small>${esc(x.value)}${ic('chev', 'mdi:chevron-down')}</button>`).join('')}</div>` : ''}
-        ${m.modes.length ? `<div class="modes" role="group" aria-label="Mode">${m.modes.map((x) => `<button type="button" class="mode" data-act="mode" data-arg="${x.k}" aria-pressed="${x.on}" ${m.na ? 'disabled' : ''}>${esc(x.label)}</button>`).join('')}</div>` : ''}
+        ${m.modes.length ? `<div class="modes" role="group" aria-label="${this.t('Mode')}">${m.modes.map((x) => `<button type="button" class="mode" data-act="mode" data-arg="${x.k}" aria-pressed="${x.on}" ${m.na ? 'disabled' : ''}>${esc(x.label)}</button>`).join('')}</div>` : ''}
         ${m.menu ? `<div class="menu" role="listbox" aria-label="${esc(m.menu.title)}" style="${m.menu.top ? 'top:52px' : 'bottom:' + (m.modes.length ? 62 : 14) + 'px'}"><span class="t">${esc(m.menu.title)}</span>${m.menu.opts.map((o) => `<button type="button" class="opt" role="option" data-act="pick" data-arg="${esc(o.value)}" aria-selected="${o.on}"><span>${esc(o.label)}</span>${o.on ? ic('check', 'mdi:check') : ''}</button>`).join('')}</div>` : ''}
       </ha-card>`;
     }
@@ -277,17 +278,17 @@
       const big = m.big.length > 4 ? 34 : 48;
       const step = (k, d, label) => `<button type="button" class="step" data-act="step" data-arg="${k}:${d}" aria-label="${esc(label)}"><ha-icon icon="${d > 0 ? plus : minus}"></ha-icon></button>`;
       const fan = m.steps === 'fan';
-      return `<ha-card class="compact ${m.na ? 'na' : ''}" style="background:${m.bg}${m.na ? ';opacity:.6' : ''}">
+      return `<ha-card class="compact ${m.na ? 'na' : ''}" style="background:${m.bg}">
         <div class="top">
           <button type="button" class="room" data-act="more">${esc(m.name)}${ic('chevron-right', 'mdi:chevron-right')}</button>
           ${m.tag ? `<span class="tag">${esc(m.tag)}</span>` : ''}
         </div>
         <div class="line">
-          ${m.dual ? `<span class="minis">${m.rows.map((r) => { const l = r.k === 'target_temp_low' ? 'Heat' : 'Cool'; return `<span class="mini" style="opacity:${r.dim ? 0.5 : 1}"><span class="lbl">${l}</span><span class="big">${esc(r.value)}</span>${step(r.k, -1, 'Lower the ' + l.toLowerCase() + ' point')}${step(r.k, 1, 'Raise the ' + l.toLowerCase() + ' point')}</span>`; }).join('')}</span>`
+          ${m.dual ? `<span class="minis">${m.rows.map((r) => { const l = this.t(r.k === 'target_temp_low' ? 'Heat' : 'Cool'); return `<span class="mini" style="opacity:${r.dim ? 0.5 : 1}"><span class="lbl">${l}</span><span class="big">${esc(r.value)}</span>${step(r.k, -1, 'Lower the ' + l.toLowerCase() + ' point')}${step(r.k, 1, 'Raise the ' + l.toLowerCase() + ' point')}</span>`; }).join('')}</span>`
             : `<span class="lead"><span class="lbl">${esc(m.label)}</span><span class="big" style="font-size:${big}px">${esc(m.big)}</span></span>`}
           <span class="short">${esc(m.short)}</span>
-          ${m.steps && !m.dual ? `<span class="steps">${step(m.steps, -1, fan ? 'Slower' : 'Lower')}${step(m.steps, 1, fan ? 'Faster' : 'Raise')}</span>` : ''}
-          ${m.canOn ? `<button type="button" class="on" data-act="on">${ic('power', 'mdi:power')}Turn on</button>` : ''}
+          ${m.steps && !m.dual ? `<span class="steps">${step(m.steps, -1, this.t(fan ? 'Slower' : 'Lower'))}${step(m.steps, 1, this.t(fan ? 'Faster' : 'Raise'))}</span>` : ''}
+          ${m.canOn ? `<button type="button" class="on" data-act="on">${ic('power', 'mdi:power')}${this.t('Turn on')}</button>` : ''}
         </div>
       </ha-card>`;
     }

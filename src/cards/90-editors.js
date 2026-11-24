@@ -16,8 +16,9 @@
       if (!this._hass || !this._config) return;
       if (!this._form) {
         this._form = document.createElement('ha-form');
-        this._form.computeLabel = (s) => labels[s.name] || s.title || s.name;
-        this._form.computeHelper = (s) => helpers[s.name];
+        const { tr } = window.CranberryI18n;
+        this._form.computeLabel = (s) => tr(this._hass, labels[s.name] || s.title || s.name);
+        this._form.computeHelper = (s) => helpers[s.name] && tr(this._hass, helpers[s.name]);
         this._form.addEventListener('value-changed', (ev) => {
           ev.stopPropagation();
           const form = Object.assign({}, ev.detail.value);
@@ -30,7 +31,7 @@
         this.appendChild(this._form);
       }
       this._form.hass = this._hass;
-      this._form.schema = typeof schema === 'function' ? schema(this._config) : schema;
+      this._form.schema = window.CranberryI18n.trSchema(this._hass, typeof schema === 'function' ? schema(this._config) : schema);
       this._form.data = this._config;
     }
   };
@@ -238,8 +239,8 @@
         { name: 'week_layout', selector: { select: { mode: 'box', options: [{ value: 'time', label: 'At their time' }, { value: 'list', label: 'As a list per day' }] } } },
         { name: 'add_events', selector: { boolean: {} } }
       ],
-      labels: { calendars: 'Calendars', title: 'Title', days: 'Days to show in the agenda', show_empty: 'Days without plans', view: 'Start with', switcher: 'Show the Agenda / Week switch', week_layout: 'Week', add_events: 'Show “New event”' },
-      helpers: { calendars: 'The colours follow this order: cranberry, olive, harbour, ochre, quail.', title: 'Optional. Leave empty inside a pop-up, which has its own title.', view: 'Week shows the next seven days side by side. On a narrow screen the card always shows the agenda.', add_events: 'Only calendars that accept new events can be picked, like Local calendar and Google Calendar.', who: 'Pick the people who see a calendar. Leave it empty and everyone sees it.' }
+      labels: { calendars: 'Calendars', title: 'Title', days: 'Days to show in the agenda', show_empty: 'Days without plans', view: 'Start with', switcher: 'Show the Agenda / Week switch', week_layout: 'Week', add_events: 'Add, change and delete events' },
+      helpers: { calendars: 'The colours follow this order: cranberry, olive, harbour, ochre, quail.', title: 'Optional. Leave empty inside a pop-up, which has its own title.', view: 'Week shows the next seven days side by side. On a narrow screen the card always shows the agenda.', add_events: 'New event, and Edit and Delete in an event’s details. Only for calendars that allow it, like Local calendar and Google Calendar.', who: 'Pick the people who see a calendar. Leave it empty and everyone sees it.' }
     },
     {
       tag: 'cranberry-waste-card', cls: CranberryWasteCard, name: 'Cranberry waste collection',

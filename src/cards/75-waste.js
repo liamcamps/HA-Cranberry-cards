@@ -36,41 +36,40 @@
       const W = window.CranberryWaste.wasteState(this._hass, Object.assign({ waste: 'auto' }, c), now);
       const lang = this._lang();
       const wd = (d, style) => new Intl.DateTimeFormat(lang, { weekday: style || 'long' }).format(d);
-      const dateLabel = (x) => x.days === 0 ? 'Today' : x.days === 1 ? 'Tomorrow' : new Intl.DateTimeFormat(lang, { weekday: 'short', day: 'numeric', month: 'short' }).format(x.date);
-      const short = (x) => ({ 'Green (GFT)': 'Green', 'Plastic (PMD)': 'Plastic', 'Plastic (PBD)': 'Plastic' }[x.name] || x.name);
-      const join = (arr) => arr.length === 1 ? arr[0] : arr.slice(0, -1).join(', ') + ' and ' + arr[arr.length - 1].toLowerCase();
+      const dateLabel = (x) => x.days === 0 ? this.t('Today') : x.days === 1 ? this.t('Tomorrow') : new Intl.DateTimeFormat(lang, { weekday: 'short', day: 'numeric', month: 'short' }).format(x.date);
+      const join = (list) => window.CranberryWaste.label(this._hass, list);
       const list = W.upcoming.slice(0, Number(c.show) || 4).map((x) => ({ name: x.name, colour: x.colour, date: dateLabel(x), soon: x.days <= 1 }));
-      const m = { tone: 'quiet', colours: [], title: c.name || 'Waste collection', text: '', day: '', btn: null, list, na: false };
+      const m = { tone: 'quiet', colours: [], title: c.name || this.t('Waste collection'), text: '', day: '', btn: null, list, na: false };
       if (!W.items.length) {
         const any = [].concat(c.waste || []).some((id) => id !== 'auto' && this.st(id));
-        return Object.assign(m, { colours: ['var(--cc-q)'], text: any ? 'No collections planned' : 'No Afvalwijzer sensors found', na: !any });
+        return Object.assign(m, { colours: ['var(--cc-q)'], text: this.t(any ? 'No collections planned' : 'No Afvalwijzer sensors found'), na: !any });
       }
       if (W.due && W.due.length) {
-        const names = join(W.due.map(short));
+        const names = join(W.due);
         const many = W.due.length > 1;
         m.colours = W.due.map((x) => x.colour);
         if (!W.out) {
           m.tone = 'urgent';
           m.title = W.chip;
-          m.text = W.when === 'today' ? 'Still time if it isn’t out yet' : (many ? 'Both collected tomorrow morning' : 'Collected tomorrow morning');
-          if (c.waste_out) m.btn = { label: many ? 'Both out' : 'It’s out' };
+          m.text = this.t(W.when === 'today' ? 'Still time if it isn’t out yet' : (many ? 'Both collected tomorrow morning' : 'Collected tomorrow morning'));
+          if (c.waste_out) m.btn = { label: this.t(many ? 'Both out' : 'It’s out') };
           return m;
         }
         m.tone = 'out';
         m.quiet = true;
-        m.title = names + (many ? ' are out' : ' is out');
-        m.text = W.when === 'today' ? 'Collected this morning' : 'Collected tomorrow morning';
-        m.day = W.when === 'today' ? 'Today' : wd(W.due[0].date, 'short');
+        m.title = this.t(many ? '{bins} are out' : '{bins} is out', { bins: names });
+        m.text = this.t(W.when === 'today' ? 'Collected this morning' : 'Collected tomorrow morning');
+        m.day = W.when === 'today' ? this.t('Today') : wd(W.due[0].date, 'short');
         return m;
       }
       const next = W.upcoming[0];
-      if (!next) return Object.assign(m, { colours: ['var(--cc-q)'], text: 'No collections planned' });
+      if (!next) return Object.assign(m, { colours: ['var(--cc-q)'], text: this.t('No collections planned') });
       const sameDay = W.upcoming.filter((x) => x.days === next.days);
       m.colours = sameDay.map((x) => x.colour);
-      const names = join(sameDay.map(short));
-      m.title = names + (next.days === 0 ? ' today' : next.days === 1 ? ' tomorrow' : ' on ' + wd(next.date));
-      m.text = next.days === 1 ? 'Put ' + (sameDay.length > 1 ? 'them' : 'it') + ' out this evening' : 'Nothing to put out tonight';
-      m.day = next.days === 0 ? 'Today' : next.days === 1 ? 'Tmrw' : wd(next.date, 'short');
+      const names = join(sameDay);
+      m.title = this.t(next.days === 0 ? '{bins} today' : next.days === 1 ? '{bins} tomorrow' : '{bins} on {day}', { bins: names, day: wd(next.date) });
+      m.text = this.t(next.days === 1 ? (sameDay.length > 1 ? 'Put them out this evening' : 'Put it out this evening') : 'Nothing to put out tonight');
+      m.day = next.days === 0 ? this.t('Today') : next.days === 1 ? this.t('Tmrw') : wd(next.date, 'short');
       m.quiet = next.days > 1;
       return m;
     }

@@ -7,8 +7,14 @@
   const WASTE_SKIP = /_(today|tomorrow|day_after_tomorrow|next_[a-z_]+|notification[s]?|formatted)$/;
   // the theme sets these per mode (cc-bin-green, cc-bin-paper, cc-bin-plastic, cc-bin-rest)
   const BIN_COLOURS = { gft: 'var(--cv-bin-green)', paper: 'var(--cv-bin-paper)', plastic: 'var(--cv-bin-plastic)', rest: 'var(--cv-bin-rest)' };
-  const SHORT = { 'Green (GFT)': 'green', 'Plastic (PMD)': 'plastic', 'Plastic (PBD)': 'plastic' };
+  // the short name used in sentences ("Green and paper out tonight")
+  const SHORT = { 'Green (GFT)': 'Green', 'Plastic (PMD)': 'Plastic', 'Plastic (PBD)': 'Plastic' };
   const parseHM = (v, d) => { const m = /^(\d{1,2}):(\d{2})/.exec(String(v || d)); return m ? Number(m[1]) * 60 + Number(m[2]) : 0; };
+  // "Green and paper", in the user's language
+  const label = (hass, list) => {
+    const txt = listJoin(list.map((x) => (/^[A-Z]{2,}$/.test(x.short) ? x.short : x.short.toLowerCase())), tr(hass, 'and'));
+    return txt.charAt(0).toUpperCase() + txt.slice(1);
+  };
   const wasteState = (hass, cfg, nowDate) => {
     const now = nowDate || new Date();
     const C = BIN_COLOURS;
@@ -29,8 +35,9 @@
       if (days < 0) return;
       const low = id.toLowerCase();
       const type = WASTE_TYPES.find((t) => low.indexOf(t[0]) >= 0);
-      const name = names[id] || (type ? type[1] : (st.attributes.friendly_name || id).replace(/^afvalwijzer\s*/i, ''));
-      items.push({ id, name, colour: C[type ? type[2] : 'rest'], date: d, days });
+      const own = names[id] || (type ? '' : (st.attributes.friendly_name || id).replace(/^afvalwijzer\s*/i, ''));
+      const name = own || tr(hass, type[1]);
+      items.push({ id, name, short: own || tr(hass, SHORT[type[1]] || type[1]), colour: C[type ? type[2] : 'rest'], date: d, days });
     });
     items.sort((a, b) => a.date - b.date || a.name.localeCompare(b.name));
     const mins = now.getHours() * 60 + now.getMinutes();
@@ -49,19 +56,14 @@
       start.setMinutes(remindFrom);
       out = Date.parse(helper.last_changed) >= start.getTime() - 4 * 3600000;
     }
-    const label = (list) => {
-      const n = list.map((x) => SHORT[x.name] || x.name.toLowerCase());
-      const txt = n.length === 1 ? n[0] : n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1];
-      return txt.charAt(0).toUpperCase() + txt.slice(1);
-    };
     const r = { items, due, when, out, upcoming: items.filter((x) => !(x.days === 0 && mins >= collectBy)) };
     if (due.length) {
-      const L = label(due);
-      r.chip = when === 'today' ? L + (due.length > 1 ? ' are' : ' is') + ' collected today' : L + ' out tonight';
+      const L = label(hass, due);
+      r.chip = tr(hass, when === 'tonight' ? '{bins} out tonight' : due.length > 1 ? '{bins} are collected today' : '{bins} is collected today', { bins: L });
       r.colours = due.map((x) => x.colour);
     }
     return r;
   };
-  window.CranberryWaste = { wasteState, label: null };
+  window.CranberryWaste = { wasteState, label };
 
 

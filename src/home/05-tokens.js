@@ -12,12 +12,12 @@
     ['cc-quail', '--cc-q', '#7D8689'],
     ['cc-brick', '--cc-b', '#A8352F'],
     ['cc-harbour', '--cc-h', '#40606A'],
-    ['cc-ochre-tone', '--cc-ochre', '#8E6420'],
+    ['cc-ochre-tone', '--cc-ochre', '#8B621F'],
     // fills: whole coloured cards and surfaces, the same in both modes
     ['cc-fill-cranberry', '--cv-fill-c', '#591E21'],
     ['cc-fill-olive', '--cv-fill-o', '#514718'],
     ['cc-fill-harbour', '--cv-fill-h', '#40606A'],
-    ['cc-fill-ochre', '--cv-fill-ochre', '#8E6420'],
+    ['cc-fill-ochre', '--cv-fill-ochre', '#8B621F'],
     ['cc-fill-quail', '--cv-fill-q', '#545C5F'],
     ['cc-fill-ember', '--cv-fill-ember', '#3A2F2C'],
     // text and marks on those fills, and on cream
@@ -25,6 +25,7 @@
     ['cc-cream-muted', '--cv-on-muted', '#D9C3C0'],
     ['cc-on-cream', '--cv-on-cream', '#231C1A'],
     ['cc-shadow', '--cv-shadow', '#000000'],
+    ['cc-brick-text', '--cv-brick-text', '#A8352F'],
     // weather: the art, the rain, and the temperature colours from cold to warm
     ['cc-sun', '--cv-sun', '#F0B85A'],
     ['cc-mist', '--cv-mist', '#9CC3D6'],
@@ -43,15 +44,15 @@
     // calendars, in the order they are picked
     ['cc-calendar-1', '--cv-cal-1', '#B8565B'],
     ['cc-calendar-2', '--cv-cal-2', '#8C7F45'],
-    ['cc-calendar-3', '--cv-cal-3', '#8FA1A6'],
-    ['cc-calendar-4', '--cv-cal-4', '#C99A4A'],
-    ['cc-calendar-5', '--cv-cal-5', '#A9AFB1']
+    ['cc-calendar-3', '--cv-cal-3', '#40606A'],
+    ['cc-calendar-4', '--cv-cal-4', '#8B621F'],
+    ['cc-calendar-5', '--cv-cal-5', '#6E777A']
   ];
   // Home Assistant's own colours, with the same fallbacks
   const HA_TOKENS = [
     ['--cc-card', 'var(--ha-card-background, var(--card-background-color, #EEE9DF))'],
     ['--cc-text', 'var(--primary-text-color, #231C1A)'],
-    ['--cc-muted', 'var(--secondary-text-color, #6E6560)'],
+    ['--cc-muted', 'var(--secondary-text-color, #675F5A)'],
     ['--cc-bgc', 'var(--primary-background-color, #E3DDCF)']
   ];
   const TOKENS_CSS = TOKENS.map(([t, v, f]) => `${v}: var(--${t}, ${f});`).concat(HA_TOKENS.map(([v, x]) => `${v}: ${x};`)).join(' ');

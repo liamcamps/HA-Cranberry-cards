@@ -65,7 +65,7 @@ el.setConfig({ entity: `sensor.${P}_progress`, done: 'input_boolean.washing_mach
 set('input_boolean.washing_machine_done', 'off'); set('_machine_state', 'active'); set('_progress', 'spin'); set('_progress_percent', 93); t = T();
 ok(!q('.steps') && q('.bar') && t.includes('Spinning · 93%'), 'row');
 // unavailable
-set('_progress', 'unavailable'); t = T(); ok(t.includes('Unavailable'), 'unavailable');
+set('_progress', 'unavailable'); t = T(); ok(t.includes('Not responding') && q('ha-card').className.includes('na'), 'not responding');
 // stub
 ok(w.customElements.get('cranberry-washer-card').getStubConfig(hass()).entity === `sensor.${P}_progress`, 'stub finds progress sensor');
 console.log(pass + ' passed, ' + fail + ' failed'); process.exit(fail ? 1 : 0);

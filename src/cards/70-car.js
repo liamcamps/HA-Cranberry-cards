@@ -43,14 +43,14 @@
       const layer = garage ? this._val(c.layer) : '', zone = garage ? this._val(c.zone) : '';
       const note = other && c.note ? this._val(c.note) : '';
       const spot = other ? this._spot() : null;
-      const where = garage ? [place, layer, zone && 'zone ' + zone].filter(Boolean).join(' · ') : (other ? (note || place) : place);
+      const where = garage ? [place, layer, zone && this.t('zone {zone}', { zone })].filter(Boolean).join(' · ') : (other ? (note || place) : place);
       return {
-        title: c.name || 'Car', text: where ? 'Parked at ' + where : 'Where is it parked?',
+        title: c.name || this.t('Car'), text: where ? this.t('Parked at {where}', { where }) : this.t('Where is it parked?'),
         places: this._opts(c.entity).map((o) => ({ o, on: o === place })),
         layers: garage && c.layer ? this._opts(c.layer).map((o) => ({ o, on: o === layer })) : null,
         zones: garage && c.zone ? this._opts(c.zone).map((o) => ({ o, on: o === zone })) : null,
         note: other && c.note ? { v: note } : null,
-        spot, showMap: !!(other && spot), noSpot: !!(other && c.spot && !spot), na: !this.st(c.entity)
+        spot, showMap: !!(other && spot), noSpot: !!(other && c.spot && !spot), na: this.isNa(this.st(c.entity))
       };
     }
     view(m) {
@@ -61,12 +61,12 @@
           <span class="txt tap" role="button" tabindex="0" data-act="more"><span class="name">${esc(m.title)}</span><span class="state">${esc(m.text)}</span></span>
         </div>
         ${m.places.length ? chips(m.places, 'place') : ''}
-        ${m.layers ? `<div class="group"><span class="label">Layer</span>${chips(m.layers, 'layer')}</div>` : ''}
-        ${m.zones ? `<div class="group"><span class="label">Zone</span>${chips(m.zones, 'zone', true)}</div>` : ''}
-        ${m.note ? `<input class="note" data-key="note" data-act="note" type="text" maxlength="100" enterkeyhint="done" placeholder="Street, landmark, level…" aria-label="Where exactly" value="${esc(m.note.v)}">` : ''}
+        ${m.layers ? `<div class="group"><span class="label">${this.t('Layer')}</span>${chips(m.layers, 'layer')}</div>` : ''}
+        ${m.zones ? `<div class="group"><span class="label">${this.t('Zone')}</span>${chips(m.zones, 'zone', true)}</div>` : ''}
+        ${m.note ? `<input class="note" data-key="note" data-act="note" type="text" maxlength="100" enterkeyhint="done" placeholder="${esc(this.t('Street, landmark, level…'))}" aria-label="${esc(this.t('Where exactly'))}" value="${esc(m.note.v)}">` : ''}
         ${m.showMap ? `<div class="mapwrap" data-key="mapwrap"><div class="map" data-key="map" data-keep></div>
-          <button type="button" class="mapbtn" data-act="nav" aria-label="Walking directions to the car"><span class="go"><ha-icon icon="${ccIcon('nav', 'mdi:navigation-variant-outline')}"></ha-icon>Directions</span></button></div>` : ''}
-        ${m.noSpot ? '<div class="nomap">No location saved for the car yet</div>' : ''}
+          <button type="button" class="mapbtn" data-act="nav" aria-label="${esc(this.t('Walking directions to the car'))}"><span class="go"><ha-icon icon="${ccIcon('nav', 'mdi:navigation-variant-outline')}"></ha-icon>${this.t('Directions')}</span></button></div>` : ''}
+        ${m.noSpot ? `<div class="nomap">${this.t('No location saved for the car yet')}</div>` : ''}
       </ha-card>`;
     }
     _update() {

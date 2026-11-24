@@ -23,9 +23,10 @@
       const c = this._config;
       const people = this._people().map((p) => {
         const st = this.st(p.entity), home = !!st && st.state === 'home';
-        const where = !st ? 'Unavailable' : home ? 'Home' : st.state === 'not_home' ? 'Away' : st.state === 'unknown' ? 'Unknown' : String(st.state).replace(/_/g, ' ').replace(/^./, (ch) => ch.toUpperCase());
+        const na = this.isNa(st);
+        const where = na ? this.t('Not responding') : home ? this.t('Home') : st.state === 'not_home' ? this.t('Away') : st.state === 'unknown' ? this.t('Unknown') : String(st.state).replace(/_/g, ' ').replace(/^./, (ch) => ch.toUpperCase());
         return {
-          id: p.entity, popup: p.popup || '', home,
+          id: p.entity, popup: p.popup || '', home, na,
           name: p.name || firstName(this.nm(p.entity)), where,
           picture: c.show_picture !== 'icon' && st && st.attributes.entity_picture ? st.attributes.entity_picture : '',
           icon: p.icon || ''
@@ -36,7 +37,7 @@
     view(m) {
       // without a photo: their icon if one is set, else their initial
       const face = (p) => p.picture ? `<img src="${esc(p.picture)}" alt="">` : p.icon ? `<ha-icon icon="${esc(p.icon)}"></ha-icon>` : esc(p.name.charAt(0).toUpperCase());
-      const chip = (p) => `<button type="button" class="chip${p.home ? '' : ' away'}" data-act="open" data-arg="${esc(p.id)}" aria-label="${esc(p.name + ', ' + p.where)}" title="${esc(p.name + ' · ' + p.where)}">
+      const chip = (p) => `<button type="button" class="chip${p.home ? '' : ' away'}${p.na ? ' na' : ''}" data-act="open" data-arg="${esc(p.id)}" aria-label="${esc(p.name + ', ' + p.where)}" title="${esc(p.name + ' · ' + p.where)}">
           <span class="pic">${face(p)}</span>${p.home ? '' : `<span class="where">${esc(p.where)}</span>`}</button>`;
       return `<ha-card><div class="row">${m.title ? `<div class="title">${esc(m.title)}</div>` : ''}<div class="chips">${m.people.map(chip).join('')}</div></div></ha-card>`;
     }

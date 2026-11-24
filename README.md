@@ -125,7 +125,7 @@ npm install
 npm test
 ```
 
-Releases are automatic: raise `VERSION` in `dist/cranberry-cards.js` and `version` in
+Releases are automatic: raise `VERSION` in `src/home/00-shared.js` and `version` in
 `package.json`, add a `## <version>` section to `CHANGELOG.md`, and push to `main`. When the
 tests and the HACS check pass, CI publishes release `v<version>` and HACS offers the update.
 
@@ -145,3 +145,11 @@ node build.mjs --plain   # an unminified build, for reading or debugging
 `00-base.js` and the card registrations in `90-editors.js`. Files are joined in name order.
 Colours come from the theme's `cc-` tokens; the only colour values in the cards are the
 fallbacks for when the theme isn't installed, all in `src/home/05-tokens.js`.
+
+### Language
+
+The cards and their editors speak Dutch when your Home Assistant language (your profile, or the
+system language) is Dutch, and English otherwise. Dates and times always follow that language.
+The texts are written in English in the cards, as `this.t('Heating to {target}', { target })`;
+`src/home/07-nl.js` holds the Dutch for each. `tests/i18n.js` fails when a text has no Dutch, or
+when a translation drops one of the `{parts}`.

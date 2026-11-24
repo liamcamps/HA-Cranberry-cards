@@ -141,7 +141,7 @@ const say = () => $('.say').textContent;
   card.hass = hass(climate('fan_only', { hvac_modes: ['off', 'fan_only'], supported_features: F.FAN, current_temperature: 24.8, fan_mode: 'medium', fan_modes: ['low', 'medium', 'high'] }));
   ok($('.line .big').style.fontSize === '34px' && $$('.line .step').map((b) => b.getAttribute('aria-label')).join() === 'Slower,Faster', 'compact fan');
   card.hass = hass(climate('unavailable', {}));
-  ok($('.short').textContent === 'Not responding.' && /opacity:\s*\.6/.test(bg()), 'compact unavailable');
+  ok($('.short').textContent === 'Not responding.' && $('ha-card').classList.contains('na') && !/opacity/.test(bg()), 'compact unavailable: faded once, by the shared style');
 
   console.log(pass + ' passed, ' + fail + ' failed'); process.exit(0);
 })();

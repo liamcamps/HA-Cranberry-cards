@@ -121,6 +121,20 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   ped.querySelector('ha-form').dispatchEvent(new w.CustomEvent('value-changed', { detail: { value: Object.assign({}, ped._config, { 'popup:person.mylou': '#mylou' }) } }));
   ok(JSON.stringify(pcfg.people) === JSON.stringify([{ entity: 'person.liam', popup: '#liam' }, { entity: 'person.mylou', popup: '#mylou' }]), 'editor: pop-up per person: ' + JSON.stringify(pcfg));
 
+  // not responding: the same on every card
+  states['light.gone'] = S('light.gone', 'unavailable', { friendly_name: 'Garage' });
+  states['media_player.gone'] = S('media_player.gone', 'unavailable', {});
+  states['person.gone'] = S('person.gone', 'unavailable', { friendly_name: 'Kim' });
+  const naCards = [
+    ['room', make('cranberry-room-card', { entity: 'light.gone', name: 'Garage' }), '.state'],
+    ['status', make('cranberry-status-card', { entity: 'light.gone' }), '.state'],
+    ['music', make('cranberry-media-card', { entity: 'media_player.gone', name: 'Kitchen' }), null],
+    ['status, missing', make('cranberry-status-card', { entity: 'sensor.nothing_here' }), '.state']
+  ];
+  naCards.forEach(([n, card, sel]) => ok(q(card, 'ha-card').classList.contains('na') && card.shadowRoot.textContent.includes('Not responding') && (!sel || q(card, sel).textContent.includes('Not responding')), 'not responding: ' + n));
+  const ppl = make('cranberry-people-card', { people: ['person.gone'] });
+  ok(q(ppl, '.chip.na') && q(ppl, '.chip').getAttribute('aria-label') === 'Kim, Not responding', 'not responding: people chip');
+
   // room alert: an open door turns the card brick and says which
   states['binary_sensor.balcony_door'] = S('binary_sensor.balcony_door', 'on', { friendly_name: 'Balcony door', device_class: 'door' });
   states['lock.front'] = S('lock.front', 'locked', { friendly_name: 'Front door' });

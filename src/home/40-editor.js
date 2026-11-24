@@ -152,9 +152,9 @@
             const id = s.name.slice(6), st = this._hass.states[id];
             return (st && st.attributes.friendly_name) || id;
           }
-          return LABELS[s.name] || s.title || s.name;
+          return tr(this._hass, LABELS[s.name] || s.title || s.name);
         };
-        this._form.computeHelper = (s) => (s.name && s.name.indexOf('name__') === 0 ? 'Leave empty to use the entity name' : HELPERS[s.name]);
+        this._form.computeHelper = (s) => { const x = s.name && s.name.indexOf('name__') === 0 ? 'Leave empty to use the entity name' : HELPERS[s.name]; return x && tr(this._hass, x); };
         this._form.addEventListener('value-changed', (ev) => {
           ev.stopPropagation();
           const config = Object.assign({}, ev.detail.value);
@@ -189,7 +189,7 @@
       const data = Object.assign({}, this._config);
       ids.forEach((id) => { data['name__' + id] = names[id] || ''; });
       this._form.hass = this._hass;
-      this._form.schema = schema;
+      this._form.schema = trSchema(this._hass, schema);
       this._form.data = data;
     }
   }

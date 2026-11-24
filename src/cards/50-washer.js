@@ -56,11 +56,11 @@
     _lang() { return (this._hass.locale && this._hass.locale.language) || this._hass.language || 'en'; }
     hm(d) { try { return new Intl.DateTimeFormat(this._lang(), { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d); } catch (e) { return d.toTimeString().slice(0, 5); } }
     ago(min) {
-      if (min < 1) return 'just now';
-      if (min < 60) return min + ' min ago';
+      if (min < 1) return this.t('just now');
+      if (min < 60) return this.t('{n} min ago', { n: min });
       const h = Math.floor(min / 60), m = min % 60;
-      if (h < 24) return h + ' h' + (m && h < 6 ? ' ' + m + ' min' : '') + ' ago';
-      return Math.floor(h / 24) === 1 ? 'yesterday' : Math.floor(h / 24) + ' days ago';
+      if (h < 24) return m && h < 6 ? this.t('{h} h {m} min ago', { h, m }) : this.t('{h} h ago', { h });
+      return Math.floor(h / 24) === 1 ? this.t('yesterday') : this.t('{n} days ago', { n: Math.floor(h / 24) });
     }
 
     model() {
@@ -81,14 +81,14 @@
       const prewashOn = (st('switch', 'pre_wash') || {}).state === 'on';
       const doneSt = c.done ? this.st(c.done) : null;
       const doneAtSt = c.done_at ? this.st(c.done_at) : null;
-      const name = c.name || 'Washing machine';
+      const name = c.name || this.t('Washing machine');
       const program = cycle && ['unknown', 'unavailable'].indexOf(cycle.state) < 0 ? String(this.fmt(cycle)) : '';
       const meta = [];
       if (temp && !isNaN(parseFloat(temp.state))) meta.push(Math.round(parseFloat(temp.state)) + '°');
       if (spin && spin.state) meta.push(/^\d+$/.test(spin.state) ? spin.state + ' rpm' : String(this.fmt(spin)).replace(/_/g, ' '));
-      if (prewashOn) meta.push('Pre-wash');
-      if ((st('switch', 'intensive') || {}).state === 'on') meta.push('Intensive');
-      if ((st('switch', 'bubble_soak') || {}).state === 'on') meta.push('Bubble soak');
+      if (prewashOn) meta.push(this.t('Pre-wash'));
+      if ((st('switch', 'intensive') || {}).state === 'on') meta.push(this.t('Intensive'));
+      if ((st('switch', 'bubble_soak') || {}).state === 'on') meta.push(this.t('Bubble soak'));
 
       const doneAt = () => {
         if (doneAtSt) {
@@ -99,7 +99,7 @@
       };
       const m = { tone: 'neutral', icon: ccIcon('washer', 'mdi:washing-machine'), title: name, text: '', big: '', small: '', btn: null, pct: -1, steps: [], meta: [], na: false };
 
-      if (!prog || prog.state === 'unavailable') return Object.assign(m, { text: 'Unavailable', na: true, quiet: true });
+      if (this.isNa(prog)) return Object.assign(m, { text: this.t('Not responding'), na: true, quiet: true });
 
       const code = alarm ? String(alarm.state) : 'none';
       const phase = String(prog.state).toLowerCase();
@@ -107,7 +107,7 @@
       const pct = pctSt && !isNaN(parseFloat(pctSt.state)) ? Math.max(0, Math.min(100, Math.round(parseFloat(pctSt.state)))) : null;
 
       if (NO_ALARM.indexOf(code) < 0) {
-        return Object.assign(m, { tone: 'brick', icon: ccIcon('alert', 'mdi:alert-outline'), title: name + ' stopped', text: 'Error ' + code + (program ? ' · ' + program : ''), btn: { act: 'more', label: 'Details', icon: ccIcon('alert', 'mdi:alert-outline') }, meta: program ? [program] : [] });
+        return Object.assign(m, { tone: 'brick', icon: ccIcon('alert', 'mdi:alert-outline'), title: this.t('{name} stopped', { name }), text: this.t('Error {code}', { code }) + (program ? ' · ' + program : ''), btn: { act: 'more', label: this.t('Details'), icon: ccIcon('alert', 'mdi:alert-outline') }, meta: program ? [program] : [] });
       }
 
       if (doneSt && doneSt.state === 'on' && mstate !== 'active') {
@@ -116,9 +116,9 @@
         const late = mins >= (Number(c.alert_after) || 60);
         return Object.assign(m, {
           tone: late ? 'brick' : 'cran',
-          title: late ? 'Washing is still in the drum' : 'Washing is done',
-          text: late ? 'Done ' + this.ago(mins) + ' · don’t let it sit' : this.ago(mins).replace(/^just now$/, 'Just now') + ' · ready to empty',
-          btn: { act: 'emptied', label: 'Emptied', icon: ccIcon('check', 'mdi:check') },
+          title: this.t(late ? 'Washing is still in the drum' : 'Washing is done'),
+          text: late ? this.t('Done {ago} · don’t let it sit', { ago: this.ago(mins) }) : this.t('{ago} · ready to empty', { ago: capitalise(this.ago(mins)) }),
+          btn: { act: 'emptied', label: this.t('Emptied'), icon: ccIcon('check', 'mdi:check') },
           meta: [program].concat(meta.slice(0, 2)).filter(Boolean)
         });
       }
@@ -130,7 +130,7 @@
       if (phase === 'delaywash') {
         let ready = finish && !isNaN(Date.parse(finish.state)) ? this.hm(new Date(finish.state)) : (finishBy && /^\d\d:\d\d/.test(finishBy.state) ? finishBy.state.slice(0, 5) : null);
         if (!ready && leftMin != null) ready = this.hm(new Date(now + leftMin * 60000));
-        return Object.assign(m, { tone: 'olive', title: program || name, text: 'Delayed start' + (ready ? ' · ready at ' + ready : ''), big: ready || '', small: ready ? 'ready at' : '', meta });
+        return Object.assign(m, { tone: 'olive', title: program || name, text: this.t('Delayed start') + (ready ? ' · ' + this.t('ready at {time}', { time: ready }) : ''), big: ready || '', small: ready ? this.t('ready at') : '', meta });
       }
 
       if (mstate === 'active' || mstate === 'pause') {
@@ -145,22 +145,22 @@
           cur = ws[0] === 'pre' ? 0 : ws[0] === 'dry' ? labels.length - 1 : ws[0] + off;
           curLabel = ws[1];
         } else if (phase === 'finish') cur = labels.length;
-        m.steps = labels.map((l, i) => ({ label: i === cur && curLabel ? curLabel : l, s: i < cur ? 'done' : i === cur ? 'now' : '' }));
+        m.steps = labels.map((l, i) => ({ label: this.t(i === cur && curLabel ? curLabel : l), s: i < cur ? 'done' : i === cur ? 'now' : '' }));
         m.pct = pct == null ? -1 : pct;
         m.meta = meta;
         m.title = program || name;
-        const phaseText = PHASE_TEXT[phase] || capitalise(phase);
+        const phaseText = PHASE_TEXT[phase] ? this.t(PHASE_TEXT[phase]) : capitalise(phase);
         if (mstate === 'pause') {
-          m.text = 'Paused' + (PHASE_TEXT[phase] ? ' while ' + PHASE_TEXT[phase].toLowerCase() : '') + (pct != null ? ' · ' + pct + '%' : '');
+          m.text = (PHASE_TEXT[phase] ? this.t('Paused while {phase}', { phase: this.t(PHASE_TEXT[phase]).toLowerCase() }) : this.t('Paused')) + (pct != null ? ' · ' + pct + '%' : '');
           m.btn = remote && remote.state === 'on'
-            ? { act: 'resume', label: 'Resume', icon: ccIcon('play', 'mdi:play') }
+            ? { act: 'resume', label: this.t('Resume'), icon: ccIcon('play', 'mdi:play') }
             : null;
-          if (!m.btn) m.text += ' · press start on the machine';
+          if (!m.btn) m.text += ' · ' + this.t('press start on the machine');
           return m;
         }
         m.tone = 'olive';
         m.text = phaseText + (pct != null ? ' · ' + pct + '%' : '');
-        if (leftMin != null) { m.big = hmm(leftMin); m.small = 'left' + (fin ? ' · ' + this.hm(fin) : ''); }
+        if (leftMin != null) { m.big = hmm(leftMin); m.small = this.t('left') + (fin ? ' · ' + this.hm(fin) : ''); }
         return m;
       }
 
@@ -169,9 +169,9 @@
       let last = '';
       if (at && now - at.getTime() < 7 * 86400000) {
         const sameDay = new Date(at).toDateString() === new Date(now).toDateString();
-        last = ' · last wash done ' + (sameDay ? this.hm(at) : new Intl.DateTimeFormat(this._lang(), { weekday: 'long' }).format(at).toLowerCase());
+        last = ' · ' + this.t('last wash done {when}', { when: sameDay ? this.hm(at) : new Intl.DateTimeFormat(this._lang(), { weekday: 'long' }).format(at).toLowerCase() });
       }
-      return Object.assign(m, { text: 'Idle' + last, quiet: true });
+      return Object.assign(m, { text: this.t('Idle') + last, quiet: true });
     }
     view(m) {
       const c = this._config;
@@ -183,7 +183,7 @@
       const vars = [
         '--fill:' + (coloured ? 'currentColor' : tone === 'olive' ? 'var(--cc-o)' : 'var(--cc-q)'),
         '--chip:' + (coloured ? alpha('--cc-on', 12) : 'color-mix(in srgb, var(--cc-bgc) 70%, transparent)'),
-        '--nowbg:' + (coloured ? 'var(--cc-on)' : tone === 'olive' ? 'var(--cc-o)' : 'var(--cc-q)'),
+        '--nowbg:' + (coloured ? 'var(--cc-on)' : tone === 'olive' ? 'var(--cv-fill-o)' : 'var(--cv-fill-q)'),
         '--nowfg:' + (tone === 'brick' ? 'var(--cc-b)' : tone === 'cran' ? 'var(--cc-c)' : 'var(--cc-on)')
       ].join(';');
       const showBar = m.pct >= 0;

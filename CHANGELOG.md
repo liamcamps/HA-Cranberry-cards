@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.34.0 (2026-11-24)
+
+- **Dutch.** Every card and its editor speaks Dutch when your Home Assistant language is Dutch ("Verwarmt naar 21° · 19,5°", "GFT en papier vanavond buiten zetten", "Alles rustig."). Any other language stays English. The home card's own weather warnings and advice follow too, and the wind direction reads ZW instead of SW.
+- **Calendar: change and delete events.** An event's details have Edit and Delete, for calendars that allow it (Local calendar, Google Calendar). Edit opens the same form as New event; a repeating event asks whether to delete only this one or this one and all after. The editor option is now "Add, change and delete events".
+- **The same "Not responding" everywhere.** When a device is unavailable, every card shows it the same way: faded, a grey icon and "Not responding". The calendar marks a calendar that doesn't answer in its legend, or the whole card when none do.
+- Readable colours, checked by the theme's new contrast test: the brick error and Delete text, stone, ochre and calendar colours 3–5 are a little deeper in light mode, and coloured fills on olive cards use the fill colour instead of the lighter accent. Use with theme 4.2.0.
+
 ## 2.33.0 (2026-11-24)
 
 - **Every colour comes from the theme.** The cards no longer contain their own colour values: the thermostat states, the hero, the weather art, the temperature line, the bins, the calendar dots and the translucent layers on coloured cards all use the Cranberry Canvas theme's tokens. The fallbacks for when the theme isn't installed are in one place, `src/home/05-tokens.js`. Use with theme 4.1.0 or newer; with an older theme the cards look the same through those fallbacks.

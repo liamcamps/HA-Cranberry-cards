@@ -29,7 +29,9 @@
     .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
     .name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .state { font-size: 12px; font-weight: 500; color: var(--cc-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .na { opacity: .55; }
+    /* not responding: the same on every card. Faded, the icon in quail, and it says so */
+    .na { opacity: .6; }
+    .na .ic { background: var(--cc-q-t) !important; color: var(--cc-q) !important; }
   `;
 
   class CranberryBase extends HTMLElement {
@@ -45,6 +47,8 @@
     getCardSize() { return 1; }
     getGridOptions() { return { columns: 12, rows: 'auto', min_columns: 3 }; }
     st(id) { return this._hass && id ? this._hass.states[id] : undefined; }
+    // text in the user's language: Dutch when Home Assistant is set to Dutch, else English
+    t(text, vars) { return window.CranberryI18n.tr(this._hass, text, vars); }
     _editing() {
       // keep the card visible while the dashboard or the card itself is being edited
       return !!(this.preview || this.editMode || /[?&]edit=1/.test(window.location.search));
@@ -64,8 +68,10 @@
       const st = this.st(id), reg = this._hass.entities && this._hass.entities[id];
       return (reg && reg.name) || (st && st.attributes.friendly_name) || id;
     }
+    // an entity that is missing or unavailable is "not responding", on every card
+    isNa(st) { return !st || st.state === 'unavailable'; }
     fmt(st) {
-      if (!st) return 'Unavailable';
+      if (this.isNa(st)) return this.t('Not responding');
       if (this._hass.formatEntityState) { try { return this._hass.formatEntityState(st); } catch (e) { /* ignore */ } }
       return st.state;
     }

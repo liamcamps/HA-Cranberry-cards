@@ -63,6 +63,8 @@
     .chip { display: none; align-items: center; gap: 8px; }
     .chip .serif { font-size: 40px; line-height: 1; }
     .empty { padding: 24px; font-size: 15px; }
+    /* not responding: faded, like the other cards */
+    .na { opacity: .6; }
     /* coming up: the next things on the calendar, under the clock */
     .agenda { flex: 1; display: flex; flex-direction: column; gap: 8px; margin-top: 14px; min-height: 0; }
     .agenda .k, .stat .k { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--chc-sub); }
@@ -275,8 +277,8 @@
         const endT = en && !isNaN(en.d) ? en.d.getTime() : s.d.getTime() + (s.all ? DAY : 3600000);
         if (endT <= now.getTime()) return;
         const started = s.d <= now;
-        const when = s.all ? 'All day' : started ? 'Now, until ' + this._fmtTime(new Date(endT)) : this._fmtTime(s.d);
-        list.push({ day: started ? today : day0(s.d), t: started ? now.getTime() : s.d.getTime(), all: s.all, when, what: e.summary || e.message || 'Busy', id: e.cal });
+        const when = s.all ? this.t('All day') : started ? this.t('Now, until {time}', { time: this._fmtTime(new Date(endT)) }) : this._fmtTime(s.d);
+        list.push({ day: started ? today : day0(s.d), t: started ? now.getTime() : s.d.getTime(), all: s.all, when, what: e.summary || e.message || this.t('Busy'), id: e.cal });
       });
       // the next bin collection, unless the bins chip already says it
       if (c.waste && !bins) {
@@ -284,7 +286,7 @@
         const next = (ws.upcoming || []).filter((x) => x.days <= 2);
         if (next.length) {
           const same = next.filter((x) => x.days === next[0].days);
-          list.push({ day: day0(next[0].date), t: day0(next[0].date), all: true, when: 'Bin collection', what: capital(listJoin(same.map((x) => (SHORT[x.name] || x.name).toLowerCase()))), id: same[0].id });
+          list.push({ day: day0(next[0].date), t: day0(next[0].date), all: true, when: this.t('Bin collection'), what: label(this._hass, same), id: same[0].id });
         }
       }
       // timed events first within a day, all-day after
@@ -299,12 +301,15 @@
       const fmt = (o) => new Intl.DateTimeFormat(this._lang(), o);
       return days.slice(0, Math.max(1, Math.min(5, Number(c.coming_up_count) || 2))).map((g) => {
         const d = new Date(g.day);
-        return { wd: fmt({ weekday: 'short' }).format(d).replace(/\.$/, ''), n: d.getDate(), what: g.what, when: g.when + (g.more ? ' · +' + g.more + ' more' : ''), id: g.id,
+        return { wd: fmt({ weekday: 'short' }).format(d).replace(/\.$/, ''), n: d.getDate(), what: g.what, when: g.when + (g.more ? ' · ' + this.t('+{n} more', { n: g.more }) : ''), id: g.id,
           aria: fmt({ weekday: 'long', day: 'numeric', month: 'long' }).format(d) + ': ' + g.what + ', ' + g.when };
       });
     }
 
     // ----- Helpers -----
+    // text in the user's language: Dutch when Home Assistant is set to Dutch, else English
+    t(text, vars) { return tr(this._hass, text, vars); }
+
     _name(id) {
       const st = this._hass.states[id];
       const reg = this._hass.entities && this._hass.entities[id];
@@ -338,12 +343,12 @@
 
     _ago(d, now) {
       const min = Math.max(0, Math.floor((now - d) / 60000));
-      if (min < 1) return 'just now';
-      if (min < 60) return min + ' min ago';
+      if (min < 1) return this.t('just now');
+      if (min < 60) return this.t('{n} min ago', { n: min });
       const hrs = Math.floor(min / 60), rest = min % 60;
-      if (hrs < 24) return hrs + ' h' + (rest && hrs < 6 ? ' ' + rest + ' min' : '') + ' ago';
+      if (hrs < 24) return rest && hrs < 6 ? this.t('{h} h {m} min ago', { h: hrs, m: rest }) : this.t('{h} h ago', { h: hrs });
       const days = Math.floor(hrs / 24);
-      return days === 1 ? 'yesterday' : days + ' days ago';
+      return days === 1 ? this.t('yesterday') : this.t('{n} days ago', { n: days });
     }
 
     _toC(t, unit) { return t == null ? null : (unit && unit.indexOf('F') >= 0 ? (t - 32) * 5 / 9 : t); }
@@ -367,7 +372,7 @@
         const st = id && h.states[id];
         if (st && PROBLEM_STATES.indexOf(st.state) >= 0) {
           const label = (item && item.name) || names[id] || this._name(id);
-          issues.push({ id, text: label + ' ' + String(this._stateText(st)).toLowerCase() });
+          issues.push({ id, text: this.t('{name} {state}', { name: label, state: String(this._stateText(st)).toLowerCase() }) });
         }
       });
       if (c.laundry_done) {
@@ -381,7 +386,7 @@
             if (!isNaN(d)) at = d;
           }
           if (!at) at = new Date(ds.last_changed || ds.last_updated || now);
-          issues.push({ id: c.laundry_done, text: (c.laundry_name || 'Washing machine') + ' done ' + this._ago(at, now) });
+          issues.push({ id: c.laundry_done, text: this.t('{name} done {ago}', { name: c.laundry_name || this.t('Washing machine'), ago: this._ago(at, now) }) });
         }
       }
       let warning = null;
@@ -451,20 +456,20 @@
         if (active) {
           const level = NAMES[rank] || '';
           const levelNl = { yellow: 'geel', orange: 'oranje', red: 'rood' };
-          const untilText = until ? 'until ' + this._fmtTime(until) : null;
+          const untilText = until ? this.t('until {time}', { time: this._fmtTime(until) }) : null;
           // English by default: KNMI's own texts are Dutch only
           const english = c.warning_text !== 'original' && WARN_EN[wcond];
           if (english) {
-            text = WARN_EN[wcond][0];
-            let advice = WARN_EN[wcond][1];
-            if (rank >= 3) advice += ' Follow the advice of the authorities.';
-            else if (rank === 2 && WARN_TRAVEL.indexOf(wcond) >= 0) advice += ' Avoid travelling if you can.';
+            text = this.t(WARN_EN[wcond][0] + '@warning');
+            let advice = this.t(WARN_EN[wcond][1]);
+            if (rank >= 3) advice += ' ' + this.t('Follow the advice of the authorities.');
+            else if (rank === 2 && WARN_TRAVEL.indexOf(wcond) >= 0) advice += ' ' + this.t('Avoid travelling if you can.');
             detail = advice;
           }
           const short = String(text).split(/[.\n]/)[0].slice(0, 70);
           warning = {
             entity: firstId,
-            strip: [level ? 'Code ' + (c.warning_language === 'nl' ? levelNl[level] : level) : null, short || null, untilText].filter(Boolean).join(' · '),
+            strip: [level ? this.t('Code {level}', { level: c.warning_language === 'nl' || isNl(h) ? levelNl[level] : level }) : null, short || null, untilText].filter(Boolean).join(' · '),
             cond: wcond,
             // the actual warning text, shortened to two sentences for the card
             detail: (() => {
@@ -476,7 +481,7 @@
               if (parts[1] && (out + parts[1]).length <= 150) out += parts[1];
               return out.length > 170 ? out.slice(0, 167).replace(/\s+\S*$/, '') + '…' : out.trim();
             })(),
-            chip: capital(String(english ? WARN_EN[wcond][0] + ' warning' : (event || (WARN_WORD[wcond] ? WARN_WORD[wcond] + ' warning' : (level ? 'Code ' + level : 'Weather warning'))))) + (untilText ? ' ' + untilText : '')
+            chip: capital(String(english ? this.t('{what} warning', { what: this.t(WARN_EN[wcond][0] + '@warning') }) : (event || (WARN_WORD[wcond] ? this.t('{what} warning', { what: this.t(WARN_WORD[wcond] + '@warning') }) : (level ? this.t('Code {level}', { level: isNl(h) ? levelNl[level] : level }) : this.t('Weather warning')))))) + (untilText ? ' ' + untilText : '')
           };
           issues.unshift({ id: firstId, text: warning.chip });
         }
@@ -492,11 +497,11 @@
       const lit = litAreas.concat(litNames);
       let lights = '';
       if ((c.lights || []).length) {
-        if (!lit.length) lights = 'All lights are off.';
-        else if (lit.length > 3) lights = 'Lights on in ' + lit.length + ' places.';
-        else lights = 'Lights on in ' + listJoin(lit) + '.';
+        if (!lit.length) lights = this.t('All lights are off.');
+        else if (lit.length > 3) lights = this.t('Lights on in {n} places.', { n: lit.length });
+        else lights = this.t('Lights on in {where}.', { where: listJoin(lit, this.t('and')) });
       }
-      const lead = issues.length ? (issues.length === 1 ? 'One thing needs you.' : (issues.length === 2 ? 'Two things need you.' : issues.length + ' things need you.')) : 'All quiet.';
+      const lead = this.t(issues.length ? (issues.length === 1 ? 'One thing needs you.' : (issues.length === 2 ? 'Two things need you.' : '{n} things need you.')) : 'All quiet.', { n: issues.length });
       // the lights that are on, for the chip and its menu; a light group lists its members that are on
       const pct = (st) => (st.attributes.brightness != null ? Math.round(st.attributes.brightness / 2.55) + '%' : '');
       const menu = (c.lights || []).filter((id) => h.states[id] && h.states[id].state === 'on').map((id) => {
@@ -505,7 +510,7 @@
         return { id, name: this._area(id) || this._name(id), items: (members.length ? members : [id]).map((e) => ({ id: e, name: this._name(e), level: pct(h.states[e]) })) };
       });
       // next to a red chip, the lights chip keeps it short so both fit on one line
-      const lampText = issues.length && lit.length > 1 ? 'Lights on in ' + lit.length + (litNames.length ? ' places' : ' rooms') : lights.replace(/\.$/, '');
+      const lampText = issues.length && lit.length > 1 ? this.t(litNames.length ? 'Lights on in {n} places' : 'Lights on in {n} rooms', { n: lit.length }) : lights.replace(/\.$/, '');
       const lamps = !c.home_text && lit.length ? { n: menu.reduce((s, g) => s + g.items.length, 0), text: lampText } : null;
       const homeText = c.home_text || (lead + (lights && !lamps ? ' ' + lights : ''));
 
@@ -550,11 +555,11 @@
       const atNight = (c, t) => (c === 'partlycloudy' && isNight(t) ? 'partlycloudy-night' : c);
       const feelsBits = [];
       const app = num(oa.apparent_temperature) != null ? num(oa.apparent_temperature) : num(at.apparent_temperature);
-      if (app != null && Math.round(app) !== Math.round(temp)) feelsBits.push('Feels like ' + round(app) + '°');
-      if (temps12.length) feelsBits.push(night ? 'low ' + round(Math.min.apply(null, temps12)) + '°' : 'high ' + round(Math.max.apply(null, temps12)) + '°');
-      else if (!hourly && fc[0]) feelsBits.push('high ' + round(num(fc[0].temperature)) + '°');
+      if (app != null && Math.round(app) !== Math.round(temp)) feelsBits.push(this.t('Feels like {temp}', { temp: round(app) + '°' }));
+      if (temps12.length) feelsBits.push(night ? this.t('low {temp}', { temp: round(Math.min.apply(null, temps12)) + '°' }) : this.t('high {temp}', { temp: round(Math.max.apply(null, temps12)) + '°' }));
+      else if (!hourly && fc[0]) feelsBits.push(this.t('high {temp}', { temp: round(num(fc[0].temperature)) + '°' }));
       const gust = num(oa.wind_gust_speed) != null ? num(oa.wind_gust_speed) : num(at.wind_gust_speed);
-      if (warning && gust) feelsBits.unshift('Gusts up to ' + Math.round(gust) + ' ' + (oa.wind_speed_unit || at.wind_speed_unit || 'km/h'));
+      if (warning && gust) feelsBits.unshift(this.t('Gusts up to {speed}', { speed: Math.round(gust) + ' ' + (oa.wind_speed_unit || at.wind_speed_unit || 'km/h') }));
 
       const wet = (f) => (num(f.precipitation) || 0) >= 0.1 || (num(f.precipitation_probability) || 0) >= 50;
       // 5-minute rain nowcast (for example NL Weather's precipitation_forecasted sensor)
@@ -572,10 +577,10 @@
       const t = (f) => this._fmtTime(new Date(f.datetime));
       const wc = (warning && warning.cond) || cond;
       if (warning && (wc.indexOf('lightning') >= 0 || wc.indexOf('wind') >= 0)) {
-        insight = 'Bring loose things in from outside before it picks up.';
+        insight = this.t('Bring loose things in from outside before it picks up.');
         icon = I.alert;
       } else if (warning && (wc.indexOf('snow') >= 0 || wc === 'hail')) {
-        insight = 'Slippery out there. Take it slow on the roads and paths.';
+        insight = this.t('Slippery out there. Take it slow on the roads and paths.');
         icon = I.alert;
       } else if (ncAny) {
         const tm = (p) => this._fmtTime(new Date(p.datetime));
@@ -586,49 +591,48 @@
             const again = nc.findIndex((p, i) => i > dry && ncWet(p));
             const end = nc[nc.length - 1];
             if (again > 0) {
-              insight = 'Rain stops around ' + tm(nc[dry]) + ', starts again around ' + tm(nc[again]) + '.';
+              insight = this.t('Rain stops around {stop}, starts again around {start}.', { stop: tm(nc[dry]), start: tm(nc[again]) });
             } else {
               // beyond the nowcast, look at the hourly forecast
               const later = next12.find((f) => Date.parse(f.datetime) > Date.parse(end.datetime) && wet(f));
               const lastHour = next12.length ? next12[next12.length - 1] : null;
-              if (later) insight = 'Rain stops around ' + tm(nc[dry]) + ', back around ' + t(later) + '.';
-              else if (lastHour && Date.parse(lastHour.datetime) > Date.parse(end.datetime)) insight = 'Rain stops around ' + tm(nc[dry]) + ', dry after that.';
-              else insight = 'Rain stops around ' + tm(nc[dry]) + ', dry after that.';
+              if (later) insight = this.t('Rain stops around {stop}, back around {start}.', { stop: tm(nc[dry]), start: t(later) });
+              else insight = this.t('Rain stops around {stop}, dry after that.', { stop: tm(nc[dry]) });
             }
             icon = I.clock;
-          } else { insight = 'Rain for at least the next two hours. Take an umbrella.'; icon = I.umbrella; }
+          } else { insight = this.t('Rain for at least the next two hours. Take an umbrella.'); icon = I.umbrella; }
         } else {
           const start = nc.findIndex(ncWet);
           let peak = start;
           nc.forEach((p, i) => { if ((num(p.precipitation) || 0) > (num(nc[peak].precipitation) || 0)) peak = i; });
           const mins = Math.max(5, Math.round((Date.parse(nc[start].datetime) - now.getTime()) / 60000 / 5) * 5);
-          insight = (mins <= 30 ? 'Rain in about ' + mins + ' minutes' : 'Rain from about ' + tm(nc[start])) + (peak !== start ? ', heaviest around ' + tm(nc[peak]) : '') + '.';
+          insight = this.t(mins <= 30 ? (peak !== start ? 'Rain in about {n} minutes, heaviest around {peak}.' : 'Rain in about {n} minutes.') : (peak !== start ? 'Rain from about {time}, heaviest around {peak}.' : 'Rain from about {time}.'), { n: mins, time: tm(nc[start]), peak: tm(nc[peak]) });
           icon = I.umbrella;
         }
       } else if (rainNow && !nc.length) {
         const dry = next12.findIndex((f) => !wet(f));
         const again = dry > 0 ? next12.findIndex((f, i) => i > dry && wet(f)) : -1;
-        if (dry > 0 && again > 0) { insight = 'Rain stops around ' + t(next12[dry]) + ', starts again around ' + t(next12[again]) + '.'; icon = I.clock; }
-        else if (dry > 0) { insight = 'Rain stops around ' + t(next12[dry]) + ', dry after that.'; icon = I.clock; }
-        else if (dry === 0) { insight = 'Rain is easing off, dry within the hour.'; icon = I.clock; }
-        else { insight = 'Wet for the next ' + (next12.length || 12) + ' hours. Take an umbrella.'; icon = I.umbrella; }
+        if (dry > 0 && again > 0) { insight = this.t('Rain stops around {stop}, starts again around {start}.', { stop: t(next12[dry]), start: t(next12[again]) }); icon = I.clock; }
+        else if (dry > 0) { insight = this.t('Rain stops around {stop}, dry after that.', { stop: t(next12[dry]) }); icon = I.clock; }
+        else if (dry === 0) { insight = this.t('Rain is easing off, dry within the hour.'); icon = I.clock; }
+        else { insight = this.t('Wet for the next {n} hours. Take an umbrella.', { n: next12.length || 12 }); icon = I.umbrella; }
       } else if (firstWet >= 0) {
         let peak = firstWet;
         next12.forEach((f, i) => { if ((num(f.precipitation) || 0) > (num(next12[peak].precipitation) || 0)) peak = i; });
-        insight = 'Rain from about ' + t(next12[firstWet]) + (peak !== firstWet ? ', heaviest around ' + t(next12[peak]) : '') + '.';
+        insight = this.t(peak !== firstWet ? 'Rain from about {time}, heaviest around {peak}.' : 'Rain from about {time}.', { time: t(next12[firstWet]), peak: t(next12[peak]) });
         icon = I.umbrella;
       } else if (SNOWY.indexOf(cond) >= 0 || (temps12.length && Math.min.apply(null, temps12.map((v) => this._toC(v, unit))) <= 0)) {
-        insight = 'Freezing, down to ' + round(temps12.length ? Math.min.apply(null, temps12) : temp) + '°. Watch for slippery paths.';
+        insight = this.t('Freezing, down to {temp}. Watch for slippery paths.', { temp: round(temps12.length ? Math.min.apply(null, temps12) : temp) + '°' });
         icon = I.alert;
       } else if (cond === 'sunny' && sun && sun.attributes.next_setting) {
-        insight = 'Sunny until ' + this._fmtTime(new Date(sun.attributes.next_setting)) + '. Good time to air the house.';
+        insight = this.t('Sunny until {time}. Good time to air the house.', { time: this._fmtTime(new Date(sun.attributes.next_setting)) });
         icon = I.check;
       } else if (hourly && next12.length) {
         const low = Math.min.apply(null, temps12);
-        insight = 'Dry for the next ' + next12.length + ' hours' + (night ? ', low of ' + round(low) + '°.' : '.');
+        insight = this.t(night ? 'Dry for the next {n} hours, low of {temp}.' : 'Dry for the next {n} hours.', { n: next12.length, temp: round(low) + '°' });
         icon = this._toC(low, unit) < 8 ? I.coat : I.check;
       } else {
-        insight = 'Dry for now.';
+        insight = this.t('Dry for now.');
         icon = I.check;
       }
       if (warning && warning.detail && c.warning_detail !== false) { insight = warning.detail; icon = I.alert; }
@@ -636,7 +640,7 @@
 
       // hourly line
       const step = Math.max(1, Math.min(3, Number(c.hour_step) || 2));
-      const hours = [{ temp, cond: atNight(cond, now.getTime()), label: 'Now' }];
+      const hours = [{ temp, cond: atNight(cond, now.getTime()), label: this.t('Now') }];
       for (let i = step - 1; hours.length < 6 && i < fc.length; i += step) {
         const f = fc[i];
         hours.push({ mm: num(f.precipitation) || 0, temp: num(f.temperature), cond: hourly ? atNight(f.condition, Date.parse(f.datetime)) : f.condition, label: hourly ? this._fmtTime(new Date(f.datetime), false) : new Intl.DateTimeFormat(this._lang(), { weekday: 'short' }).format(new Date(f.datetime)) });
@@ -677,8 +681,8 @@
       if (ncAny) {
         const maxN = Math.max(2, ...nc.map((p) => num(p.precipitation) || 0));
         bars = nc.map((p) => { const v = (num(p.precipitation) || 0) / maxN; return { h: Math.round(Math.min(1, v) * 100), o: v > 0 ? 1 : 0.35 }; });
-        ticks = [0, 6, 12, 18, nc.length - 1].filter((i, k, a) => i < nc.length && a.indexOf(i) === k).map((i) => (i === 0 ? 'Now' : this._fmtTime(new Date(nc[i].datetime))));
-        rainAria = 'Rain for the next ' + Math.round(nc.length * 5) + ' minutes';
+        ticks = [0, 6, 12, 18, nc.length - 1].filter((i, k, a) => i < nc.length && a.indexOf(i) === k).map((i) => (i === 0 ? this.t('Now') : this._fmtTime(new Date(nc[i].datetime))));
+        rainAria = this.t('Rain for the next {n} minutes', { n: Math.round(nc.length * 5) });
       } else {
       const maxP = Math.max(2, ...next12.map((f) => num(f.precipitation) || 0));
       bars = next12.map((f) => {
@@ -686,8 +690,8 @@
         const v = p != null && (p > 0 || f.precipitation_probability == null) ? p / maxP : (num(f.precipitation_probability) || 0) / 100 * 0.6;
         return { h: Math.round(Math.min(1, v) * 100), o: v > 0 ? 1 : 0.35 };
       });
-      ticks = next12.length ? [0, 3, 6, 9, 11].filter((i) => i < next12.length).map((i) => (i === 0 ? 'Now' : this._fmtTime(new Date(next12[i].datetime), false))) : [];
-      rainAria = 'Rain for the next ' + next12.length + ' hours';
+      ticks = next12.length ? [0, 3, 6, 9, 11].filter((i) => i < next12.length).map((i) => (i === 0 ? this.t('Now') : this._fmtTime(new Date(next12[i].datetime), false))) : [];
+      rainAria = this.t('Rain for the next {n} hours', { n: next12.length });
       }
 
       // details: high and low, rain chance, wind, the next sunrise or sunset
@@ -697,23 +701,23 @@
         const t24 = (hourly ? fc.slice(0, 24) : fc.slice(0, 1)).map((f) => num(f.temperature)).concat(hourly ? [temp] : []).filter((v) => v != null);
         const lo24 = hourly ? fc.slice(0, 24).map((f) => num(f.templow != null ? f.templow : f.temperature)) : fc.slice(0, 1).map((f) => num(f.templow));
         const lows = lo24.concat(t24).filter((v) => v != null);
-        if (t24.length) stats.push({ k: 'High / low', v: round(Math.max.apply(null, t24)) + '° / ' + round(Math.min.apply(null, lows)) + '°' });
+        if (t24.length) stats.push({ k: this.t('High / low'), v: round(Math.max.apply(null, t24)) + '° / ' + round(Math.min.apply(null, lows)) + '°' });
         const probs = next12.map((f) => num(f.precipitation_probability)).filter((v) => v != null);
         const mmSum = next12.reduce((sum, f) => sum + (num(f.precipitation) || 0), 0);
-        if (probs.length) stats.push({ k: 'Rain', v: Math.round(Math.max.apply(null, probs)) + '%' });
-        else if (next12.length) stats.push({ k: 'Rain', v: (Math.round(mmSum * 10) / 10).toLocaleString(this._lang()) + ' mm' });
+        if (probs.length) stats.push({ k: this.t('Rain'), v: Math.round(Math.max.apply(null, probs)) + '%' });
+        else if (next12.length) stats.push({ k: this.t('Rain'), v: (Math.round(mmSum * 10) / 10).toLocaleString(this._lang()) + ' mm' });
         const ws = num(oa.wind_speed) != null ? num(oa.wind_speed) : num(at.wind_speed);
         const wb = num(oa.wind_bearing) != null ? num(oa.wind_bearing) : num(at.wind_bearing);
         if (ws != null) {
-          const dir = wb != null ? ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(((wb % 360) + 360) % 360 / 45) % 8] + ' ' : '';
-          stats.push({ k: 'Wind', v: dir + Math.round(ws) + ' ' + (oa.wind_speed_unit || at.wind_speed_unit || 'km/h') });
+          const dir = wb != null ? (isNl(h) ? ['N', 'NO', 'O', 'ZO', 'Z', 'ZW', 'W', 'NW'] : ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'])[Math.round(((wb % 360) + 360) % 360 / 45) % 8] + ' ' : '';
+          stats.push({ k: this.t('Wind'), v: dir + Math.round(ws) + ' ' + (oa.wind_speed_unit || at.wind_speed_unit || 'km/h') });
         }
-        if (!isNaN(rise) && !isNaN(set)) stats.push(rise < set ? { k: 'Sunrise', v: this._fmtTime(new Date(rise)) } : { k: 'Sunset', v: this._fmtTime(new Date(set)) });
+        if (!isNaN(rise) && !isNaN(set)) stats.push(rise < set ? { k: this.t('Sunrise'), v: this._fmtTime(new Date(rise)) } : { k: this.t('Sunset'), v: this._fmtTime(new Date(set)) });
       }
 
       return Object.assign(model, {
         stats,
-        cond: atNight(cond, now.getTime()), unit: unit.replace('°', ''), temp, label: this._stateText(w), feels: feelsBits.join(' · '),
+        cond: atNight(cond, now.getTime()), unit: unit.replace('°', ''), temp, wna: w.state === 'unavailable', label: w.state === 'unavailable' ? this.t('Not responding') : this._stateText(w), feels: feelsBits.join(' · '),
         tempCol: tempColour(this._toC(temp, unit) ?? 10),
         insight, icon, hours: hours.map((x) => Object.assign(x, { col: x.temp == null ? 'inherit' : tempColour(this._toC(x.temp, unit)) })),
         line, area, showRain, bars, ticks, rainAria
@@ -777,18 +781,18 @@
                   <span class="date">${esc(m.date)}</span>
                   <span class="time serif">${esc(m.time)}</span>
                 </div>
-                <button class="chip" data-entity="${esc(c.weather)}" aria-label="${esc(m.label)}, ${round(m.temp)} degrees">
+                <button class="chip" data-entity="${esc(c.weather)}" aria-label="${esc(this.t('{label}, {temp} degrees', { label: m.label, temp: round(m.temp) }))}">
                   ${this._art(m.cond, 44)}<span class="serif" style="color:${m.tempCol}">${round(m.temp)}°</span>
                 </button>
               </div>
-              ${m.agenda ? `<div class="agenda">${c.calendar_popup ? `<button class="k" data-nav="${esc(c.calendar_popup)}" aria-label="Open the calendar">Coming up</button>` : '<span class="k">Coming up</span>'}${m.agenda.length ? m.agenda.map((e) => `<button class="ev" ${c.calendar_popup ? `data-nav="${esc(c.calendar_popup)}"` : `data-entity="${esc(e.id)}"`} aria-label="${esc(e.aria)}"><span class="day"><small>${esc(e.wd)}</small><span class="serif">${e.n}</span></span><span class="txt"><span class="what">${esc(e.what)}</span><span class="when">${esc(e.when)}</span></span></button>`).join('') : (c.calendar_popup ? `<button class="none" data-nav="${esc(c.calendar_popup)}">Nothing planned this week.</button>` : '<span class="none">Nothing planned this week.</span>')}</div>` : ''}
+              ${m.agenda ? `<div class="agenda">${c.calendar_popup ? `<button class="k" data-nav="${esc(c.calendar_popup)}" aria-label="${this.t('Open the calendar')}">${this.t('Coming up')}</button>` : `<span class="k">${this.t('Coming up')}</span>`}${m.agenda.length ? m.agenda.map((e) => `<button class="ev" ${c.calendar_popup ? `data-nav="${esc(c.calendar_popup)}"` : `data-entity="${esc(e.id)}"`} aria-label="${esc(e.aria)}"><span class="day"><small>${esc(e.wd)}</small><span class="serif">${e.n}</span></span><span class="txt"><span class="what">${esc(e.what)}</span><span class="when">${esc(e.when)}</span></span></button>`).join('') : (c.calendar_popup ? `<button class="none" data-nav="${esc(c.calendar_popup)}">${this.t('Nothing planned this week.')}</button>` : `<span class="none">${this.t('Nothing planned this week.')}</span>`)}</div>` : ''}
               <div class="stack">
                 ${m.issues.length || m.bins || m.lamps ? `<div class="chips">${m.issues.length ? `<button class="issue" data-entity="${esc(m.issues[0].id)}"><span class="n">${m.issues.length}</span><span>${esc(issueText)}</span></button>` : ''}${m.bins ? `<button class="bins" data-bins="1" aria-label="${esc(m.bins.text)}"><span class="n">${m.bins.colours.map((col) => `<svg width="${m.bins.colours.length > 1 ? 17 : 20}" height="${m.bins.colours.length > 1 ? 17 : 20}" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 13a1.5 1.5 0 0 1-1.5 1.4h-7A1.5 1.5 0 0 1 7 20zM4.5 5h15M10 3h4" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="stroke:${col}"></path><path d="M7.4 10h9.2l-.7 10H8.1z" style="fill:${col}"></path></svg>`).join('')}</span><span>${esc(m.bins.text)}</span></button>` : ''}${m.lamps ? `<button class="lamps" data-lights aria-haspopup="dialog" aria-expanded="${!!this._menu}"><span class="n">${this._icon(I.bulb, 16)}${m.lamps.n}</span><span>${esc(m.lamps.text)}</span>${this._icon(I.chev, 16)}</button>` : ''}</div>` : ''}
                 ${c.home_text ? `<p>${esc(m.homeText)}</p>` : ''}
                 ${m.insight ? `<p class="insight">${this._icon(m.icon)}<span>${esc(m.insight)}</span></p>` : ''}
               </div>
             </div>
-            <div class="weather${m.details ? ' fill' : ''}" role="button" tabindex="0" data-entity="${esc(c.weather)}" aria-label="${esc(m.label)}, ${round(m.temp)} degrees">
+            <div class="weather${m.details ? ' fill' : ''}${m.wna ? ' na' : ''}" role="button" tabindex="0" data-entity="${esc(c.weather)}" aria-label="${esc(this.t('{label}, {temp} degrees', { label: m.label, temp: round(m.temp) }))}">
               <div class="head">
                 ${this._art(m.cond, 64)}
                 <span class="names"><span class="label">${esc(m.label)}</span><span class="feels">${esc(m.feels)}</span></span>
@@ -798,15 +802,15 @@
               ${chart}
             </div>
           </div>
-          ${this._menu ? `<div class="menu" role="dialog" aria-label="Lights that are on">
-            <div class="mhead"><span class="mtitle">Lights on</span><button class="mbtn" data-close aria-label="Close">${this._icon(I.close)}</button></div>
+          ${this._menu ? `<div class="menu" role="dialog" aria-label="${this.t('Lights that are on')}">
+            <div class="mhead"><span class="mtitle">${this.t('Lights on')}</span><button class="mbtn" data-close aria-label="${this.t('Close')}">${this._icon(I.close)}</button></div>
             <div class="mlist">${m.menu.map((g) => `<div class="mgroup">
               <span class="mlabel">${g.items.length > 1 || g.items[0].id !== g.id ? esc(g.name) : (esc(this._area(g.id) || '') || '&nbsp;')}</span>
               ${g.items.map((x) => `<div class="mrow">
                 <button class="mname" data-entity="${esc(x.id)}"><span>${esc(x.name)}</span>${x.level ? `<small>${esc(x.level)}</small>` : ''}</button>
-                <button class="mbtn" data-off="${esc(x.id)}" aria-label="Turn off ${esc(x.name)}">${this._icon(I.power)}</button>
+                <button class="mbtn" data-off="${esc(x.id)}" aria-label="${esc(this.t('Turn off {name}', { name: x.name }))}">${this._icon(I.power)}</button>
               </div>`).join('')}</div>`).join('')}</div>
-            <button class="alloff" data-alloff>${this._icon(I.power, 16)}All off</button>
+            <button class="alloff" data-alloff>${this._icon(I.power, 16)}${this.t('All off')}</button>
           </div>` : ''}
         </ha-card>`);
       this._fit();

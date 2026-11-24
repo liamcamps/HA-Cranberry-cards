@@ -1,4 +1,4 @@
-  const VERSION = '2.33.0';
+  const VERSION = '2.34.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -90,7 +90,7 @@
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   const num = (v) => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };
   const round = (v) => (v == null ? '–' : String(Math.round(v)).replace('-', '−'));
-  const listJoin = (arr) => arr.length <= 1 ? (arr[0] || '') : arr.slice(0, -1).join(', ') + ' and ' + arr[arr.length - 1];
+  const listJoin = (arr, and) => arr.length <= 1 ? (arr[0] || '') : arr.slice(0, -1).join(', ') + ' ' + (and || 'and') + ' ' + arr[arr.length - 1];
   const capital = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
   const loadFonts = () => {

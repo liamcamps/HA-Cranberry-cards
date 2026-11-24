@@ -40,13 +40,13 @@
         const action = a.hvac_action;
         const heating = action === 'heating' || action === 'cooling';
         m.tone = st.state === 'off' ? 'quail' : 'olive';
-        m.state = st.state === 'off' ? 'Off · ' + t(a.current_temperature)
-          : (action === 'heating' ? 'Heating to ' : action === 'cooling' ? 'Cooling to ' : 'Holding ') + t(target) + ' · ' + t(a.current_temperature);
+        m.state = st.state === 'off' ? this.t('Off · {now}', { now: t(a.current_temperature) })
+          : this.t(action === 'heating' ? 'Heating to {target} · {now}' : action === 'cooling' ? 'Cooling to {target} · {now}' : 'Holding {target} · {now}', { target: t(target), now: t(a.current_temperature) });
         if (target != null) {
           m.btns = [
-            { act: 'temp', arg: '-1', label: '−', aria: 'Lower' },
-            { act: 'more', label: (Math.round(target * 10) / 10).toLocaleString(this._lang()) + '°', pressed: heating, aria: 'Target ' + target },
-            { act: 'temp', arg: '1', label: '+', aria: 'Raise' }];
+            { act: 'temp', arg: '-1', label: '−', aria: this.t('Lower') },
+            { act: 'more', label: (Math.round(target * 10) / 10).toLocaleString(this._lang()) + '°', pressed: heating, aria: this.t('Target {temp}', { temp: target }) },
+            { act: 'temp', arg: '1', label: '+', aria: this.t('Raise') }];
         }
         m.btnsW = '44%';
       } else if (domain === 'lock') {
@@ -57,10 +57,10 @@
         const armed = alarm && String(alarm.state).indexOf('armed') === 0;
         if (['jammed', 'open', 'opening'].indexOf(st.state) >= 0 || (!locked && st.state !== 'locking' && (armed || c.alert_when_unlocked))) {
           m.alert = true;
-          if (armed && !locked) m.state = this.fmt(st) + ' · alarm is on';
-          m.btns = [{ act: 'lock', icon: ccIcon('lock', 'mdi:lock-outline'), label: 'Lock', aria: 'Lock' }];
+          if (armed && !locked) m.state = this.t('{state} · alarm is on', { state: this.fmt(st) });
+          m.btns = [{ act: 'lock', icon: ccIcon('lock', 'mdi:lock-outline'), label: this.t('Lock'), aria: this.t('Lock') }];
         } else {
-          m.btns = [{ act: 'lock', icon: ccIcon('lock', 'mdi:lock-outline'), pressed: locked, aria: 'Lock' }, { act: 'unlock', icon: ccIcon('lock-open', 'mdi:lock-open-variant-outline'), pressed: st.state === 'unlocked', aria: 'Unlock' }];
+          m.btns = [{ act: 'lock', icon: ccIcon('lock', 'mdi:lock-outline'), pressed: locked, aria: this.t('Lock') }, { act: 'unlock', icon: ccIcon('lock-open', 'mdi:lock-open-variant-outline'), pressed: st.state === 'unlocked', aria: this.t('Unlock') }];
           m.btnsW = '44%';
         }
       } else if (domain === 'alarm_control_panel') {
@@ -68,7 +68,7 @@
         m.tone = st.state === 'disarmed' ? 'quail' : 'olive';
         m.alert = st.state === 'triggered' || st.state === 'pending';
         const modes = c.modes && c.modes.length ? c.modes : ['armed_home', 'armed_away', 'armed_night', 'disarmed'];
-        m.btns = modes.filter((x) => ALARM_MODES[x]).map((x) => ({ act: 'alarm', arg: x, icon: ALARM_MODES[x].icon, pressed: st.state === x, aria: ALARM_MODES[x].label }));
+        m.btns = modes.filter((x) => ALARM_MODES[x]).map((x) => ({ act: 'alarm', arg: x, icon: ALARM_MODES[x].icon, pressed: st.state === x, aria: this.t(ALARM_MODES[x].label) }));
         m.btnsW = '44%';
       } else if (domain === 'person' && !(c.people && c.people.length)) {
         // one person: home, away or the zone they are in, and since when
@@ -76,17 +76,17 @@
         m.icon = m.icon || ccIcon('user', 'mdi:account-outline');
         m.name = c.name || firstName(this.nm(c.entity));
         m.tone = home ? 'olive' : 'quail';
-        const where = home ? 'Home' : st.state === 'not_home' ? 'Away' : st.state === 'unknown' ? 'Unknown' : String(st.state).replace(/_/g, ' ').replace(/^./, (ch) => ch.toUpperCase());
+        const where = home ? this.t('Home') : st.state === 'not_home' ? this.t('Away') : st.state === 'unknown' ? this.t('Unknown') : String(st.state).replace(/_/g, ' ').replace(/^./, (ch) => ch.toUpperCase());
         const t = new Date(st.last_changed || 0), now = new Date();
         let since = '';
         if (!isNaN(t) && t.getTime() > 0 && st.state !== 'unknown') {
           const days = Math.round((new Date(now).setHours(0, 0, 0, 0) - new Date(t).setHours(0, 0, 0, 0)) / 86400000);
           const tf = this._hass.locale && this._hass.locale.time_format;
           if (days === 0) since = new Intl.DateTimeFormat(this._lang(), { hour: '2-digit', minute: '2-digit', hour12: tf === '12' ? true : tf === '24' ? false : undefined }).format(t);
-          else if (days === 1) since = 'yesterday';
+          else if (days === 1) since = this.t('yesterday');
           else if (days < 7) since = new Intl.DateTimeFormat(this._lang(), { weekday: 'long' }).format(t);
         }
-        m.state = where + (since ? ' · since ' + since : '');
+        m.state = since ? this.t('{where} · since {since}', { where, since }) : where;
         // the person's own photo, unless the card asks for the icon
         if (c.show_picture !== 'icon' && st.attributes.entity_picture) { m.picture = st.attributes.entity_picture; m.away = !home; }
       } else if (domain === 'zone' || (c.people && c.people.length)) {
@@ -94,12 +94,12 @@
         const ppl = ids.map((id) => ({ n: firstName(this.nm(id)), home: (this.st(id) || {}).state === 'home' }));
         const home = ppl.filter((p) => p.home);
         m.icon = m.icon || ccIcon('people', 'mdi:account-multiple-outline');
-        m.name = c.name || (ppl.length && ppl.length <= 3 ? listJoin(ppl.map((p) => p.n)) : 'People');
+        m.name = c.name || (ppl.length && ppl.length <= 3 ? listJoin(ppl.map((p) => p.n)) : this.t('People'));
         m.tone = home.length ? 'olive' : 'quail';
-        if (!ppl.length) m.state = st.state + ' home';
-        else if (home.length === ppl.length) m.state = ppl.length === 1 ? 'Home' : ppl.length === 2 ? 'Both home' : 'Everyone home';
-        else if (!home.length) m.state = ppl.length === 1 ? 'Away' : 'Nobody home';
-        else m.state = home.map((p) => p.n).join(' & ') + ' home · ' + ppl.filter((p) => !p.home).map((p) => p.n).join(' & ') + ' away';
+        if (!ppl.length) m.state = this.t('{n} home', { n: st.state });
+        else if (home.length === ppl.length) m.state = this.t(ppl.length === 1 ? 'Home' : ppl.length === 2 ? 'Both home' : 'Everyone home');
+        else if (!home.length) m.state = this.t(ppl.length === 1 ? 'Away' : 'Nobody home');
+        else m.state = this.t('{home} home · {away} away', { home: home.map((p) => p.n).join(' & '), away: ppl.filter((p) => !p.home).map((p) => p.n).join(' & ') });
       } else {
         m.icon = m.icon || ccIcon('info', 'mdi:information-outline');
         m.tone = ['on', 'home', 'open', 'playing'].indexOf(st.state) >= 0 ? 'olive' : 'quail';

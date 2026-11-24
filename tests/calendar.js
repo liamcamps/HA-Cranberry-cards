@@ -222,6 +222,64 @@ const rowText = (r) => { const tw = r.ownerDocument.createTreeWalker(r, 4); cons
   el = await make2({ calendars: ['calendar.family'], add_events: false }, H3());
   ok(!$(el, '.add'), 'button can be turned off');
 
+  // ---- change and delete
+  const ws = [];
+  const H4 = (fail) => Object.assign(H3(), {
+    states: { 'calendar.family': { entity_id: 'calendar.family', state: 'off', attributes: { friendly_name: 'Family', supported_features: 7 } },
+      'calendar.holidays': { entity_id: 'calendar.holidays', state: 'off', attributes: { friendly_name: 'Holidays', supported_features: 0 } } },
+    callWS: async (m) => { ws.push(m); if (fail) throw new Error('Nope'); return {}; } });
+  EV = { 'calendar.family': [
+      { summary: 'Dentist', uid: 'abc', start: { dateTime: at(1, 9) }, end: { dateTime: at(1, 9, 45) }, location: 'Tandarts', description: 'Bring the card' },
+      { summary: 'Gym', uid: 'rep', recurrence_id: '20261125T070000', rrule: 'FREQ=WEEKLY', start: { dateTime: at(1, 7) }, end: { dateTime: at(1, 8) } },
+      { summary: 'Trip', uid: 'trip', start: { date: ymd(3) }, end: { date: ymd(5) } } ],
+    'calendar.holidays': [{ summary: 'Sinterklaas', uid: 'h1', start: { date: ymd(2) }, end: { date: ymd(3) } }] };
+  el = await make2({ calendars: ['calendar.family', 'calendar.holidays'] }, H4());
+  const openEv = (name) => $$(el, '.ev').find((x) => x.textContent.includes(name)).click();
+  openEv('Sinterklaas');
+  ok(!$(el, '[data-act="edit"]') && !$(el, '[data-act="dask"]'), 'read-only calendar: no edit or delete');
+  $(el, '[data-act="back"]').click();
+  openEv('Dentist');
+  ok($(el, '[data-act="edit"]') && $(el, '[data-act="dask"]'), 'edit and delete offered');
+  $(el, '[data-act="dask"]').click();
+  ok($(el, '.confirm') && $(el, '.confirm b').textContent === 'Delete “Dentist”?', 'asks first');
+  $(el, '[data-act="dcancel"]').click(); ok(!$(el, '.confirm'), 'cancel keeps it');
+  $(el, '[data-act="dask"]').click(); $(el, '[data-act="ddelete"]').click(); await wait(); await wait();
+  ok(JSON.stringify(ws[0]) === JSON.stringify({ type: 'calendar/event/delete', entity_id: 'calendar.family', uid: 'abc' }) && !$(el, '.detail'), 'deleted: ' + JSON.stringify(ws[0]));
+  // repeating: only this one, or this and all after
+  openEv('Gym'); $(el, '[data-act="dask"]').click();
+  ok($$(el, '[data-act="ddelete"]').length === 2, 'two choices for a repeating event');
+  $$(el, '[data-act="ddelete"]')[1].click(); await wait(); await wait();
+  ok(ws[1].recurrence_id === '20261125T070000' && ws[1].recurrence_range === 'THISANDFUTURE', 'this and all after');
+  // change
+  openEv('Dentist'); $(el, '[data-act="edit"]').click();
+  ok($(el, '.form') && $(el, '[data-field="title"]').value === 'Dentist' && $(el, '[data-field="start"]').value === '09:00' && $(el, '[data-field="end"]').value === '09:45' && $(el, '[data-field="loc"]').value === 'Tandarts' && !$(el, '.chip') && $(el, '.fhead b').textContent === 'Change event', 'form filled in');
+  const setv = (f, v) => { const i = $(el, '[data-field="' + f + '"]'); i.value = v; i.dispatchEvent(new w.Event('input', { bubbles: true })); };
+  setv('title', 'Dentist (moved)'); setv('start', '10:00'); setv('end', '10:30');
+  $(el, '[data-act="fsave"]').click(); await wait(); await wait();
+  const up = ws[2];
+  ok(up.type === 'calendar/event/update' && up.uid === 'abc' && up.event.summary === 'Dentist (moved)' && /^\d{4}-\d{2}-\d{2}T10:00:00[+-]\d\d:\d\d$/.test(up.event.dtstart) && /T10:30:00/.test(up.event.dtend) && up.event.location === 'Tandarts' && up.event.description === 'Bring the card', 'update keeps place and description: ' + JSON.stringify(up));
+  // an all-day event keeps its length
+  openEv('Trip'); $(el, '[data-act="edit"]').click(); setv('date', ymd(4));
+  $(el, '[data-act="fsave"]').click(); await wait(); await wait();
+  ok(ws[3].event.dtstart === ymd(4) && ws[3].event.dtend === ymd(6), 'two-day trip stays two days: ' + JSON.stringify(ws[3].event));
+  // changing a repeating event: only this one
+  openEv('Gym'); $(el, '[data-act="edit"]').click();
+  ok($(el, '.note') && /only this one/.test($(el, '.note').textContent), 'repeating: says it changes only this one');
+  $(el, '[data-act="fsave"]').click(); await wait(); await wait();
+  ok(ws[4].recurrence_id === '20261125T070000' && !ws[4].recurrence_range && !ws[4].event.rrule, 'only this occurrence');
+  // failing
+  el = await make2({ calendars: ['calendar.family'] }, H4(true));
+  openEv('Dentist'); $(el, '[data-act="dask"]').click(); $(el, '[data-act="ddelete"]').click(); await wait(); await wait();
+  ok($(el, '.detail') && /Could not delete it: Nope/.test($(el, '.err').textContent), 'delete error shown');
+
+  // a calendar that doesn't answer is named, not silently missing
+  const H5 = () => Object.assign(hass(), { callApi: async (m, path) => { if (path.indexOf('calendar.liam') >= 0) throw new Error('down'); return []; } });
+  el = await make2({ calendars: ['calendar.family', 'calendar.liam'] }, H5());
+  const leg = $$(el, '.legend > span');
+  ok(leg[1].classList.contains('na') && leg[1].textContent === 'Liam · not responding' && !leg[0].classList.contains('na'), 'failing calendar named: ' + leg.map((x) => x.textContent).join('|'));
+  el = await make2({ calendars: ['calendar.liam'] }, H5());
+  ok($(el, '.empty.na') && $(el, '.empty').textContent === 'Not responding', 'all failing: not responding');
+
   console.log(pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);
 })();

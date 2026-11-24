@@ -72,7 +72,7 @@
       .tog i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 8px; background: var(--cc-card); transition: transform .2s ease; }
       .tog[aria-pressed="true"] i { background: var(--cc-c); }
       .tog[aria-pressed="true"] i::after { transform: translateX(14px); background: var(--cc-on); }
-      .err { font-size: 14px; font-weight: 600; color: var(--cc-b); }
+      .err { font-size: 14px; font-weight: 600; color: var(--cv-brick-text); }
       .detail { display: flex; flex-direction: column; gap: 10px; padding: 12px 0 10px; }
       .dtitle { font-size: 24px; font-weight: 700; line-height: 1.25; padding-top: 4px; }
       .dstatus { align-self: flex-start; height: 28px; padding: 0 10px; border-radius: var(--cc-r-chip, 8px); background: var(--cc-c); color: var(--cc-on); display: flex; align-items: center; font-size: 13px; font-weight: 700; }
@@ -80,6 +80,14 @@
       .drow ha-icon { --mdc-icon-size: 20px; color: var(--cc-muted); width: 20px; flex-shrink: 0; }
       .drow .dot { width: 10px; height: 10px; border-radius: 5px; margin: 0 5px; }
       .dcal { align-self: flex-start; color: var(--cc-muted); }
+      .dfoot { justify-content: space-between; margin-top: 8px; padding-top: 14px; border-top: 1px solid var(--cc-rule); }
+      .dfoot .go { margin-left: auto; }
+      .btn.delt { color: var(--cv-brick-text); }
+      .btn.del { background: var(--cc-b); color: var(--cc-on); }
+      .confirm { margin-top: 8px; padding: 14px; border-radius: var(--cc-r-ctl, 12px); background: color-mix(in srgb, var(--cc-b) 12%, transparent); display: flex; flex-direction: column; gap: 10px; }
+      .confirm b { font-size: 15px; }
+      .confirm .btns { flex-wrap: wrap; }
+      .note { font-size: 14px; color: var(--cc-muted); }
       .ddesc { margin-top: 6px; padding-top: 14px; border-top: 1px solid var(--cc-rule); font-size: 15px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
       .btns { display: flex; justify-content: flex-end; gap: 8px; padding-top: 4px; }
       .btn { height: 44px; padding: 0 18px; border-radius: var(--cc-r-ctl, 12px); font-size: 14px; font-weight: 700; background: var(--cc-raise); }
@@ -142,10 +150,13 @@
       return !!mine && cal.people.some((p) => mine.indexOf(p) >= 0);
     }
     _ids() { return this._cals().filter((c) => this._shown(c)).map((c) => c.id); }
-    _writable() {
-      // calendars that accept new events (supported_features & 1)
-      return this._ids().filter((id) => { const st = this.st(id); return st && (Number(st.attributes.supported_features) & 1); });
+    // what a calendar lets you do: 1 add, 2 delete, 4 change (its supported_features)
+    _can(id, bit) {
+      if (this._config.add_events === false) return false;
+      const st = this.st(id);
+      return !!st && !!(Number(st.attributes.supported_features) & bit);
     }
+    _writable() { return this._ids().filter((id) => this._can(id, 1)); }
     _refresh() {
       // the clock moves every minute; the calendars are asked again every 10 minutes
       if (!this._hass || !this._config) return;
@@ -159,13 +170,15 @@
       this._busy = true; this._at = Date.now();
       const start = new Date(); start.setHours(0, 0, 0, 0);
       const end = new Date(start.getTime() + (this._days() + 1) * 86400000);
-      const out = [];
+      const out = [], failed = [];
       await Promise.all(ids.map(async (id) => {
         try {
           const evs = await h.callApi('GET', 'calendars/' + id + '?start=' + encodeURIComponent(start.toISOString()) + '&end=' + encodeURIComponent(end.toISOString()));
           (evs || []).forEach((e) => out.push(Object.assign({ cal: id }, e)));
-        } catch (e) { /* a calendar that fails is left out */ }
+        } catch (e) { failed.push(id); }
       }));
+      // a calendar that doesn't answer is named in the legend instead of quietly missing
+      this._failed = failed;
       this._events = out; this._busy = false;
       this._last = ''; this._update();
     }
@@ -200,18 +213,18 @@
           if (!days[d]) continue;
           let when, rank;
           const ongoing = d === today && s.d <= now && endT > now.getTime();
-          if (s.all) { when = span > 1 ? 'All day · ' + k + ' of ' + span : 'All day'; rank = 0; }
-          else if (span === 1) { when = ongoing ? 'Now, until ' + this._time(new Date(endT)) : this._time(s.d); rank = 1; }
-          else if (d === first) { when = ongoing ? 'Now' : this._time(s.d) + ' →'; rank = 1; }
-          else if (d === last) { when = ongoing ? 'Now, until ' + this._time(new Date(endT)) : 'Until ' + this._time(new Date(endT)); rank = 0; }
-          else { when = ongoing ? 'Now' : 'All day'; rank = 0; }
+          if (s.all) { when = span > 1 ? this.t('All day · {n} of {total}', { n: k, total: span }) : this.t('All day'); rank = 0; }
+          else if (span === 1) { when = ongoing ? this.t('Now, until {time}', { time: this._time(new Date(endT)) }) : this._time(s.d); rank = 1; }
+          else if (d === first) { when = ongoing ? this.t('Now') : this._time(s.d) + ' →'; rank = 1; }
+          else if (d === last) { when = this.t(ongoing ? 'Now, until {time}' : 'Until {time}', { time: this._time(new Date(endT)) }); rank = 0; }
+          else { when = this.t(ongoing ? 'Now' : 'All day'); rank = 0; }
           // the week view has less room: just the time, "Now", or where it starts and ends
-          const short = s.all ? 'All day' : span === 1 ? this._time(s.d) : d === first ? this._time(s.d) + ' →' : d === last ? 'Until ' + this._time(new Date(endT)) : 'All day';
+          const short = s.all ? this.t('All day') : span === 1 ? this._time(s.d) : d === first ? this._time(s.d) + ' →' : d === last ? this.t('Until {time}', { time: this._time(new Date(endT)) }) : this.t('All day');
           const ci = colour[e.cal] || 0;
           // where it sits on the day, in minutes; a piece that fills the whole day goes in the all-day row
           const sMin = s.all ? 0 : d === first ? Math.round((s.d.getTime() - d) / 60000) : 0;
           const eMin = s.all ? 1440 : d === last ? Math.round((endT - d) / 60000) : 1440;
-          days[d].push({ t: d === first ? s.d.getTime() : d, rank, when, short, now: ongoing && !s.all, what: e.summary || e.message || 'Busy', loc: e.location || '', id: e.cal, dot: CAL_DOTS[ci], tint: CAL_COLOURS[ci], ix, all: s.all || (sMin <= 0 && eMin >= 1440), sMin: Math.max(0, sMin), eMin: Math.min(1440, eMin), fromPrev: !s.all && d !== first, toNext: !s.all && d !== last });
+          days[d].push({ t: d === first ? s.d.getTime() : d, rank, when, short, now: ongoing && !s.all, what: e.summary || e.message || this.t('Busy'), loc: e.location || '', id: e.cal, dot: CAL_DOTS[ci], tint: CAL_COLOURS[ci], ix, all: s.all || (sMin <= 0 && eMin >= 1440), sMin: Math.max(0, sMin), eMin: Math.min(1440, eMin), fromPrev: !s.all && d !== first, toNext: !s.all && d !== last });
         }
       });
       const keys = Object.keys(days).map(Number).sort((a, b) => a - b);
@@ -255,7 +268,8 @@
         else rows.push({ free: true, from: label, to: '', d, last: d });
       });
       while (rows.length && rows[rows.length - 1].free) rows.pop();
-      const legend = ids.length > 1 ? ids.map((id) => ({ name: this.nm(id), dot: CAL_DOTS[colour[id]] })) : [];
+      const failed = this._failed || [];
+      const legend = ids.length > 1 || failed.length ? ids.map((id) => ({ name: this.nm(id), dot: CAL_DOTS[colour[id]], na: failed.indexOf(id) >= 0 || this.isNa(this.st(id)) })) : [];
       const writable = c.add_events === false ? [] : this._writable();
       let form = null;
       if (this._form && writable.length) {
@@ -272,39 +286,42 @@
           const dayF = (dt, o) => new Intl.DateTimeFormat(this._lang(), Object.assign({ weekday: 'long', day: 'numeric', month: 'long' }, o || {})).format(dt);
           const sameDay = day0(s.d) === day0(s.all ? lastDay : endT - 1);
           let when;
-          if (s.all) when = sameDay ? dayF(s.d) + ' · All day' : dayF(s.d, { weekday: 'short' }) + ' – ' + dayF(lastDay, { weekday: 'short' }) + ' · All day';
+          if (s.all) when = (sameDay ? dayF(s.d) : dayF(s.d, { weekday: 'short' }) + ' – ' + dayF(lastDay, { weekday: 'short' })) + ' · ' + this.t('All day');
           else if (sameDay) when = dayF(s.d) + ' · ' + this._time(s.d) + ' – ' + this._time(new Date(endT));
           else when = dayF(s.d, { weekday: 'short' }) + ', ' + this._time(s.d) + ' – ' + dayF(new Date(endT), { weekday: 'short' }) + ', ' + this._time(new Date(endT));
           const nowT = now.getTime(), ci = colour[e.cal] || 0;
-          const status = s.d.getTime() <= nowT && endT > nowT ? 'Happening now' : endT <= nowT ? 'Over' : '';
+          const status = s.d.getTime() <= nowT && endT > nowT ? this.t('Happening now') : endT <= nowT ? this.t('Over') : '';
           // descriptions can carry a little HTML (Google); show it as plain text with its line breaks
           const desc = String(e.description || '').replace(/<br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\n{3,}/g, '\n\n').trim();
-          detail = { what: e.summary || e.message || 'Busy', when, status, loc: e.location || '', desc, cal: e.cal, calName: this.nm(e.cal), dot: CAL_DOTS[ci] };
+          const repeats = !!(e.rrule || e.recurrence_id);
+          detail = { what: e.summary || e.message || this.t('Busy'), when, status, loc: e.location || '', desc, cal: e.cal, calName: this.nm(e.cal), dot: CAL_DOTS[ci],
+            canEdit: !!e.uid && this._can(e.cal, 4), canDelete: !!e.uid && this._can(e.cal, 2), repeats, confirm: this._confirm || '', err: this._derr || '', busy: !!this._dbusy };
         }
       }
-      return { title: c.title || '', legend, rows, week, grid, view, form, detail, canAdd: writable.length > 0, seg: c.switcher !== false && canWeek, loading: this._events == null && ids.length > 0, none: !ids.length };
+      return { title: c.title || '', legend, rows, week, grid, view, form, detail, canAdd: writable.length > 0, seg: c.switcher !== false && canWeek, loading: this._events == null && ids.length > 0, none: !ids.length, allFailed: ids.length > 0 && failed.length === ids.length };
     }
     view(m) {
       const ev = (e) => `<button type="button" class="ev${e.now ? ' now' : ''}" data-act="open" data-arg="${e.ix}"><span class="when"><span class="dot" style="--dot:${e.dot}"></span>${esc(e.when)}</span><span class="what">${esc(e.what)}${e.loc ? ` <small>· ${esc(e.loc)}</small>` : ''}</span></button>`;
       const wev = (e) => `<button type="button" class="wev${e.now ? ' now' : ''}" style="--dot:${e.dot};--tint:color-mix(in srgb, ${e.tint} 24%, var(--cc-card))" data-act="open" data-arg="${e.ix}" aria-label="${esc(e.what + ', ' + e.when)}"><small>${esc(e.short)}</small><b>${esc(e.what)}</b></button>`;
       const block = (r) => `<span class="block"><small>${esc(r.wd)}</small><b>${r.n}</b></span>`;
-      const body = m.none ? '<div class="empty">Pick one or more calendars in the editor.</div>'
-        : m.loading ? '<div class="empty">Loading…</div>'
+      const body = m.none ? `<div class="empty">${this.t('Pick one or more calendars in the editor.')}</div>`
+        : m.loading ? `<div class="empty">${this.t('Loading…')}</div>`
+        : m.allFailed ? `<div class="empty na">${this.t('Not responding')}</div>`
         : m.view === 'week' && m.grid ? this._gridView(m)
-        : m.view === 'week' ? `<div class="week">${m.week.map((r) => `<div class="col${r.today ? ' today' : ''}">${block(r)}${r.evs.length ? r.evs.map(wev).join('') : '<span class="none">Free</span>'}</div>`).join('')}</div>`
-        : !m.rows.length ? `<div class="empty">Nothing planned in the coming ${this._days()} days.</div>`
+        : m.view === 'week' ? `<div class="week">${m.week.map((r) => `<div class="col${r.today ? ' today' : ''}">${block(r)}${r.evs.length ? r.evs.map(wev).join('') : `<span class="none">${this.t('Free')}</span>`}</div>`).join('')}</div>`
+        : !m.rows.length ? `<div class="empty">${this.t('Nothing planned in the coming {n} days.', { n: this._days() })}</div>`
         : m.rows.map((r) => r.free
-          ? `<div class="day free${r.to ? ' range' : ''}"><b>${esc(r.from)}${r.to ? ' – ' + esc(r.to) : ''}</b>Nothing planned</div>`
+          ? `<div class="day free${r.to ? ' range' : ''}"><b>${esc(r.from)}${r.to ? ' – ' + esc(r.to) : ''}</b>${this.t('Nothing planned')}</div>`
           : `<div class="day${r.today ? ' today' : ''}">${block(r)}<div class="evs">${r.evs.map(ev).join('')}</div></div>`).join('');
-      const seg = m.seg ? `<span class="seg" role="group" aria-label="View">${['agenda', 'week'].map((v) => `<button type="button" data-act="view" data-arg="${v}" aria-pressed="${m.view === v}">${v === 'agenda' ? 'Agenda' : 'Week'}</button>`).join('')}</span>` : '';
-      const legend = m.legend.length ? `<div class="legend">${m.legend.map((l) => `<span><span class="dot" style="--dot:${l.dot}"></span>${esc(l.name)}</span>`).join('')}</div>` : '';
+      const seg = m.seg ? `<span class="seg" role="group" aria-label="${this.t('View')}">${['agenda', 'week'].map((v) => `<button type="button" data-act="view" data-arg="${v}" aria-pressed="${m.view === v}">${this.t(v === 'agenda' ? 'Agenda' : 'Week')}</button>`).join('')}</span>` : '';
+      const legend = m.legend.length ? `<div class="legend">${m.legend.map((l) => `<span${l.na ? ' class="na"' : ''}><span class="dot" style="--dot:${l.na ? 'var(--cc-q)' : l.dot}"></span>${esc(l.name)}${l.na ? ' · ' + this.t('not responding') : ''}</span>`).join('')}</div>` : '';
       if (m.form) return `<ha-card>${this._formView(m.form)}</ha-card>`;
       if (m.detail) return `<ha-card>${this._detailView(m.detail)}</ha-card>`;
       return `<ha-card>
         ${m.title ? `<div class="title">${esc(m.title)}</div>` : ''}
         ${legend || seg ? `<div class="top">${legend}${seg}</div>` : ''}
         ${body}
-        ${m.canAdd && !m.none && !m.loading ? `<div class="foot"><button type="button" class="add" data-act="new"><ha-icon icon="${ccIcon('plus', 'mdi:plus')}"></ha-icon>New event</button></div>` : ''}
+        ${m.canAdd && !m.none && !m.loading ? `<div class="foot"><button type="button" class="add" data-act="new"><ha-icon icon="${ccIcon('plus', 'mdi:plus')}"></ha-icon>${this.t('New event')}</button></div>` : ''}
       </ha-card>`;
     }
     _gridView(m) {
@@ -313,7 +330,7 @@
       const lbl = (h) => this._time(new Date(2000, 0, 1, h, 0));
       const wev = (e) => `<button type="button" class="wev${e.now ? ' now' : ''}" style="--dot:${e.dot};--tint:color-mix(in srgb, ${e.tint} 24%, var(--cc-card))" data-act="open" data-arg="${e.ix}" aria-label="${esc(e.what + ', ' + e.when)}"><small>${esc(e.short)}</small><b>${esc(e.what)}</b></button>`;
       const head = m.week.map((r) => `<div class="hd${r.today ? ' today' : ''}"><span class="block"><small>${esc(r.wd)}</small><b>${r.n}</b></span></div>`).join('');
-      const allDay = g.hasAllDay ? `<div class="adl">All day</div>${g.cols.map((x) => `<div class="ad">${x.allDay.map(wev).join('')}</div>`).join('')}` : '';
+      const allDay = g.hasAllDay ? `<div class="adl">${this.t('All day')}</div>${g.cols.map((x) => `<div class="ad">${x.allDay.map(wev).join('')}</div>`).join('')}` : '';
       const cols = g.cols.map((x) => `<div class="dc" style="height:${(g.to - g.from) * HH}px">${x.timed.map((e) => {
         const top = px(e.sMin), h = Math.max(22, px(e.eMin) - top), w = 100 / e.lanes;
         return `<div class="te${h < 44 ? ' short' : ''}${h < 28 ? ' tiny' : ''}${e.lanes > 1 ? ' split' : ''}" title="${esc(e.short + ' · ' + e.what)}" style="top:${top.toFixed(1)}px;height:${h.toFixed(1)}px;left:${(e.lane * w).toFixed(3)}%;width:${w.toFixed(3)}%">${wev(e)}</div>`;
@@ -326,32 +343,48 @@
     }
     _detailView(d) {
       return `<div class="detail">
-        <div class="fhead"><button type="button" class="x" data-act="back" aria-label="Back"><ha-icon icon="${ccIcon('chevron-left', 'mdi:chevron-left')}"></ha-icon></button></div>
+        <div class="fhead"><button type="button" class="x" data-act="back" aria-label="${this.t('Back')}"><ha-icon icon="${ccIcon('chevron-left', 'mdi:chevron-left')}"></ha-icon></button></div>
         <div class="dtitle">${esc(d.what)}</div>
         ${d.status ? `<div class="dstatus">${esc(d.status)}</div>` : ''}
         <div class="drow"><ha-icon icon="${ccIcon('clock', 'mdi:clock-outline')}"></ha-icon><span>${esc(d.when)}</span></div>
         ${d.loc ? `<div class="drow"><ha-icon icon="${ccIcon('pin', 'mdi:map-marker-outline')}"></ha-icon><span>${esc(d.loc)}</span></div>` : ''}
         <button type="button" class="drow dcal" data-act="cal" data-arg="${esc(d.cal)}"><span class="dot" style="--dot:${d.dot}"></span><span>${esc(d.calName)}</span></button>
         ${d.desc ? `<div class="ddesc">${esc(d.desc)}</div>` : ''}
+        ${d.err ? `<div class="err" role="alert">${esc(d.err)}</div>` : ''}
+        ${d.confirm === 'delete' ? `<div class="confirm" role="alertdialog" aria-label="${this.t('Delete')}">
+            <b>${esc(d.repeats ? this.t('Delete this repeating event?') : this.t('Delete “{what}”?', { what: d.what }))}</b>
+            <div class="btns">
+              <button type="button" class="btn" data-act="dcancel">${this.t('Cancel')}</button>
+              ${d.repeats
+                ? `<button type="button" class="btn del" data-act="ddelete" data-arg="one" ${d.busy ? 'disabled' : ''}>${this.t('Only this one')}</button><button type="button" class="btn del" data-act="ddelete" data-arg="future" ${d.busy ? 'disabled' : ''}>${this.t('This and all after')}</button>`
+                : `<button type="button" class="btn del" data-act="ddelete" data-arg="one" ${d.busy ? 'disabled' : ''}>${this.t(d.busy ? 'Deleting…' : 'Delete')}</button>`}
+            </div>
+          </div>`
+        : d.canEdit || d.canDelete ? `<div class="btns dfoot">
+            ${d.canDelete ? `<button type="button" class="btn delt" data-act="dask">${this.t('Delete')}</button>` : ''}
+            ${d.canEdit ? `<button type="button" class="btn go" data-act="edit">${this.t('Edit')}</button>` : ''}
+          </div>` : ''}
       </div>`;
     }
     _formView(f) {
       const v = (k) => esc(f[k] == null ? '' : f[k]);
-      return `<div class="form" role="form" aria-label="New event">
-        <div class="fhead"><b>New event</b><button type="button" class="x" data-act="fcancel" aria-label="Close"><ha-icon icon="${ccIcon('x', 'mdi:close')}"></ha-icon></button></div>
-        <label class="field"><span>What</span><input class="in big" data-field="title" value="${v('title')}" placeholder="Dinner with Anna" autocomplete="off"></label>
-        ${f.cals.length > 1 ? `<div class="field"><span>Calendar</span><div class="chips">${f.cals.map((c) => `<button type="button" class="chip" data-act="fcal" data-arg="${esc(c.id)}" aria-pressed="${c.on}" style="--dot:${c.dot};--tint:${c.tint}"><span class="dot" style="--dot:${c.dot}"></span>${esc(c.name)}</button>`).join('')}</div></div>` : ''}
+      const head = esc(this.t(f.edit ? 'Change event' : 'New event'));
+      return `<div class="form" role="form" aria-label="${head}">
+        <div class="fhead"><b>${head}</b><button type="button" class="x" data-act="fcancel" aria-label="${this.t('Close')}"><ha-icon icon="${ccIcon('x', 'mdi:close')}"></ha-icon></button></div>
+        <label class="field"><span>${this.t('What')}</span><input class="in big" data-field="title" value="${v('title')}" placeholder="${this.t('Dinner with Anna')}" autocomplete="off"></label>
+        ${f.edit && f.edit.repeats ? `<div class="note">${this.t('This changes only this one; the other times stay as they are.')}</div>` : ''}
+        ${f.cals.length > 1 && !f.edit ? `<div class="field"><span>${this.t('Calendar')}</span><div class="chips">${f.cals.map((c) => `<button type="button" class="chip" data-act="fcal" data-arg="${esc(c.id)}" aria-pressed="${c.on}" style="--dot:${c.dot};--tint:${c.tint}"><span class="dot" style="--dot:${c.dot}"></span>${esc(c.name)}</button>`).join('')}</div></div>` : ''}
         <div class="row2">
-          <label class="field"><span>Day</span><input class="in" type="date" data-field="date" value="${v('date')}"></label>
-          <button type="button" class="tog" data-act="fallday" aria-pressed="${!!f.allDay}"><i></i>All day</button>
+          <label class="field"><span>${this.t('Day')}</span><input class="in" type="date" data-field="date" value="${v('date')}"></label>
+          <button type="button" class="tog" data-act="fallday" aria-pressed="${!!f.allDay}"><i></i>${this.t('All day')}</button>
         </div>
         ${f.allDay ? '' : `<div class="row2">
-          <label class="field"><span>From</span><input class="in" type="time" data-field="start" value="${v('start')}"></label>
-          <label class="field"><span>Until</span><input class="in" type="time" data-field="end" value="${v('end')}"></label>
+          <label class="field"><span>${this.t('From')}</span><input class="in" type="time" data-field="start" value="${v('start')}"></label>
+          <label class="field"><span>${this.t('Until')}</span><input class="in" type="time" data-field="end" value="${v('end')}"></label>
         </div>`}
-        <label class="field"><span>Where</span><input class="in" data-field="loc" value="${v('loc')}" placeholder="Optional" autocomplete="off"></label>
+        <label class="field"><span>${this.t('Where')}</span><input class="in" data-field="loc" value="${v('loc')}" placeholder="${this.t('Optional')}" autocomplete="off"></label>
         ${f.err ? `<div class="err" role="alert">${esc(f.err)}</div>` : ''}
-        <div class="btns"><button type="button" class="btn" data-act="fcancel">Cancel</button><button type="button" class="btn go" data-act="fsave" ${f.busy ? 'disabled' : ''}>${f.busy ? 'Adding…' : 'Add'}</button></div>
+        <div class="btns"><button type="button" class="btn" data-act="fcancel">${this.t('Cancel')}</button><button type="button" class="btn go" data-act="fsave" ${f.busy ? 'disabled' : ''}>${this.t(f.busy ? (f.edit ? 'Saving…' : 'Adding…') : (f.edit ? 'Save' : 'Add'))}</button></div>
       </div>`;
     }
     act(a, arg) {
@@ -359,7 +392,11 @@
         const e = (this._events || [])[Number(arg)];
         if (e) { this._detail = Object.assign({}, e); this._redraw(); }
       }
-      if (a === 'back') { this._detail = null; this._redraw(); }
+      if (a === 'back') { this._detail = null; this._confirm = ''; this._derr = ''; this._redraw(); }
+      if (a === 'dask') { this._confirm = 'delete'; this._derr = ''; this._redraw(); }
+      if (a === 'dcancel') { this._confirm = ''; this._redraw(); }
+      if (a === 'ddelete') this._delete(arg === 'future');
+      if (a === 'edit' && this._detail) this._edit(this._detail);
       if (a === 'cal' && arg) this.moreInfo(arg);
       if (a === 'view') { this._view = arg; this._last = ''; this._update(); }
       if (a === 'new') {
@@ -370,7 +407,7 @@
         const t = this.shadowRoot.querySelector('[data-field="title"]'); if (t) t.focus();
       }
       if (!this._form) return;
-      if (a === 'fcancel') { this._form = null; this._redraw(); }
+      if (a === 'fcancel') { const back = this._form.edit; this._form = null; if (!back) this._detail = null; this._redraw(); }
       if (a === 'fcal') { this._form.cal = arg; this._redraw(); }
       if (a === 'fallday') { this._form.allDay = !this._form.allDay; this._redraw(); }
       if (a === 'fsave') this._save();
@@ -380,8 +417,9 @@
       const f = this._form;
       this._read();
       const title = (f.title || '').trim();
-      f.err = !title ? 'Give it a name.' : !/^\d{4}-\d{2}-\d{2}$/.test(f.date || '') ? 'Pick a day.' : !f.allDay && !(/^\d{2}:\d{2}/.test(f.start || '') && /^\d{2}:\d{2}/.test(f.end || '')) ? 'Pick a start and end time.' : '';
+      f.err = this.t(!title ? 'Give it a name.' : !/^\d{4}-\d{2}-\d{2}$/.test(f.date || '') ? 'Pick a day.' : !f.allDay && !(/^\d{2}:\d{2}/.test(f.start || '') && /^\d{2}:\d{2}/.test(f.end || '')) ? 'Pick a start and end time.' : '');
       if (f.err) { this._redraw(); return; }
+      if (f.edit) return this._update2(f, title);
       const ymd = (dt) => dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
       const day = new Date(f.date + 'T00:00:00');
       const data = { entity_id: f.cal, summary: title };
@@ -399,8 +437,58 @@
         await this.call('calendar', 'create_event', data);
         this._form = null; this._at = 0; this._fetch(); this._redraw();
       } catch (e) {
-        f.busy = false; f.err = 'Could not add it: ' + ((e && e.message) || 'the calendar said no') + '.'; this._redraw();
+        f.busy = false; f.err = this.t('Could not add it: {why}.', { why: (e && e.message) || this.t('the calendar said no') }); this._redraw();
       }
+    }
+    // ---- change and delete, through Home Assistant's calendar websocket commands
+    _edit(e) {
+      const pad = (x) => String(x).padStart(2, '0');
+      const ymd = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+      const hm = (d) => pad(d.getHours()) + ':' + pad(d.getMinutes());
+      const all = !!(e.start && e.start.date) || /^\d{4}-\d{2}-\d{2}$/.test(String(e.start || ''));
+      const s = new Date(all ? (e.start.date || e.start) + 'T00:00:00' : (e.start.dateTime || e.start));
+      const en = new Date(all ? (e.end.date || e.end) + 'T00:00:00' : (e.end.dateTime || e.end));
+      this._form = { title: e.summary || '', cal: e.cal, date: ymd(s), allDay: all, start: all ? '09:00' : hm(s), end: all ? '10:00' : hm(en), loc: e.location || '', err: '',
+        edit: { uid: e.uid, recurrence_id: e.recurrence_id || null, repeats: !!(e.rrule || e.recurrence_id), description: e.description || '', days: all ? Math.max(1, Math.round((en - s) / 86400000)) : 0 } };
+      this._confirm = ''; this._redraw();
+    }
+    // a time with the device's offset, as Home Assistant's calendar commands expect
+    _iso(date, time) {
+      const d = new Date(date + 'T' + time + ':00');
+      const off = -d.getTimezoneOffset(), sign = off >= 0 ? '+' : '-', a = Math.abs(off);
+      return date + 'T' + time + ':00' + sign + String(Math.floor(a / 60)).padStart(2, '0') + ':' + String(a % 60).padStart(2, '0');
+    }
+    async _update2(f, title) {
+      const ymd = (dt) => dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+      const day = new Date(f.date + 'T00:00:00'), plus = (n) => ymd(new Date(day.getFullYear(), day.getMonth(), day.getDate() + n));
+      const ev = { summary: title };
+      if (f.allDay) { ev.dtstart = f.date; ev.dtend = plus(f.edit.days || 1); }
+      else { ev.dtstart = this._iso(f.date, f.start.slice(0, 5)); ev.dtend = this._iso(f.end.slice(0, 5) <= f.start.slice(0, 5) ? plus(1) : f.date, f.end.slice(0, 5)); }
+      if ((f.loc || '').trim()) ev.location = f.loc.trim();
+      if (f.edit.description) ev.description = f.edit.description;
+      const msg = { type: 'calendar/event/update', entity_id: f.cal, uid: f.edit.uid, event: ev };
+      if (f.edit.recurrence_id) msg.recurrence_id = f.edit.recurrence_id;
+      f.busy = true; this._redraw();
+      try {
+        await this._hass.callWS(msg);
+        this._form = null; this._detail = null; this._at = 0; this._fetch(); this._redraw();
+      } catch (e) {
+        f.busy = false; f.err = this.t('Could not save it: {why}.', { why: (e && e.message) || this.t('the calendar said no') }); this._redraw();
+      }
+    }
+    async _delete(future) {
+      const e = this._detail; if (!e) return;
+      const msg = { type: 'calendar/event/delete', entity_id: e.cal, uid: e.uid };
+      if (e.recurrence_id) msg.recurrence_id = e.recurrence_id;
+      if (future && e.recurrence_id) msg.recurrence_range = 'THISANDFUTURE';
+      this._dbusy = true; this._redraw();
+      try {
+        await this._hass.callWS(msg);
+        this._detail = null; this._confirm = ''; this._derr = ''; this._at = 0; this._fetch();
+      } catch (err) {
+        this._derr = this.t('Could not delete it: {why}.', { why: (err && err.message) || this.t('the calendar said no') });
+      }
+      this._dbusy = false; this._redraw();
     }
     // keep what was typed, so a redraw (every minute) never loses it
     _read() {
