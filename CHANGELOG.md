@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.36.0 (2026-11-24)
+
+- **Updates chip for admins.** The people card shows a chip before the people when Home Assistant, an add-on or an integration can be updated: the name and version for one ("Home Assistant Core 2026.12.0"), the count for more ("3 updates"), and a ring with the percentage while one installs. Only admins see it, and only updates that can be installed from Home Assistant count (firmware that updates itself is left out, as are skipped versions). Tapping opens Settings › Updates. On a phone it shows just the count. Switch it off with `updates: false` or in the editor.
+
 ## 2.35.0 (2026-11-24)
 
 Every card checked at every width it can have (from half a column on a phone to a wide desktop), in English and Dutch. Nothing sticks out of a card any more, and rows no longer break onto a second line:

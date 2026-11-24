@@ -17,7 +17,7 @@ so HACS can install and update it too.
 | Washing machine (localthings): time left, phase, done | `custom:cranberry-washer-card` |
 | Waste collection (Afvalwijzer): which bin goes out next | `custom:cranberry-waste-card` |
 | Car: where it is parked, with a map | `custom:cranberry-car-card` |
-| People: a chip per person with photo and where they are | `custom:cranberry-people-card` |
+| People: a chip per person with photo and where they are; for admins, a chip when updates are waiting | `custom:cranberry-people-card` |
 | Calendar: the coming days from your calendars, with date blocks like the home card | `custom:cranberry-calendar-card` |
 | Thermostat: the card's colour, the setpoint and one sentence; every mode, heat/cool, presets, fan, swing; full or compact | `custom:cranberry-thermostat-card` |
 

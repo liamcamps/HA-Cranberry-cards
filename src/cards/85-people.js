@@ -13,6 +13,16 @@
       .pic { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--cc-q-t); color: var(--cc-text); font-size: 16px; font-weight: 700; }
       .pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
       .chip span.where { color: var(--cc-muted); font-weight: 600; }
+      /* updates, for admins: like the people chips, olive text the only hint */
+      .chip.upd { padding: 4px 16px 4px 12px; gap: 8px; color: color-mix(in srgb, var(--cc-o) 75%, var(--cc-text)); }
+      .chip.upd.na { opacity: 1; }
+      .upd svg { flex-shrink: 0; }
+      .upd .ul { max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
+      .upd .us { display: none; font-weight: 700; }
+      .ring-t { stroke: var(--cc-o-t); }
+      /* a phone: the words go, the count stays */
+      ha-card { container-type: inline-size; }
+      @container (max-width: 520px) { .upd .ul { display: none; } .upd .us { display: inline; } .chip.upd { padding: 4px 12px 4px 10px; gap: 6px; } }
     `;
     }
     getGridOptions() { return { columns: 'full', rows: 'auto' }; }
@@ -32,21 +42,49 @@
           icon: p.icon || ''
         };
       });
-      return { title: c.title == null ? '' : c.title, people };
+      return { title: c.title == null ? '' : c.title, people, updates: this._updates() };
+    }
+    // updates an admin can install (an update entity that can't install, such as a device that
+    // updates itself, isn't shown); null when there is nothing or the user isn't an admin
+    _updates() {
+      const h = this._hass;
+      if (this._config.updates === false || !h || !h.user || !h.user.is_admin) return null;
+      const list = Object.keys(h.states).filter((id) => id.indexOf('update.') === 0).map((id) => h.states[id])
+        .filter((st) => st.state === 'on' && ((Number(st.attributes.supported_features) || 0) & 1));
+      if (!list.length) return null;
+      const busy = list.find((st) => st.attributes.in_progress);
+      if (busy) {
+        const a = busy.attributes;
+        const pct = a.update_percentage != null ? Math.round(a.update_percentage) : typeof a.in_progress === 'number' ? Math.round(a.in_progress) : null;
+        return { busy: true, pct, text: pct != null ? this.t('Updating · {pct}%', { pct }) : this.t('Updating'), short: pct != null ? pct + '%' : '…' };
+      }
+      let text;
+      if (list.length === 1) {
+        const a = list[0].attributes;
+        const what = a.title || String(a.friendly_name || list[0].entity_id).replace(/\s+update$/i, '').replace(/\s+firmware$/i, '');
+        text = a.latest_version ? what + ' ' + a.latest_version : what;
+      } else text = this.t('{n} updates', { n: list.length });
+      return { busy: false, text, short: String(list.length) };
     }
     view(m) {
       // without a photo: their icon if one is set, else their initial
       const face = (p) => p.picture ? `<img src="${esc(p.picture)}" alt="">` : p.icon ? `<ha-icon icon="${esc(p.icon)}"></ha-icon>` : esc(p.name.charAt(0).toUpperCase());
       const chip = (p) => `<button type="button" class="chip${p.home ? '' : ' away'}${p.na ? ' na' : ''}" data-act="open" data-arg="${esc(p.id)}" aria-label="${esc(p.name + ', ' + p.where)}" title="${esc(p.name + ' · ' + p.where)}">
           <span class="pic">${face(p)}</span>${p.home ? '' : `<span class="where">${esc(p.where)}</span>`}</button>`;
-      return `<ha-card><div class="row">${m.title ? `<div class="title">${esc(m.title)}</div>` : ''}<div class="chips">${m.people.map(chip).join('')}</div></div></ha-card>`;
+      const u = m.updates;
+      const uIcon = u && u.busy
+        ? `<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle class="ring-t" cx="12" cy="12" r="9" fill="none" stroke-width="2.5"></circle><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="${u.pct != null ? Math.max(2, u.pct * 0.565).toFixed(1) + ' 57' : '14 57'}" transform="rotate(-90 12 12)"></circle></svg>`
+        : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 16V8M8.5 11.5 12 8l3.5 3.5"></path></svg>';
+      const upd = u ? `<button type="button" class="chip upd" data-act="updates" aria-label="${esc(u.text + ' · ' + this.t('Show updates'))}" title="${esc(u.text)}">${uIcon}<span class="ul">${esc(u.text)}</span><span class="us">${esc(u.short)}</span></button>` : '';
+      return `<ha-card><div class="row">${m.title ? `<div class="title">${esc(m.title)}</div>` : ''}<div class="chips">${upd}${m.people.map(chip).join('')}</div></div></ha-card>`;
     }
     act(a, arg) {
+      if (a === 'updates') return this.navigate('/config/updates');
       if (a !== 'open') return;
       const p = this._people().find((x) => x.entity === arg);
       if (p && p.popup) this.navigate(p.popup); else this.moreInfo(arg);
     }
   }
   CranberryPeopleCard.needsEntity = false;
-  CranberryPeopleCard.defaults = { show_picture: 'picture' };
+  CranberryPeopleCard.defaults = { show_picture: 'picture', updates: true };
 

@@ -478,7 +478,13 @@
     'Works out “warm in about … minutes” from how fast the room warmed up in the current run (needs the recorder).': 'Berekent “warm over ongeveer … minuten” uit hoe snel de kamer in deze ronde opwarmde (heeft de recorder nodig).',
     '…has this state': '…deze status heeft',
     '+{n} more': '+{n} meer',
-    'Turn on': 'Aanzetten'
+    'Turn on': 'Aanzetten',
+    'Updating · {pct}%': 'Bijwerken · {pct}%',
+    'Updating': 'Bijwerken',
+    '{n} updates': '{n} updates',
+    'Show updates': 'Updates bekijken',
+    'Show updates to admins': 'Updates tonen aan beheerders',
+    'A chip when Home Assistant, an add-on or an integration can be updated. Only admins see it; tapping opens Settings › Updates.': 'Een chip als Home Assistant, een add-on of een integratie bijgewerkt kan worden. Alleen beheerders zien hem; tikken opent Instellingen › Updates.'
   };
   window.CranberryI18n = { tr, isNl, trSchema, NL };
 

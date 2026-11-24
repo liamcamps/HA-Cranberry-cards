@@ -183,11 +183,14 @@
             if (x && typeof x === 'object') { if (x.popup) f['popup:' + x.entity] = x.popup; return x.entity; }
             return x;
           }).filter(Boolean);
+          f.updates = cfg.updates !== false;
           return f;
         },
         fromForm: (f) => {
           const cfg = {};
           Object.keys(f).forEach((k) => { if (k.indexOf('popup:') !== 0) cfg[k] = f[k]; });
+          // on is the default, so only off is written
+          if (cfg.updates !== false) delete cfg.updates;
           if (f.people) cfg.people = f.people.map((id) => (f['popup:' + id] ? { entity: id, popup: f['popup:' + id] } : id));
           return cfg;
         }
@@ -196,13 +199,14 @@
         { name: 'people', selector: { entity: { multiple: true, domain: 'person' } } },
         { name: 'title', selector: { text: {} } },
         { name: 'show_picture', selector: { select: { mode: 'box', options: [{ value: 'picture', label: 'Photo' }, { value: 'icon', label: 'Icon' }] } } },
+        { name: 'updates', selector: { boolean: {} } },
         ...((f && f.people) || []).length ? [{
           type: 'expandable', name: 'popups', flatten: true, title: 'Pop-up per person', icon: 'mdi:map-marker-outline',
           schema: f.people.map((id) => ({ name: 'popup:' + id, title: id.replace(/^person\./, '').replace(/_/g, ' ').replace(/^./, (ch) => ch.toUpperCase()), selector: { text: {} } }))
         }] : []
       ],
-      labels: { people: 'People', title: 'Title', show_picture: 'Picture' },
-      helpers: { title: 'Optional, for example Home. Shown on the left, the people on the right.', show_picture: 'The photo set for each person in Home Assistant. Without a photo it shows their initial.', popups: 'A Bubble pop-up hash per person, for example #liam. Leave empty to open the details instead.' }
+      labels: { people: 'People', title: 'Title', show_picture: 'Picture', updates: 'Show updates to admins' },
+      helpers: { updates: 'A chip when Home Assistant, an add-on or an integration can be updated. Only admins see it; tapping opens Settings › Updates.', title: 'Optional, for example Home. Shown on the left, the people on the right.', show_picture: 'The photo set for each person in Home Assistant. Without a photo it shows their initial.', popups: 'A Bubble pop-up hash per person, for example #liam. Leave empty to open the details instead.' }
     },
     {
       tag: 'cranberry-calendar-card', cls: CranberryCalendarCard, name: 'Cranberry calendar',

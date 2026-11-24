@@ -122,6 +122,30 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   ped.querySelector('ha-form').dispatchEvent(new w.CustomEvent('value-changed', { detail: { value: Object.assign({}, ped._config, { 'popup:person.mylou': '#mylou' }) } }));
   ok(JSON.stringify(pcfg.people) === JSON.stringify([{ entity: 'person.liam', popup: '#liam' }, { entity: 'person.mylou', popup: '#mylou' }]), 'editor: pop-up per person: ' + JSON.stringify(pcfg));
 
+  // updates chip: admins only, installable updates only, opens Settings › Updates
+  const U = (id, state, a) => S(id, state, Object.assign({ supported_features: 1 }, a));
+  states['update.home_assistant_core_update'] = U('update.home_assistant_core_update', 'on', { friendly_name: 'Home Assistant Core Update', title: 'Home Assistant Core', installed_version: '2026.11.3', latest_version: '2026.12.0' });
+  states['update.hue_lamp_firmware'] = U('update.hue_lamp_firmware', 'on', { friendly_name: 'Hue lamp Firmware', supported_features: 0, latest_version: '1.122' });
+  states['update.zigbee2mqtt_update'] = U('update.zigbee2mqtt_update', 'off', { friendly_name: 'Zigbee2MQTT Update' });
+  const admin = (isAdmin) => Object.assign(hass(), { user: { is_admin: isAdmin } });
+  el = make('cranberry-people-card', { people: ['person.liam'], title: 'Home' });
+  ok(!q(el, '.upd'), 'updates: nothing without a user');
+  el.hass = admin(false); ok(!q(el, '.upd'), 'updates: not for someone who is not an admin');
+  el.hass = admin(true);
+  ok(q(el, '.upd') && q(el, '.upd .ul').textContent === 'Home Assistant Core 2026.12.0' && q(el, '.upd .us').textContent === '1', 'updates: one, by name (firmware that cannot install is left out): ' + (q(el, '.upd') || {}).textContent);
+  ok(el.shadowRoot.querySelectorAll('.chip').length === 2 && q(el, '.chips').firstElementChild.classList.contains('upd'), 'updates: the chip comes first');
+  let upTo = null; el.navigate = (p) => { upTo = p; }; q(el, '.upd').click();
+  ok(upTo === '/config/updates', 'updates: tap opens Settings › Updates');
+  states['update.zigbee2mqtt_update'] = U('update.zigbee2mqtt_update', 'on', { friendly_name: 'Zigbee2MQTT Update', latest_version: '2.7.0' });
+  el.hass = admin(true); ok(q(el, '.upd .ul').textContent === '2 updates' && q(el, '.upd .us').textContent === '2', 'updates: several');
+  states['update.zigbee2mqtt_update'] = U('update.zigbee2mqtt_update', 'on', { friendly_name: 'Zigbee2MQTT Update', in_progress: true, update_percentage: 45 });
+  el.hass = admin(true); ok(q(el, '.upd .ul').textContent === 'Updating · 45%' && q(el, '.upd circle[stroke-dasharray]'), 'updates: installing, with a ring');
+  el = make('cranberry-people-card', { people: ['person.liam'], updates: false }); el.hass = admin(true);
+  ok(!q(el, '.upd'), 'updates: can be switched off');
+  ['update.home_assistant_core_update', 'update.hue_lamp_firmware', 'update.zigbee2mqtt_update'].forEach((k) => { delete states[k]; });
+  el = make('cranberry-people-card', { people: ['person.liam'] }); el.hass = admin(true);
+  ok(!q(el, '.upd'), 'updates: no chip when there is nothing to install');
+
   // not responding: the same on every card
   states['light.gone'] = S('light.gone', 'unavailable', { friendly_name: 'Garage' });
   states['media_player.gone'] = S('media_player.gone', 'unavailable', {});
