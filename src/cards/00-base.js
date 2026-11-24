@@ -116,22 +116,43 @@
         mark(r);
       });
     }
-    // a mouse can drag a scrolling row; touch scrolls it natively. A drag doesn't count as a tap.
+    // a mouse can drag a scrolling row, and a flick keeps it gliding; touch scrolls it natively.
+    // A drag doesn't count as a tap.
     _drag(r) {
-      let x0 = 0, s0 = 0, moved = false, id = null;
+      let x0 = 0, s0 = 0, moved = false, id = null, track = [], glide = 0;
+      const stopGlide = () => { if (glide) cancelAnimationFrame(glide); glide = 0; };
       r.addEventListener('pointerdown', (e) => {
+        stopGlide();
         if (e.pointerType !== 'mouse' || e.button !== 0 || r.scrollWidth <= r.clientWidth) return;
-        x0 = e.clientX; s0 = r.scrollLeft; moved = false; id = e.pointerId;
+        x0 = e.clientX; s0 = r.scrollLeft; moved = false; id = e.pointerId; track = [[e.timeStamp, e.clientX]];
       });
+      r.addEventListener('wheel', stopGlide, { passive: true });
       r.addEventListener('pointermove', (e) => {
         if (id !== e.pointerId) return;
         const dx = e.clientX - x0;
         if (!moved && Math.abs(dx) > 4) { moved = true; r.classList.add('dragging'); try { r.setPointerCapture(id); } catch (err) { /* */ } }
         if (moved) { r.scrollLeft = s0 - dx; e.preventDefault(); }
+        track.push([e.timeStamp, e.clientX]);
+        while (track.length > 2 && e.timeStamp - track[0][0] > 100) track.shift();
       });
       const end = (e) => {
         if (id !== e.pointerId) return;
         id = null; r.classList.remove('dragging');
+        // the speed over the last tenth of a second; a pause before letting go means no glide
+        const last = track[track.length - 1], first = track[0];
+        let v = last && first && last[0] > first[0] && e.timeStamp - last[0] < 100 ? (first[1] - last[1]) / (last[0] - first[0]) : 0;
+        if (moved && Math.abs(v) > 0.2) {
+          v = Math.max(-4, Math.min(4, v));
+          let t = performance.now();
+          const step = (now) => {
+            const dt = Math.min(32, now - t); t = now;
+            const before = r.scrollLeft;
+            r.scrollLeft += v * dt;
+            v *= Math.pow(0.995, dt);
+            glide = Math.abs(v) > 0.02 && r.scrollLeft !== before ? requestAnimationFrame(step) : 0;
+          };
+          glide = requestAnimationFrame(step);
+        }
         if (moved) { const stop = (ev) => { ev.stopPropagation(); ev.preventDefault(); }; r.addEventListener('click', stop, { capture: true, once: true }); setTimeout(() => r.removeEventListener('click', stop, { capture: true }), 0); }
       };
       r.addEventListener('pointerup', end);

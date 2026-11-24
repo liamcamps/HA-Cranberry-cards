@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.38.4 (2026-11-24)
+
+- A flick with the mouse keeps a scrolling row gliding and slowing down, like on a phone. Stopping before letting go means no glide; a click or the scroll wheel stops it.
+
 ## 2.38.3 (2026-11-24)
 
 - Rows that scroll sideways can be dragged with a mouse: the weather card's hours, the car card's choices and the thermostat's modes. The cursor shows a hand when there is more to see. A drag never counts as a tap, so dragging the car's chips doesn't pick one. Touch scrolls as before.
