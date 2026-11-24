@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.40.0 (2026-11-24)
+
+- **Music card, full size** (`size: full`), for a pop-up. Olive while on. The cover large on top (a TV icon when the TV is the source), what's playing, where it is in the song (drag to seek), shuffle, previous, play/pause, next and repeat, a volume slider with mute, and chips for the receiver's source and sound mode that open a list over the card, plus a power button. When it's off: what played last, Turn on, and your favourites.
+- **Favourites:** your playlists and radio stations as two rows of tiles that scroll sideways (`favourites`, each with `name`, `type: playlist` or `radio`, `media_content_id`, and optionally `media_content_type`, `source`, `image`, `entity`, or `action` to run a script instead). One tap turns the receiver on if needed, switches the source and starts it, on `favourites_player` if set (a Music Assistant or Spotify player). The one that's playing is marked.
+- Every icon on the music card, in both sizes, is now Lucide's shape, built in.
+
 ## 2.39.1 (2026-11-24)
 
 - Home card: new option *Weather pop-up* (for example `#weather`). Tapping the weather opens that Bubble pop-up instead of the weather's details.

@@ -517,7 +517,26 @@
     'Cranberry scene pills': 'Cranberry scène-knoppen',
     'In YAML each can be { entity, name, icon } to set its name and icon.': 'In YAML kan elke scène { entity, name, icon } zijn om naam en pictogram te kiezen.',
     'Weather pop-up': 'Weer-pop-up',
-    'Optional. The Bubble pop-up hash, for example #weather, opened by tapping the weather. Leave empty to open the weather’s details instead.': 'Optioneel. De Bubble-pop-uphash, bijvoorbeeld #weather, die opent als je op het weer tikt. Laat leeg om de details van het weer te openen.'
+    'Optional. The Bubble pop-up hash, for example #weather, opened by tapping the weather. Leave empty to open the weather’s details instead.': 'Optioneel. De Bubble-pop-uphash, bijvoorbeeld #weather, die opent als je op het weer tikt. Laat leeg om de details van het weer te openen.',
+    'Playlists': 'Afspeellijsten',
+    'Radio': 'Radio',
+    'Play {name}': '{name} afspelen',
+    'Playing': 'Speelt',
+    'Last played: {what}': 'Laatst gespeeld: {what}',
+    'Turn off': 'Uitzetten',
+    'Position': 'Positie',
+    'Shuffle': 'Willekeurig',
+    'Repeat': 'Herhalen',
+    'Mute': 'Dempen',
+    'Unmute': 'Dempen uit',
+    'Volume': 'Volume',
+    'Source': 'Bron',
+    'Sound mode': 'Geluidsmodus',
+    'Row': 'Rij',
+    'Full, for a pop-up': 'Volledig, voor een pop-up',
+    'Play favourites on': 'Favorieten afspelen op',
+    'Full shows the cover, the song’s progress, the volume, source and sound mode, and your favourites (set in YAML: favourites).': 'Volledig toont de hoes, de voortgang van het nummer, het volume, de bron en geluidsmodus, en je favorieten (in YAML: favourites).',
+    'Optional. The player that plays a favourite, such as a Music Assistant or Spotify player. Leave empty to use the media player above.': 'Optioneel. De speler die een favoriet afspeelt, zoals een Music Assistant- of Spotify-speler. Laat leeg om de mediaspeler hierboven te gebruiken.'
   };
   window.CranberryI18n = { tr, isNl, trSchema, NL };
 
