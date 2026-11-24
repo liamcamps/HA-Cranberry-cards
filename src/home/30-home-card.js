@@ -770,7 +770,7 @@
                <path d="${m.area}" stroke="none" style="fill:url(#${g});opacity:.28"></path>
                <path d="${m.line}" fill="none" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" style="stroke:url(#${g})"></path>
              </svg></div>
-             <div class="hours" style="grid-template-columns: repeat(${m.hours.length}, minmax(0,1fr))">${m.hours.map((x) => `<span class="hour"><b style="color:${x.col}">${round(x.temp)}°</b>${window.customIcons && window.customIcons.lucide ? `<ha-icon icon="lucide:${HOUR_LUCIDE[x.cond] || 'cloud'}" style="--mdc-icon-size:18px"></ha-icon>` : this._icon(HOUR_ICON[x.cond] || I.cloud)}<span>${esc(x.label)}</span></span>`).join('')}</div>
+             <div class="hours" style="grid-template-columns: repeat(${m.hours.length}, minmax(0,1fr))">${m.hours.map((x) => `<span class="hour"><b style="color:${x.col}">${round(x.temp)}°</b>${this._icon(HOUR_ICON[x.cond] || I.cloud)}<span>${esc(x.label)}</span></span>`).join('')}</div>
            </div>` : '');
 
       const issueText = m.issues.map((x) => x.text).join(' · ');

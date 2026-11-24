@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.38.0 (2026-11-24)
+
+- **Lucide icons for every small icon**, built into the cards, so they look the same with or without the Lucide icons integration: the home card's hourly chart, its tip and chips, the lights menu, and the weather card. Pouring rain and hail have their own icon now; the cold-weather tip shows a thermometer. The large filled weather picture on the home card stays as it is.
+
 ## 2.37.2 (2026-11-24)
 
 - The partly cloudy icon is a sun peeking out from behind a cloud again, instead of a sun drawn through the cloud. Same for the moon at night. In the weather card and the home card's hourly chart (without the Lucide icons integration).

@@ -1,31 +1,34 @@
-  const VERSION = '2.37.2';
+  const VERSION = '2.38.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
 
   // ---------- Icons (24px, stroked) ----------
+  // Lucide's shapes (ISC licence), built in so they look the same with or without the Lucide icons integration
   const I = {
-    chev: 'm9 6 6 6-6 6',
-    close: 'M6 6l12 12M18 6 6 18',
-    power: 'M12 3v8M7 6.2a7 7 0 1 0 10 0',
-    bulb: 'M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z',
-    moon: 'M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z',
-    sun: 'M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
-    cloud: 'M7 18a4 4 0 0 1-.5-8 6 6 0 0 1 11.5 1.5A3.5 3.5 0 0 1 17.5 18z',
-    // sun or moon peeking out from behind a cloud: only the part not behind it is drawn (shapes from Lucide, ISC licence)
+    chev: 'm9 18 6-6-6-6',
+    close: 'M18 6 6 18M6 6l12 12',
+    power: 'M12 2v10M18.4 6.6a9 9 0 1 1-12.77.04',
+    bulb: 'M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5M9 18h6M10 22h4',
+    moon: 'M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z',
+    sun: 'M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41',
+    cloud: 'M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z',
+    // sun or moon peeking out from behind a cloud: only the part not behind it is drawn
     partly: 'M12 2v2M4.93 4.93l1.41 1.41M20 12h2M19.07 4.93l-1.41 1.41M15.95 12.65a4 4 0 0 0-5.93-4.13M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6z',
     partlyNight: 'M13 16a3 3 0 0 1 0 6H7a5 5 0 1 1 4.9-6zM18.38 14.51a6 6 0 0 0 3.46-4.13c.15-.62-.66-.97-1.25-.71a4 4 0 0 1-5.26-5.26c.26-.59-.09-1.4-.72-1.25a6 6 0 0 0-4.59 5.36',
-    rain: 'M7 15a4 4 0 0 1-.5-8 6 6 0 0 1 11.5 1.5A3.5 3.5 0 0 1 17.5 15zM9 18l-1 3M13 18l-1 3M17 18l-1 3',
-    storm: 'M7 15a4 4 0 0 1-.5-8 6 6 0 0 1 11.5 1.5A3.5 3.5 0 0 1 17.5 15zM13 13l-2 4h3l-2 4',
-    snow: 'M7 15a4 4 0 0 1-.5-8 6 6 0 0 1 11.5 1.5A3.5 3.5 0 0 1 17.5 15zM8 19h.01M12 18h.01M16 19h.01M10 22h.01M14 22h.01',
-    wind: 'M3 8h11a3 3 0 1 0-3-3M3 16h15a3 3 0 1 1-3 3M3 12h7',
-    fog: 'M7 13a4 4 0 0 1-.5-8 6 6 0 0 1 11.5 1.5A3.5 3.5 0 0 1 17.5 13zM4 17h16M6 21h12',
-    umbrella: 'M12 3a9 9 0 0 1 9 9H3a9 9 0 0 1 9-9zM12 12v7a2 2 0 0 0 4 0',
-    coat: 'M8 3l4 3 4-3 4 4-3 3v11H7V10L4 7z',
-    check: 'M5 12l4 4 10-10',
-    clock: 'M12 7v5l3 2M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z',
-    alert: 'M12 3 2 20h20zM12 10v4M12 17h.01',
-    cal: 'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z'
+    rain: 'M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24M16 14v6M8 14v6M12 16v6',
+    pour: 'M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24M9.2 22l3-7M9 13l-3 7M17 13l-3 7',
+    storm: 'M6 16.33A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 .5 8.97M13 12l-3 5h4l-3 5',
+    snow: 'M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24M8 15h.01M8 19h.01M12 17h.01M12 21h.01M16 15h.01M16 19h.01',
+    hail: 'M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24M16 14v2M8 14v2M16 20h.01M8 20h.01M12 16v2M12 22h.01',
+    wind: 'M12.8 19.6A2 2 0 1 0 14 16H2M17.5 8a2.5 2.5 0 1 1 2 4H2M9.8 4.4A2 2 0 1 1 11 8H2',
+    fog: 'M4 14.9A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.24M16 17H7M17 21H9',
+    umbrella: 'M22 12a10.06 10.06 1 0 0-20 0zM12 12v8a2 2 0 0 0 4 0M12 2v1',
+    coat: 'M2 12h10M9 4v16M3 9l3 3-3 3M12 6 9 9 6 6M6 18l3-3 1.5 1.5M20 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z',
+    check: 'M20 6 9 17l-5-5',
+    clock: 'M12 6v6l4 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0z',
+    alert: 'M21.73 18l-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3M12 9v4M12 17h.01',
+    cal: 'M8 2v4M16 2v4M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM3 10h18'
   };
 
   // ---------- Weather art (64px, three layers: fill, fill, stroke) ----------
@@ -69,14 +72,13 @@
   };
   const HOUR_ICON = {
     'clear-night': I.moon, sunny: I.sun, partlycloudy: I.partly, 'partlycloudy-night': I.partlyNight, cloudy: I.cloud, fog: I.fog,
-    rainy: I.rain, pouring: I.rain, lightning: I.storm, 'lightning-rainy': I.storm,
-    snowy: I.snow, 'snowy-rainy': I.snow, hail: I.snow, windy: I.wind, 'windy-variant': I.wind, exceptional: I.alert
+    rainy: I.rain, pouring: I.pour, lightning: I.storm, 'lightning-rainy': I.storm,
+    snowy: I.snow, 'snowy-rainy': I.snow, hail: I.hail, windy: I.wind, 'windy-variant': I.wind, exceptional: I.alert
   };
-  const HOUR_LUCIDE = { 'clear-night': 'moon', cloudy: 'cloud', exceptional: 'triangle-alert', fog: 'cloud-fog', hail: 'cloud-hail', lightning: 'cloud-lightning', 'lightning-rainy': 'cloud-lightning', partlycloudy: 'cloud-sun', 'partlycloudy-night': 'cloud-moon', pouring: 'cloud-rain-wind', rainy: 'cloud-rain', snowy: 'cloud-snow', 'snowy-rainy': 'cloud-snow', sunny: 'sun', windy: 'wind', 'windy-variant': 'wind' };
   const RAINY = ['rainy', 'pouring', 'lightning-rainy', 'snowy-rainy', 'hail'];
   const SNOWY = ['snowy', 'snowy-rainy'];
   // the hour icons, shared with the weather card
-  window.CranberryWeather = { I, HOUR_ICON, HOUR_LUCIDE, RAINY };
+  window.CranberryWeather = { I, HOUR_ICON, RAINY };
   const DONE_STATES = ['on', 'true', 'done', 'finished', 'complete', 'completed', 'ready', 'klaar', 'gereed'];
   const PROBLEM_STATES = ['on', 'open', 'opening', 'unlocked', 'unlocking', 'jammed', 'triggered', 'problem'];
 
