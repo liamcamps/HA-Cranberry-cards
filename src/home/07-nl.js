@@ -484,7 +484,29 @@
     '{n} updates': '{n} updates',
     'Show updates': 'Updates bekijken',
     'Show updates to admins': 'Updates tonen aan beheerders',
-    'A chip when Home Assistant, an add-on or an integration can be updated. Only admins see it; tapping opens Settings › Updates.': 'Een chip als Home Assistant, een add-on of een integratie bijgewerkt kan worden. Alleen beheerders zien hem; tikken opent Instellingen › Updates.'
+    'A chip when Home Assistant, an add-on or an integration can be updated. Only admins see it; tapping opens Settings › Updates.': 'Een chip als Home Assistant, een add-on of een integratie bijgewerkt kan worden. Alleen beheerders zien hem; tikken opent Instellingen › Updates.',
+    'Rain for the next {n} hours.': 'Regen voor de komende {n} uur.',
+    'Rain until about {time}, dry after that.': 'Regen tot ongeveer {time}, daarna droog.',
+    'Dry until about {time}, then a short shower.': 'Droog tot ongeveer {time}, dan een korte bui.',
+    'Dry until about {time}, then rain for about {n} hours.': 'Droog tot ongeveer {time}, dan zo’n {n} uur regen.',
+    'Windy, gusts up to {speed}.': 'Winderig, windstoten tot {speed}.',
+    'No hourly forecast from this weather service.': 'Deze weerdienst geeft geen verwachting per uur.',
+    'Dry all week.': 'De hele week droog.',
+    '{day} looks best: dry, up to {temp}.': '{day} lijkt het best: droog, tot {temp}.',
+    '{day} looks best: up to {temp}.': '{day} lijkt het best: tot {temp}.',
+    '{day} brings the most rain.': '{day} brengt de meeste regen.',
+    'Hours': 'Uren',
+    'Days': 'Dagen',
+    'Next hours': 'Komende uren',
+    'Cranberry weather': 'Cranberry weer',
+    'Show the Hours / Days switch': 'De schakelaar Uren / Dagen tonen',
+    'Hours in the strip': 'Uren in de strook',
+    'Days to show': 'Dagen om te tonen',
+    'Optional. A second weather entity for the temperature now, such as NL Weather’s observations.': 'Optioneel. Een tweede weerentiteit voor de temperatuur nu, zoals de waarnemingen van NL Weather.',
+    'The card remembers the view picked last on each device.': 'De kaart onthoudt per apparaat welke weergave het laatst gekozen is.',
+    'The strip scrolls sideways.': 'De strook scrolt opzij.',
+    'max {temp}': 'max {temp}',
+    'Humidity@short': 'Vocht'
   };
   window.CranberryI18n = { tr, isNl, trSchema, NL };
 

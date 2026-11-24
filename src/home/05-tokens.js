@@ -29,6 +29,7 @@
     // weather: the art, the rain, and the temperature colours from cold to warm
     ['cc-sun', '--cv-sun', '#F0B85A'],
     ['cc-mist', '--cv-mist', '#9CC3D6'],
+    ['cc-rain', '--cv-rain', '#40606A'],
     ['cc-taupe', '--cv-taupe', '#B5ABA0'],
     ['cc-canvas', '--cv-canvas', '#E3DDCF'],
     ['cc-temp-freezing', '--cv-temp-1', '#B9D7E8'],

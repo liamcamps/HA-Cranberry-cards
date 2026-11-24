@@ -1,4 +1,4 @@
-  const VERSION = '2.36.0';
+  const VERSION = '2.37.0';
   const TAG = 'cranberry-home-card';
   const EDITOR_TAG = 'cranberry-home-card-editor';
   const FONT_URL = 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..600,100&family=Figtree:wght@400;500;600;700&display=swap';
@@ -74,6 +74,8 @@
   const HOUR_LUCIDE = { 'clear-night': 'moon', cloudy: 'cloud', exceptional: 'triangle-alert', fog: 'cloud-fog', hail: 'cloud-hail', lightning: 'cloud-lightning', 'lightning-rainy': 'cloud-lightning', partlycloudy: 'cloud-sun', 'partlycloudy-night': 'cloud-moon', pouring: 'cloud-rain-wind', rainy: 'cloud-rain', snowy: 'cloud-snow', 'snowy-rainy': 'cloud-snow', sunny: 'sun', windy: 'wind', 'windy-variant': 'wind' };
   const RAINY = ['rainy', 'pouring', 'lightning-rainy', 'snowy-rainy', 'hail'];
   const SNOWY = ['snowy', 'snowy-rainy'];
+  // the hour icons, shared with the weather card
+  window.CranberryWeather = { I, HOUR_ICON, RAINY };
   const DONE_STATES = ['on', 'true', 'done', 'finished', 'complete', 'completed', 'ready', 'klaar', 'gereed'];
   const PROBLEM_STATES = ['on', 'open', 'opening', 'unlocked', 'unlocking', 'jammed', 'triggered', 'problem'];
 

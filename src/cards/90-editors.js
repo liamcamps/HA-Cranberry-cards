@@ -247,6 +247,21 @@
       helpers: { calendars: 'The colours follow this order: cranberry, olive, harbour, ochre, quail.', title: 'Optional. Leave empty inside a pop-up, which has its own title.', view: 'Week shows the next seven days side by side. On a narrow screen the card always shows the agenda.', add_events: 'New event, and Edit and Delete in an event’s details. Only for calendars that allow it, like Local calendar and Google Calendar.', who: 'Pick the people who see a calendar. Leave it empty and everyone sees it.' }
     },
     {
+      tag: 'cranberry-weather-card', cls: CranberryWeatherCard, name: 'Cranberry weather',
+      description: 'Out here, now and later: a sentence, the next 24 hours, and the week. For a balcony or garden pop-up.',
+      stub: (ids) => ({ entity: ids.find((id) => id.indexOf('weather.') === 0) || 'weather.home' }),
+      schema: [
+        { name: 'entity', selector: { entity: { domain: 'weather' } } },
+        { name: 'weather_now', selector: { entity: { domain: 'weather' } } },
+        { name: 'view', selector: { select: { mode: 'box', options: [{ value: 'hours', label: 'Hours' }, { value: 'days', label: 'Days' }] } } },
+        { name: 'switcher', selector: { boolean: {} } },
+        { name: 'hours', selector: { number: { min: 6, max: 48, step: 1, mode: 'slider' } } },
+        { name: 'days', selector: { number: { min: 3, max: 10, step: 1, mode: 'slider' } } }
+      ],
+      labels: { entity: 'Weather', weather_now: 'Current conditions (optional)', view: 'Start with', switcher: 'Show the Hours / Days switch', hours: 'Hours in the strip', days: 'Days to show' },
+      helpers: { weather_now: 'Optional. A second weather entity for the temperature now, such as NL Weather’s observations.', view: 'The card remembers the view picked last on each device.', hours: 'The strip scrolls sideways.' }
+    },
+    {
       tag: 'cranberry-waste-card', cls: CranberryWasteCard, name: 'Cranberry waste collection',
       description: 'Which bin goes out next. Cranberry the evening before, with “It’s out”.',
       stub: () => ({ waste: 'auto' }),

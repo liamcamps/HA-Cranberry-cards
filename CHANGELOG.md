@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.37.0 (2026-11-24)
+
+- **New: weather card**, for a balcony or garden pop-up. The temperature now, the condition and "Feels like 6° · max 10°", with a switch between two views:
+  - **Hours:** a sentence ("Dry until about 19:00, then rain for about 2 hours."; it adds gusts when it gets windy), then wind, rain today, sunset or sunrise and humidity, then the next 24 hours as a strip that scrolls sideways. Midnight shows the day; blue bars are rain.
+  - **Days:** a sentence ("Thursday looks best: dry, up to 7°. Friday brings the most rain."), then today and the next six: chance of rain and a low-to-high bar on one scale, with a dot for the temperature now.
+  - It remembers the view picked last on each device. Without a daily forecast there is no switch, just Hours. In Dutch too.
+- Uses the theme's new rain colour (`cc-rain`); use with theme 4.3.0.
+
 ## 2.36.0 (2026-11-24)
 
 - **Updates chip for admins.** The people card shows a chip before the people when Home Assistant, an add-on or an integration can be updated: the name and version for one ("Home Assistant Core 2026.12.0"), the count for more ("3 updates"), and a ring with the percentage while one installs. Only admins see it, and only updates that can be installed from Home Assistant count (firmware that updates itself is left out, as are skipped versions). Tapping opens Settings › Updates. On a phone it shows just the count. Switch it off with `updates: false` or in the editor.
