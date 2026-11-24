@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.38.1 (2026-11-24)
+
+- Scene card: a picked scene is the deep cranberry fill in dark mode too, like the home card, instead of the lighter accent.
+
 ## 2.38.0 (2026-11-24)
 
 - **Lucide icons for every small icon**, built into the cards, so they look the same with or without the Lucide icons integration: the home card's hourly chart, its tip and chips, the lights menu, and the weather card. Pouring rain and hail have their own icon now; the cold-weather tip shows a thermometer. The large filled weather picture on the home card stays as it is.

@@ -12,7 +12,7 @@
     static get styles() {
       return `
       ha-card { border-radius: var(--cc-r-card, 24px); transition: background .25s ease, color .25s ease; }
-      ha-card.active { background: var(--cc-c); color: var(--cc-on); }
+      ha-card.active { background: var(--cv-fill-c); color: var(--cc-on); }
       .btn { width: 100%; height: 100%; min-height: 96px; box-sizing: border-box; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
       .ic { width: 40px; height: 40px; border-radius: var(--cc-r-ctl, 12px); }
       .name { font-size: 13px; font-weight: 600; max-width: 100%; }
