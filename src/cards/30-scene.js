@@ -14,8 +14,12 @@
       ha-card { border-radius: var(--cc-r-card, 24px); transition: background .25s ease, color .25s ease; }
       ha-card.active { background: var(--cv-fill-c); color: var(--cc-on); }
       .btn { width: 100%; height: 100%; min-height: 96px; box-sizing: border-box; padding: 12px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
-      .ic { width: 40px; height: 40px; border-radius: var(--cc-r-ctl, 12px); }
-      .name { font-size: 13px; font-weight: 600; max-width: 100%; }
+      /* the icon on its own, no box behind it; muted until the scene is picked */
+      .ic { width: 28px; height: 28px; color: var(--cc-muted); }
+      .ic ha-icon { --mdc-icon-size: 22px; }
+      .name { font-size: 13px; font-weight: 700; max-width: 100%; color: var(--cc-muted); }
+      ha-card.active .ic, ha-card.active .name { color: var(--cc-on); }
+      ha-card.na .ic { background: none !important; }
     `;
     }
     getGridOptions() { return { columns: 3, rows: 2, min_columns: 2 }; }
@@ -43,7 +47,7 @@
     }
     view(m) {
       return `<ha-card class="${m.na ? 'na' : ''} ${m.active ? 'active' : ''}"><button type="button" class="btn" data-act="run" aria-pressed="${m.active}" aria-label="${esc(m.name)}${m.active ? ', active' : ''}">
-        <span class="ic" style="background:${m.active ? alpha('--cc-on', 16) : 'var(--cc-q-t)'};color:${m.active ? 'var(--cc-on)' : 'var(--cc-q)'}"><ha-icon icon="${esc(m.icon)}"></ha-icon></span>
+        <span class="ic"><ha-icon icon="${esc(m.icon)}"></ha-icon></span>
         <span class="name">${esc(m.name)}</span></button></ha-card>`;
     }
     act() {

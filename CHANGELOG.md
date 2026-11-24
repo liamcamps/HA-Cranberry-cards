@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.38.2 (2026-11-24)
+
+- Scene card: the icon stands on its own, without the box behind it. Icon and name are muted until the scene is picked, then cream on cranberry.
+
 ## 2.38.1 (2026-11-24)
 
 - Scene card: a picked scene is the deep cranberry fill in dark mode too, like the home card, instead of the lighter accent.
