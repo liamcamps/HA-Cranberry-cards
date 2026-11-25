@@ -35,8 +35,11 @@
     getCardSize() { return 1; }
     getGridOptions() { return { columns: 'full', rows: 'auto' }; }
     connectedCallback() {
-      // the cards of a section sit side by side in one container, each in its own wrapper
-      this._wrap = this.parentElement && this.parentElement.localName === 'hui-card' ? this.parentElement : this;
+      // the cards of a section sit side by side in one container, each in its own wrapper (a
+      // hui-card, inside a grid cell): climb to the element that is one of the container's cards
+      let unit = this;
+      for (let i = 0; i < 4 && unit.parentElement && unit.parentElement.children.length === 1; i++) unit = unit.parentElement;
+      this._wrap = unit;
       const box = this._wrap.parentNode;
       if (box && box !== this._box) {
         this._unwatch();
@@ -44,7 +47,7 @@
         this._onVis = (ev) => { if (!ev.composedPath().includes(this)) this._schedule(); };
         box.addEventListener('card-visibility-changed', this._onVis);
         this._mo = new MutationObserver(() => this._schedule());
-        this._mo.observe(box, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden', 'style'] });
+        this._mo.observe(box, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden', 'style', 'class'] });
       }
       this._schedule();
     }
@@ -60,18 +63,25 @@
       const run = () => { this._pending = false; this._check(); };
       (window.requestAnimationFrame || ((f) => setTimeout(f, 16)))(run);
     }
-    _shown(el) {
-      if (!el || el.nodeType !== 1 || el.hidden || el.hasAttribute('hidden')) return false;
-      if (el.style && el.style.display === 'none') return false;
-      // the card inside a wrapper can hide itself while the wrapper stays
-      if (el.localName === 'hui-card') {
-        const card = el.firstElementChild;
-        if (card && (card.hidden || card.hasAttribute('hidden') || (card.style && card.style.display === 'none'))) return false;
+    _off(el) { return !el || el.hidden || el.hasAttribute('hidden') || (el.classList && el.classList.contains('hidden')) || (el.style && el.style.display === 'none'); }
+    // the card itself, inside the grid cell and the hui-card wrapper around it
+    _card(unit) {
+      let el = unit;
+      for (let i = 0; i < 4 && el && el.firstElementChild && !/-card$/.test(el.localName); i++) el = el.firstElementChild;
+      if (el && el.localName === 'hui-card') el = el.firstElementChild || el;
+      return el;
+    }
+    _shown(unit) {
+      if (!unit || unit.nodeType !== 1) return false;
+      // any wrapper on the way down, or the card itself, can be the one that is hidden
+      for (let el = unit, i = 0; el && i < 5; el = el.firstElementChild, i++) {
+        if (this._off(el)) return false;
+        if (/-card$/.test(el.localName) && el.localName !== 'hui-card') break;
       }
       return true;
     }
-    _isHeading(el) {
-      const card = el.localName === 'hui-card' ? el.firstElementChild : el;
+    _isHeading(unit) {
+      const card = this._card(unit);
       return !!card && /^(hui-heading-card|cranberry-heading-card)$/.test(card.localName);
     }
     _check() {

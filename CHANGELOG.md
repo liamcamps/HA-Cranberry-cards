@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.41.1 (2026-11-25)
+
+- **Cranberry heading** now finds the cards under it in a sections view, where each card sits in a grid cell of its own. In 2.41.0 it looked for them one level too low, found none, and so stayed visible.
+
 ## 2.41.0 (2026-11-25)
 
 - **Cranberry heading** (`custom:cranberry-heading-card`): Home Assistant's own heading, with the same options, that hides itself while every card under it in the section is hidden, and shows again as soon as one of them does. So a title like "Around the house" no longer sits over nothing when the bins are out and the washer is idle. It watches the cards after it up to the next heading, or only the next `follows` cards.

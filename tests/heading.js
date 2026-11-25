@@ -60,6 +60,21 @@ const wrap = (card) => { const h = d.createElement('hui-card'); h.appendChild(ca
 
   let threw = false; try { d.createElement('cranberry-heading-card').setConfig({}); } catch (e) { threw = true; }
   ok(threw, 'needs a heading');
+  // Home Assistant's sections: each hui-card sits in a grid cell, <div class="card">
+  const box4 = d.createElement('div'); d.body.appendChild(box4);
+  const cell = (card) => { const c = d.createElement('div'); c.className = 'card'; c.appendChild(wrap(card)); return c; };
+  const h4 = d.createElement('cranberry-heading-card'); h4.setConfig({ heading: 'Around the house' });
+  const waste = d.createElement('cranberry-x-card'), washer = d.createElement('cranberry-y-card');
+  waste.style.display = 'none'; waste.setAttribute('hidden', '');
+  const c2 = cell(waste), c3 = cell(washer); c3.firstElementChild.hidden = true;
+  box4.append(cell(h4), c2, c3);
+  await tick();
+  ok(h4.hidden, 'in a section grid cell: hidden while the cards under it are');
+  c3.firstElementChild.hidden = false; await tick();
+  ok(!h4.hidden, 'in a section grid cell: shows when the washer shows');
+  // the way Home Assistant hides a cell: class="card hidden"
+  c3.classList.add('hidden'); await tick();
+  ok(h4.hidden, 'a cell with the hidden class counts as hidden');
   console.log(`${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })();
