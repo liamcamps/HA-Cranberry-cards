@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.43.1 (2026-11-25)
+
+- **Music card, row and medium:** the whole card opens the pop-up (or the details), the cover included; only the buttons that control the music or the player do something else.
+
 ## 2.43.0 (2026-11-25)
 
 - **Music card, medium size** (`size: medium`), for a dashboard: the cover beside the song, a thin progress line, previous, play/pause and next, the time and mute. Olive while it plays. Off, it keeps its size: what played last, Turn on, and Play again when it can start it again.

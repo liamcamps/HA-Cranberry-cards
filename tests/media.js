@@ -92,6 +92,12 @@ ok(calls[0][1] === 'repeat_set' && calls[0][2].repeat === 'all' && calls[1][1] =
   md.hass = hass(player('playing', { media_title: 'Harvest Moon', media_artist: 'Neil Young', app_name: 'Spotify', media_duration: 303, media_position: 112, media_position_updated_at: new Date().toISOString(), entity_picture: '/api/c.jpg' }));
   const mq = (x) => md.shadowRoot.querySelector(x);
   ok(mq('ha-card.medium.playing') && mq('.mcover').getAttribute('style').includes('/api/c.jpg') && mq('.what b').textContent === 'Harvest Moon' && mq('.mpos i') && mq('.mctl .big[data-act="media_pause"]'), 'medium: cover, song, progress, pause');
+  calls.length = 0; let went = '';
+  md.navigate = (p) => { went = p; };
+  md.shadowRoot.querySelector('.mcover').click();
+  ok(went === '#music', 'medium: the cover opens the pop-up');
+  went = ''; mq('.mctl .big').click();
+  ok(!went && calls.some((c) => c[1] === 'media_pause'), 'medium: the play button only plays');
   md.hass = hass(player('off', {}));
   ok(mq('ha-card.medium.idle') && mq('.what b').textContent === 'Harvest Moon' && mq('.what small').textContent === 'Off · Last played' && mq('button.on'), 'medium off: what played last and Turn on: ' + mq('.what').textContent);
   // TV: no cover, a TV icon

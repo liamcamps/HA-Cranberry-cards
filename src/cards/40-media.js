@@ -270,10 +270,10 @@
     }
     // medium: the cover beside what's playing and the controls, for a dashboard
     _medium(m) {
-      if (m.na) return `<ha-card class="medium na"><div class="mrow"><div class="mcover">${mIcon(MI.music, 40)}</div><div class="mbody"><div class="what"><small>${esc(m.room)}</small><b>${esc(m.text)}</b></div></div></div></ha-card>`;
+      if (m.na) return `<ha-card class="medium na tap" data-act="more"><div class="mrow"><div class="mcover">${mIcon(MI.music, 40)}</div><div class="mbody"><div class="what"><small>${esc(m.room)}</small><b>${esc(m.text)}</b></div></div></div></ha-card>`;
       if (m.off) {
         const l = m.lastItem;
-        return `<ha-card class="medium idle"><div class="mrow"><div class="mcover">${mIcon(MI.music, 40)}</div><div class="mbody">
+        return `<ha-card class="medium idle tap" data-act="more"><div class="mrow"><div class="mcover">${mIcon(MI.music, 40)}</div><div class="mbody">
           <button type="button" class="what tap" data-act="more"><small>${esc(l ? this.t('Off') + ' · ' + this.t('Last played') : m.room + ' · ' + this.t('Off'))}</small><b>${esc(l ? l.title : this.t('Nothing playing'))}</b>${l && l.artist ? `<span>${esc(l.artist)}</span>` : ''}</button>
           ${this._offButtons(m)}</div></div></ha-card>`;
       }
@@ -286,7 +286,7 @@
           ${m.pos ? `<span class="mtime">${m.pos.at} / ${m.pos.left.replace('−', '')}</span>` : '<span class="mtime"></span>'}
           ${m.canMute ? `<button type="button" class="soft" data-act="mute" aria-pressed="${m.muted}" aria-label="${esc(this.t(m.muted ? 'Unmute' : 'Mute'))}">${mIcon(m.muted ? MI.mute : MI.volume, 18)}</button>` : ''}
         </div>`;
-      return `<ha-card class="medium${on ? ' playing' : ''}"><div class="mrow">
+      return `<ha-card class="medium tap${on ? ' playing' : ''}" data-act="more"><div class="mrow">
         <div class="mcover" style="${m.art ? `background-image:url('${esc(m.art)}')` : ''}" role="img" aria-label="${esc(m.title)}">${m.art ? '' : mIcon(m.tv ? MI.tv : MI.music, 40)}</div>
         <div class="mbody"><button type="button" class="what tap" data-act="more"><small>${esc(m.label)}</small><b>${esc(m.title)}</b>${m.artist ? `<span>${esc(m.artist)}</span>` : ''}</button>${pos}${ctl}</div>
       </div></ha-card>`;
@@ -295,7 +295,7 @@
     view(m) {
       if (m.medium) return this._medium(m);
       if (!m.full) {
-        return `<ha-card class="${m.playing ? 'playing' : ''} ${m.na ? 'na' : ''}"><div class="row">
+        return `<ha-card class="tap ${m.playing ? 'playing' : ''} ${m.na ? 'na' : ''}" data-act="more"><div class="row">
           <div class="art" style="${m.art ? `background-image:url('${esc(m.art)}')` : ''}">${m.art ? '' : mIcon(MI.music, 20)}</div>
           <div class="txt tap" role="button" tabindex="0" data-act="more"><span class="name">${esc(m.title)}</span><span class="state">${esc(m.sub)}</span></div>
           ${m.ctl.map((b) => `<button type="button" class="ctl ${b.main ? 'main' : ''}" data-act="${b.act}" aria-label="${esc(b.aria)}">${mIcon(b.icon, 20, !b.stroke)}</button>`).join('')}
