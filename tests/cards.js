@@ -180,7 +180,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   q(el, '.extra').click(); ok(calls.some((c) => c[1] === 'toggle' && c[2].entity_id === 'input_boolean.lego_light'), 'extra toggles');
   ok(w.location.hash !== '#dining-room', 'extra does not open pop-up');
   states['input_boolean.lego_light'] = S('input_boolean.lego_light', 'on', { friendly_name: 'Lego light' }); el.hass = hass();
-  ok(q(el, '.extra').getAttribute('aria-pressed') === 'true' && txt(el).includes('Lego light on · 65%'), 'extra on state: ' + txt(el).slice(-40));
+  ok(q(el, '.extra').getAttribute('aria-pressed') === 'true' && txt(el).includes('On · 65%') && !txt(el).includes('Lego light on'), 'extra on: the button shows it, the status stays the room’s: ' + txt(el).slice(-40));
 
   // in-place updates: same elements survive, so transitions can run; one action per tap
   {
