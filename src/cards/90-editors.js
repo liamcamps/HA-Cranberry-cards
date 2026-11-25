@@ -189,6 +189,19 @@
       }
     },
     {
+      tag: 'cranberry-heading-card', cls: CranberryHeadingCard, name: 'Cranberry heading',
+      description: 'Home Assistant\u2019s heading, hidden while every card under it is hidden.',
+      stub: () => ({ heading: 'Around the house', heading_style: 'title' }),
+      schema: [
+        { name: 'heading', selector: { text: {} } },
+        { name: 'heading_style', selector: { select: { mode: 'dropdown', options: [{ value: 'title', label: 'Title' }, { value: 'subtitle', label: 'Subtitle' }] } } },
+        { name: 'icon', selector: { icon: {} } },
+        { name: 'follows', selector: { number: { min: 1, max: 20, mode: 'box' } } }
+      ],
+      labels: { heading: 'Heading', heading_style: 'Style', icon: 'Icon', follows: 'Cards to watch' },
+      helpers: { follows: 'How many cards after it to watch. Leave empty for every card up to the next heading.' }
+    },
+    {
       tag: 'cranberry-people-card', cls: CranberryPeopleCard, name: 'Cranberry people',
       description: 'A title row with a round photo per person; "Away" or the zone next to the photo when they are not home.',
       stub: (ids) => ({ people: ids.filter((e) => e.startsWith('person.')).slice(0, 4) }),

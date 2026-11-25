@@ -536,7 +536,12 @@
     'Full, for a pop-up': 'Volledig, voor een pop-up',
     'Play favourites on': 'Favorieten afspelen op',
     'Full shows the cover, the song’s progress, the volume, source and sound mode, and your favourites (set in YAML: favourites).': 'Volledig toont de hoes, de voortgang van het nummer, het volume, de bron en geluidsmodus, en je favorieten (in YAML: favourites).',
-    'Optional. The player that plays a favourite, such as a Music Assistant or Spotify player. Leave empty to use the media player above.': 'Optioneel. De speler die een favoriet afspeelt, zoals een Music Assistant- of Spotify-speler. Laat leeg om de mediaspeler hierboven te gebruiken.'
+    'Optional. The player that plays a favourite, such as a Music Assistant or Spotify player. Leave empty to use the media player above.': 'Optioneel. De speler die een favoriet afspeelt, zoals een Music Assistant- of Spotify-speler. Laat leeg om de mediaspeler hierboven te gebruiken.',
+    'Heading': 'Kop',
+    'Style': 'Stijl',
+    'Subtitle': 'Ondertitel',
+    'Cards to watch': 'Kaarten om te volgen',
+    'How many cards after it to watch. Leave empty for every card up to the next heading.': 'Hoeveel kaarten erna het volgt. Laat leeg voor alle kaarten tot de volgende kop.',
   };
   window.CranberryI18n = { tr, isNl, trSchema, NL };
 

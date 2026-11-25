@@ -110,6 +110,14 @@ alerts: [binary_sensor.balcony_door]
 ```
 
 ```yaml
+# Home Assistant's heading, hidden while every card under it is (an idle washer, no bins tonight)
+type: custom:cranberry-heading-card
+heading: Around the house
+heading_style: title
+follows: 2                 # optional: watch only the next 2 cards, else all up to the next heading
+```
+
+```yaml
 type: custom:cranberry-car-card
 entity: input_select.parking_location
 layers_for: Garage
