@@ -528,7 +528,7 @@
     'Row': 'Rij',
     'Full, for a pop-up': 'Volledig, voor een pop-up',
     'Play favourites on': 'Favorieten afspelen op',
-    'Full shows the cover, the song’s progress, the volume, source and sound mode, and your favourites (set in YAML: favourites).': 'Volledig toont de hoes, de voortgang van het nummer, het volume, de bron en geluidsmodus, en je favorieten (in YAML: favourites).',
+    'Medium puts the cover beside the song and the controls, for a dashboard. Full shows the cover, the song’s progress, the volume, source and sound mode, and your favourites (set in YAML: favourites).': 'Middel zet de hoes naast het nummer en de knoppen, voor een dashboard. Volledig toont de hoes, de voortgang van het nummer, het volume, de bron en geluidsmodus, en je favorieten (in YAML: favourites).',
     'Optional. The player that plays a favourite, such as a Music Assistant or Spotify player. Leave empty to use the media player above.': 'Optioneel. De speler die een favoriet afspeelt, zoals een Music Assistant- of Spotify-speler. Laat leeg om de mediaspeler hierboven te gebruiken.',
     'Heading': 'Kop',
     'Style': 'Stijl',
@@ -549,6 +549,9 @@
     'Cooling a little to hold {target}.': 'Koelt een beetje om {target} vast te houden.',
     '{room} now. Cool in {eta}.': 'Nu {room}. Koel over {eta}.',
     '{room} now, cooling to {target}.': 'Nu {room}, koelt naar {target}.',
+    'Last played': 'Laatst gespeeld',
+    'Play again': 'Opnieuw afspelen',
+    'Medium, with the cover': 'Middel, met de hoes',
   };
   window.CranberryI18n = { tr, isNl, trSchema, NL };
 

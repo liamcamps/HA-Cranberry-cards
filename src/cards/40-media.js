@@ -27,7 +27,8 @@
   };
   const mIcon = (d, size, filled) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${filled ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="${filled ? 0 : 1.8}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"></path></svg>`;
   // tiles without a picture: the cards' fills, in turn
-  const FAV_FILLS = ['var(--cv-fill-ochre)', 'var(--cv-fill-h)', 'var(--cv-fill-c)', 'var(--cv-fill-q)', 'var(--cv-fill-o)'];
+  // not olive: the card itself turns olive while it plays
+  const FAV_FILLS = ['var(--cv-fill-ochre)', 'var(--cv-fill-h)', 'var(--cv-fill-c)', 'var(--cv-fill-q)'];
   const OFF_STATES = ['off', 'unavailable', 'unknown', 'standby'];
   const mmss = (s) => { s = Math.max(0, Math.round(s || 0)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };
 
@@ -92,6 +93,28 @@
       .off .ic { width: 56px; height: 56px; border-radius: 16px; background: var(--cc-q-t); color: var(--cc-q); }
       .off .txt b { font-size: 18px; }
       .on { height: 44px; padding: 0 16px 0 12px; border-radius: var(--cc-r-ctl, 12px); background: var(--cv-fill-o); color: var(--cc-on); display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+      .full.idle .cover, .medium.idle .mcover, .medium.na .mcover { background-color: var(--cc-q-t); color: var(--cc-q); }
+      .full.idle .what small, .medium.idle .what small { color: var(--cc-muted); opacity: 1; }
+      .offact { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      .again { height: 44px; padding: 0 16px 0 12px; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-q-t); display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+
+      /* ---- medium, for a dashboard ---- */
+      ha-card.medium { padding: 12px; }
+      .mrow { display: flex; gap: 14px; align-items: stretch; }
+      .mcover { width: 128px; height: 128px; flex-shrink: 0; border-radius: 16px; background: ${alpha('--cc-on', 14)} center / cover no-repeat; display: flex; align-items: center; justify-content: center; color: ${alpha('--cc-on', 70)}; }
+      .mbody { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; padding: 2px 0; }
+      .medium .what b { font-size: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .mpos { height: 4px; border-radius: 2px; background: ${alpha('--cc-on', 22)}; position: relative; overflow: hidden; }
+      .mpos i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--cc-on); border-radius: 2px; }
+      .mctl { display: flex; align-items: center; gap: 6px; }
+      .mctl button { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: ${alpha('--cc-on', 16)}; flex-shrink: 0; }
+      .mctl button.big { width: 48px; height: 48px; background: var(--cc-on); color: var(--cv-fill-o); }
+      .mctl button.soft { background: none; opacity: .8; }
+      .mctl button.soft[aria-pressed="true"] { opacity: 1; }
+      .mtime { flex: 1; text-align: right; font-size: 12px; opacity: .8; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .medium:not(.playing) .mctl button:not(.big) { background: var(--cc-q-t); }
+      .medium:not(.playing) .mctl button.big { background: var(--cv-fill-o); color: var(--cc-on); }
+      @container (max-width: 360px) { .mcover { width: 96px; height: 96px; } .mrow { gap: 12px; } .medium .what b { font-size: 19px; } .mtime { display: none; } }
       .favs { display: flex; flex-direction: column; gap: 8px; }
       ha-card.playing .favs { padding-top: 12px; border-top: 1px solid ${alpha('--cc-on', 16)}; }
       .favs .k { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .75; }
@@ -108,7 +131,7 @@
     disconnectedCallback() { clearInterval(this._tick); this._tick = null; }
     // while a song plays in the full size, the time moves on every second
     _tickOn() {
-      const want = this.isConnected && this._config && this._config.size === 'full';
+      const want = this.isConnected && this._config && (this._config.size === 'full' || this._config.size === 'medium');
       if (want && !this._tick) this._tick = setInterval(() => { if (this._m && this._m.ticking) { this._last = ''; this._update(); } }, 1000);
       if (!want && this._tick) { clearInterval(this._tick); this._tick = null; }
     }
@@ -160,6 +183,7 @@
       const room = c.name || (st ? this.nm(c.entity) : c.entity);
       this._remember(st);
       if (c.size === 'full') return this._full(st, room);
+      if (c.size === 'medium') return Object.assign(this._full(st, room), { medium: true });
       if (!st || OFF_STATES.indexOf(st.state) >= 0 || (!st.attributes.media_title && st.state === 'idle')) {
         const na = this.isNa(st);
         if (na || !st) return { title: room, sub: this.t(na ? 'Not responding' : 'Nothing playing'), na, playing: false, art: '', ctl: [] };
@@ -204,8 +228,8 @@
       const a = st.attributes, sf = Number(a.supported_features) || 0;
       const favs = this._favs(a);
       if (OFF_STATES.indexOf(st.state) >= 0) {
-        const last = this._recall();
-        return { full: true, off: true, room, last: this._lastText(last) || a.source || a.app_name || '', canOn: !!(sf & MP.TURN_ON), favs, menu: null };
+        const last = this._recall(), again = (sf & MP.PLAY_MEDIA) ? this._resume(last) : null;
+        return { full: true, off: true, room, lastItem: last, again: !!again, canOn: !!(sf & MP.TURN_ON), favs, menu: null };
       }
       const playing = st.state === 'playing';
       const art = c.show_artwork === false ? '' : (a.entity_picture_local || a.entity_picture || '');
@@ -239,7 +263,37 @@
       };
     }
 
+    // off: turn it on, or start what played last again
+    _offButtons(m) {
+      if (!m.canOn && !m.again) return '';
+      return `<div class="offact">${m.canOn ? `<button type="button" class="on" data-act="turn_on">${mIcon(MI.power, 16)}${esc(this.t('Turn on'))}</button>` : ''}${m.again ? `<button type="button" class="again" data-act="again" aria-label="${esc(this.t('Play {name}', { name: m.lastItem.title }))}">${mIcon(MI.play, 16, true)}${esc(this.t('Play again'))}</button>` : ''}</div>`;
+    }
+    // medium: the cover beside what's playing and the controls, for a dashboard
+    _medium(m) {
+      if (m.na) return `<ha-card class="medium na"><div class="mrow"><div class="mcover">${mIcon(MI.music, 40)}</div><div class="mbody"><div class="what"><small>${esc(m.room)}</small><b>${esc(m.text)}</b></div></div></div></ha-card>`;
+      if (m.off) {
+        const l = m.lastItem;
+        return `<ha-card class="medium idle"><div class="mrow"><div class="mcover">${mIcon(MI.music, 40)}</div><div class="mbody">
+          <button type="button" class="what tap" data-act="more"><small>${esc(l ? this.t('Off') + ' · ' + this.t('Last played') : m.room + ' · ' + this.t('Off'))}</small><b>${esc(l ? l.title : this.t('Nothing playing'))}</b>${l && l.artist ? `<span>${esc(l.artist)}</span>` : ''}</button>
+          ${this._offButtons(m)}</div></div></ha-card>`;
+      }
+      const on = m.playing || m.pos || m.title;
+      const pos = m.pos ? `<div class="mpos"><i style="width:${m.pos.pct}%"></i></div>` : '';
+      const ctl = `<div class="mctl">
+          ${m.prev ? `<button type="button" data-act="media_previous_track" aria-label="${esc(this.t('Previous track'))}">${mIcon(MI.prev, 20, true)}</button>` : ''}
+          <button type="button" class="big" data-act="${m.pause || 'media_play'}" aria-label="${esc(this.t(m.pause ? (m.pause === 'media_pause' ? 'Pause' : 'Stop') : 'Play'))}">${mIcon(m.pause ? (m.pause === 'media_pause' ? MI.pause : MI.stop) : MI.play, 24, true)}</button>
+          ${m.next ? `<button type="button" data-act="media_next_track" aria-label="${esc(this.t('Next track'))}">${mIcon(MI.next, 20, true)}</button>` : ''}
+          ${m.pos ? `<span class="mtime">${m.pos.at} / ${m.pos.left.replace('−', '')}</span>` : '<span class="mtime"></span>'}
+          ${m.canMute ? `<button type="button" class="soft" data-act="mute" aria-pressed="${m.muted}" aria-label="${esc(this.t(m.muted ? 'Unmute' : 'Mute'))}">${mIcon(m.muted ? MI.mute : MI.volume, 18)}</button>` : ''}
+        </div>`;
+      return `<ha-card class="medium${on ? ' playing' : ''}"><div class="mrow">
+        <div class="mcover" style="${m.art ? `background-image:url('${esc(m.art)}')` : ''}" role="img" aria-label="${esc(m.title)}">${m.art ? '' : mIcon(m.tv ? MI.tv : MI.music, 40)}</div>
+        <div class="mbody"><button type="button" class="what tap" data-act="more"><small>${esc(m.label)}</small><b>${esc(m.title)}</b>${m.artist ? `<span>${esc(m.artist)}</span>` : ''}</button>${pos}${ctl}</div>
+      </div></ha-card>`;
+    }
+
     view(m) {
+      if (m.medium) return this._medium(m);
       if (!m.full) {
         return `<ha-card class="${m.playing ? 'playing' : ''} ${m.na ? 'na' : ''}"><div class="row">
           <div class="art" style="${m.art ? `background-image:url('${esc(m.art)}')` : ''}">${m.art ? '' : mIcon(MI.music, 20)}</div>
@@ -250,7 +304,10 @@
       if (m.na) return `<ha-card class="full na"><div class="off"><span class="ic">${mIcon(MI.music, 24)}</span><span class="txt"><b>${esc(m.room)}</b><span class="state">${esc(m.text)}</span></span></div></ha-card>`;
       const favs = m.favs.length ? `<div class="favs">${m.favs.map((r) => `<span class="k">${esc(r.k)}</span><div class="favrow scrollrow">${r.items.map((f) => `<button type="button" class="fav" data-act="fav" data-arg="${f.i}" aria-label="${esc(this.t('Play {name}', { name: f.name }))}"><span class="t" style="${f.image ? `background-image:url('${esc(f.image)}')` : `background-color:${f.fill}`}">${f.image ? '' : mIcon(f.radio ? MI.radio : MI.list, 22)}${f.now ? `<em>${esc(this.t('Playing'))}</em>` : ''}</span><span class="n">${esc(f.name)}</span></button>`).join('')}</div>`).join('')}</div>` : '';
       if (m.off) {
-        return `<ha-card class="full"><div class="off"><span class="ic">${mIcon(MI.music, 24)}</span><span class="txt tap" role="button" tabindex="0" data-act="details"><b>${esc(this.t('Off'))}</b>${m.last ? `<span class="state">${esc(this.t('Last played: {what}', { what: m.last }))}</span>` : ''}</span>${m.canOn ? `<button type="button" class="on" data-act="turn_on">${mIcon(MI.power, 16)}${esc(this.t('Turn on'))}</button>` : ''}</div>${favs}</ha-card>`;
+        const l = m.lastItem;
+        return `<ha-card class="full idle"><div class="cover" role="img" aria-label="${esc(this.t('Off'))}">${mIcon(MI.music, 56)}</div>
+          <button type="button" class="what tap" data-act="details"><small>${esc(l ? this.t('Off') + ' · ' + this.t('Last played') : this.t('Off'))}</small><b>${esc(l ? l.title : m.room)}</b>${l && l.artist ? `<span>${esc(l.artist)}</span>` : ''}</button>
+          ${this._offButtons(m)}${favs}</ha-card>`;
       }
       const cover = `<div class="cover" style="${m.art ? `background-image:url('${esc(m.art)}')` : ''}" role="img" aria-label="${esc(m.title)}">${m.art ? '' : mIcon(m.tv ? MI.tv : MI.music, 56)}</div>`;
       const pos = m.pos ? `<div class="pos"><div class="bar${m.pos.seek ? ' seek' : ''}" data-bar="seek" role="slider" aria-label="${esc(this.t('Position'))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(m.pos.pct)}"><i style="width:${m.pos.pct}%"></i><b style="left:${m.pos.pct}%"></b></div><div class="times"><span>${m.pos.at}</span><span>${m.pos.left}</span></div></div>` : '';

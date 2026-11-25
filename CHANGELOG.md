@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.43.0 (2026-11-25)
+
+- **Music card, medium size** (`size: medium`), for a dashboard: the cover beside the song, a thin progress line, previous, play/pause and next, the time and mute. Olive while it plays. Off, it keeps its size: what played last, Turn on, and Play again when it can start it again.
+- **Full size, off:** the same layout as when it's on, with what played last under the cover, Turn on and Play again, then your favourites, instead of a single row.
+- Favourite tiles without a picture no longer use olive, which disappeared on the olive card while playing.
+
 ## 2.42.0 (2026-11-25)
 
 - **Music row, when nothing plays:** it says what played last ("Last played: Harvest Moon · Neil Young") and has an on button, plus a play button that starts it again when it can (when it was one of your favourites, or has its own address). The card remembers the last song in the browser while it plays, and otherwise looks it up in the player's history of the last two days. The full size shows the song too, instead of only the source.

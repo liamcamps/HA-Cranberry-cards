@@ -76,8 +76,8 @@ ok(calls[0][1] === 'repeat_set' && calls[0][2].repeat === 'all' && calls[1][1] =
 (async () => {
   calls.length = 0;
   el.hass = hass(player('off', { source: 'Spotify' }));
-  ok($('.off') && $('.off b').textContent === 'Off' && $('.off .state').textContent === 'Last played: Harvest Moon · Neil Young' && $('button.on'), 'off: last played and Turn on');
-  ok($('.favs') && !$('.cover') && !$('.chips'), 'off: favourites, no player');
+  ok($('ha-card.full.idle') && !$('ha-card.playing') && $('.cover') && $('.what small').textContent === 'Off · Last played' && $('.what b').textContent === 'Harvest Moon' && $('.what span').textContent === 'Neil Young', 'off: the full layout, with what played last: ' + $('.what').textContent);
+  ok($('button.on') && $('button.again') && $('.favs') && !$('.chips') && !$('.vol') && !$('.controls'), 'off: Turn on, Play again, favourites; no volume or transport');
   $$('.fav')[2].click();
   await new Promise((r) => setTimeout(r, 10));
   ok(calls[0][1] === 'turn_on' && calls[1][1] === 'select_source' && calls[1][2].source === 'Network' && calls[2][1] === 'play_media' && calls[2][2].entity_id === 'media_player.ma_living' && calls[2][2].media_content_id === 'https://radio/2' && calls[2][2].media_content_type === 'music', 'radio: on, source, play: ' + JSON.stringify(calls));
@@ -86,6 +86,14 @@ ok(calls[0][1] === 'repeat_set' && calls[0][2].repeat === 'all' && calls[1][1] =
   el.hass = hass(player('off', {}));
   $('.fav').click(); await new Promise((r) => setTimeout(r, 10));
   ok(calls.length === 1 && calls[0][0] === 'script' && calls[0][2].entity_id === 'script.morning_radio', 'or any action, such as a script');
+  // medium, for a dashboard
+  const md = w.document.createElement('cranberry-media-card'); w.document.body.appendChild(md);
+  md.setConfig({ entity: 'media_player.denon', size: 'medium', popup: '#music' });
+  md.hass = hass(player('playing', { media_title: 'Harvest Moon', media_artist: 'Neil Young', app_name: 'Spotify', media_duration: 303, media_position: 112, media_position_updated_at: new Date().toISOString(), entity_picture: '/api/c.jpg' }));
+  const mq = (x) => md.shadowRoot.querySelector(x);
+  ok(mq('ha-card.medium.playing') && mq('.mcover').getAttribute('style').includes('/api/c.jpg') && mq('.what b').textContent === 'Harvest Moon' && mq('.mpos i') && mq('.mctl .big[data-act="media_pause"]'), 'medium: cover, song, progress, pause');
+  md.hass = hass(player('off', {}));
+  ok(mq('ha-card.medium.idle') && mq('.what b').textContent === 'Harvest Moon' && mq('.what small').textContent === 'Off · Last played' && mq('button.on'), 'medium off: what played last and Turn on: ' + mq('.what').textContent);
   // TV: no cover, a TV icon
   el.setConfig({ entity: 'media_player.denon', size: 'full' });
   el.hass = hass(player('on', { source: 'TV', volume_level: 0.3 }));
