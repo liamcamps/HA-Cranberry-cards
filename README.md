@@ -12,7 +12,7 @@ so HACS can install and update it too.
 | Home: clock, coming up, what needs attention, lights on (tap for a menu), weather details and the coming hours | `custom:cranberry-home-card` |
 | Status: heating, who is home, a lock or an alarm | `custom:cranberry-status-card` |
 | Room: lights on, brightness, temperature, pop-up | `custom:cranberry-room-card` |
-| Scene: one button that runs a scene | `custom:cranberry-scene-card` |
+| Scene: one button that runs a scene; with Stateful Scenes, cranberry while it's on | `custom:cranberry-scene-card` |
 | Music: what is playing, with controls | `custom:cranberry-media-card` |
 | Washing machine (localthings): time left, phase, done | `custom:cranberry-washer-card` |
 | Waste collection (Afvalwijzer): which bin goes out next | `custom:cranberry-waste-card` |

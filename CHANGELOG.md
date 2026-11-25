@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.46.0 (2026-11-25)
+
+- **Scene buttons follow Stateful Scenes.** With the [Stateful Scenes](https://github.com/hugobloem/stateful_scenes) integration (HACS), every scene gets a switch that is on while the scene is. The scene card and the scene pills find that switch by themselves (`switch.<scene>_stateful_scene`, or by its name after a rename), are cranberry while it's on, and a tap turns it on. Name it yourself with `stateful: switch.…`, or turn this off with `stateful: false`. Without the integration they stay plain buttons.
+
 ## 2.45.0 (2026-11-25)
 
 - **Scene buttons no longer show an "active" scene.** Home Assistant doesn't know which scene is on, and every way of guessing went wrong sometimes, so the scene card and the scene pills are now plain buttons: tap and the scene runs, and the button turns cranberry for a moment so you see it went through. The options `compare`, `active_entity`, `active_state` and `active_when` are gone; they're ignored if still in your YAML.

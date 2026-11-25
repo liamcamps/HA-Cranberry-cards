@@ -545,6 +545,8 @@
     'Play again': 'Opnieuw afspelen',
     'Medium, with the cover': 'Middel, met de hoes',
     'A scene or a script. Tapping runs it.': 'Een scène of een script. Tikken start hem.',
+    'Stateful Scenes switch': 'Stateful Scenes-schakelaar',
+    'Optional. With the Stateful Scenes integration the button is cranberry while this switch is on. Found by itself when it is named after the scene.': 'Optioneel. Met de Stateful Scenes-integratie is de knop cranberry zolang deze schakelaar aan is. Wordt vanzelf gevonden als hij naar de scène is genoemd.',
   };
   window.CranberryI18n = { tr, isNl, trSchema, NL };
 

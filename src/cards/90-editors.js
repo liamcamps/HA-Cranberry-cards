@@ -92,14 +92,15 @@
     },
     {
       tag: 'cranberry-scene-card', cls: CranberrySceneCard, name: 'Cranberry scene',
-      description: 'One scene button: tap to run the scene.',
+      description: 'One scene button: tap to run the scene. With Stateful Scenes, cranberry while the scene is on.',
       stub: (ids) => ({ entity: ids.find((e) => e.startsWith('scene.')) || 'scene.evening' }),
       schema: [
         { name: 'entity', required: true, selector: { entity: { domain: ['scene', 'script'] } } },
         { name: 'name', selector: { text: {} } }, { name: 'icon', selector: { icon: {} } },
+        { name: 'stateful', selector: { entity: { domain: 'switch' } } },
       ],
-      labels: { entity: 'Scene', name: 'Name', icon: 'Icon' },
-      helpers: { entity: 'A scene or a script. Tapping runs it.' }
+      labels: { entity: 'Scene', name: 'Name', icon: 'Icon', stateful: 'Stateful Scenes switch' },
+      helpers: { entity: 'A scene or a script. Tapping runs it.', stateful: 'Optional. With the Stateful Scenes integration the button is cranberry while this switch is on. Found by itself when it is named after the scene.' }
     },
     {
       tag: 'cranberry-media-card', cls: CranberryMediaCard, name: 'Cranberry music',
