@@ -68,7 +68,6 @@
         const bs = this.st(c.button_entity);
         const on = !!bs && ['on', 'open', 'playing', 'home'].indexOf(bs.state) >= 0;
         extra = { on, icon: c.button_icon || (bs && bs.attributes.icon) || ccIcon('bulb', 'mdi:toggle-switch-outline'), name: c.button_name || (bs ? this.nm(c.button_entity) : c.button_entity), na: !bs || bs.state === 'unavailable' };
-        if (on) state = this.t('{name} on', { name: extra.name });
       }
       // doors, windows and locks that make the room need you
       const PROBLEM = ['on', 'open', 'opening', 'unlocked', 'unlocking', 'jammed', 'triggered', 'problem'];

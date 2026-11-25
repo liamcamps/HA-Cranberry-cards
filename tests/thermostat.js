@@ -34,7 +34,7 @@ const say = () => $('.say').textContent;
   await wait(20);
   ok(/var\(--cv-fill-o\)/.test(bg()), 'heating is olive');
   ok($('.one .lbl').textContent === 'Heat to' && $('.one .big').textContent === '21°', 'big target');
-  ok(/^Heating from 19\.4°\. Warm in about 5[0-9] minutes\.$/.test(say()), 'sentence with eta from history: ' + say());
+  ok(/^It’s 19\.4° now, heating to 21°\. Warm in about 5[0-9] minutes\.$/.test(say()), 'sentence with eta from history: ' + say());
   ok($('.meta').textContent === '48% humidity', 'humidity meta');
   ok($('.top .chip').textContent.trim() === 'Comfort', 'preset chip');
   ok($$('.mode').map((b) => b.textContent).join() === 'Off,Heat,Auto' && $('.mode[aria-pressed="true"]').textContent === 'Heat', 'modes');
@@ -55,7 +55,7 @@ const say = () => $('.say').textContent;
 
   // cooling with fan and swing chips; fan menu
   card.hass = hass(climate('cool', { hvac_modes: ['off', 'heat', 'cool', 'heat_cool', 'auto', 'dry', 'fan_only'], supported_features: F.TARGET | F.FAN | F.SWING, temperature: 23, current_temperature: 25.6, hvac_action: 'cooling', fan_mode: 'auto', fan_modes: ['auto', 'low', 'high'], swing_mode: 'vertical', swing_modes: ['off', 'vertical'] }));
-  ok(/var\(--cv-fill-h\)/.test(bg()) && /^Cooling from 25\.6°\./.test(say()), 'cooling slate');
+  ok(/var\(--cv-fill-h\)/.test(bg()) && /^It’s 25\.6° now, cooling to 23°/.test(say()), 'cooling slate');
   ok($$('.chips .chip').map((x) => x.textContent.trim()).join('|') === 'FanAuto|SwingVertical', 'fan and swing chips');
   ok($$('.mode').length === 7 && $$('.mode')[3].textContent === 'Heat/cool', 'all seven modes');
   $$('.chips .chip')[0].click(); $$('.opt')[2].click();
@@ -105,12 +105,14 @@ const say = () => $('.say').textContent;
 
   // auto: colour follows the device
   card.hass = hass(climate('auto', { hvac_modes: ['off', 'heat', 'auto'], supported_features: F.TARGET, temperature: 21, current_temperature: 19.6, hvac_action: 'heating' }));
-  ok(/var\(--cv-fill-o\)/.test(bg()) && $('.one .lbl').textContent === 'Around' && /auto keeps it around 21°/.test(say()), 'auto: ' + say());
+  ok(/var\(--cv-fill-o\)/.test(bg()) && $('.one .lbl').textContent === 'Around' && /^It’s 19\.6° now, heating to 21°/.test(say()), 'auto: ' + say());
+  card.hass = hass(climate('auto', { hvac_modes: ['off', 'heat', 'auto'], supported_features: F.TARGET, temperature: 21, current_temperature: 21, hvac_action: 'heating' }));
+  ok(say() === 'It’s 21°, so it’s heating a little to hold 21°.', 'at the setpoint: ' + say());
 
   // options: hide modes, limit modes, no eta
   card.setConfig({ entity: 'climate.living_room', show_eta: false, modes: ['heat', 'off'] });
   card.hass = hass(climate('heat', { supported_features: F.TARGET, temperature: 21, current_temperature: 19.4, hvac_action: 'heating' }));
-  ok(say() === 'Heating from 19.4°.', 'no eta when switched off');
+  ok(say() === 'It’s 19.4° now, heating to 21°.', 'no eta when switched off: ' + say());
   ok($$('.mode').map((b) => b.textContent).join() === 'Heat,Off', 'chosen modes, in that order');
   card.setConfig({ entity: 'climate.living_room', show_modes: false }); card.hass = hass(climate('heat', { temperature: 21, current_temperature: 21 }));
   ok(!$('.modes'), 'modes hidden');
@@ -121,7 +123,7 @@ const say = () => $('.say').textContent;
   card.hass = hass(climate('heat', { supported_features: F.TARGET | F.PRESET | F.FAN, temperature: 21, current_temperature: 19.4, hvac_action: 'heating', preset_mode: 'eco', preset_modes: ['none', 'eco'], fan_mode: 'auto', fan_modes: ['auto', 'high'] }));
   ok($('ha-card').classList.contains('compact') && /var\(--cv-fill-o\)/.test(bg()), 'compact heating olive');
   ok($('.line .lbl').textContent === 'Heat to' && $('.line .big').textContent === '21°' && $('.line .big').style.fontSize === '48px', 'compact setpoint');
-  ok(/^Heating from 19\.4°\. Warm in ~[0-9]+ min\.$/.test($('.short').textContent), 'compact sentence: ' + $('.short').textContent);
+  ok(/^19\.4° now\. Warm in ~[0-9]+ min\.$/.test($('.short').textContent), 'compact sentence: ' + $('.short').textContent);
   ok($('.tag').textContent === 'Eco' && !$('.modes') && !$('.chips') && !$('.say'), 'compact: preset tag, no modes, chips or long sentence');
   ok($$('.line .step').map((b) => b.getAttribute('aria-label')).join() === 'Lower,Raise', 'compact minus then plus');
   $$('.line .step')[1].click(); ok($('.line .big').textContent === '21.5°', 'compact plus');

@@ -217,7 +217,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   ok(ctl.join() === 'Previous track,Pause,Next track', 'controls: ' + ctl);
   el.shadowRoot.querySelectorAll('.ctl')[2].click(); ok(calls.some((c) => c[1] === 'media_next_track'), 'next');
   states['media_player.living_room'] = S('media_player.living_room', 'off', {}); el.hass = hass();
-  ok(txt(el).includes('Nothing playing') && el.shadowRoot.querySelectorAll('.ctl').length === 0, 'off state');
+  ok(txt(el).includes('Last played: Harvest Moon · Neil Young'), 'off: what played last: ' + txt(el));
 
   // editors
   w.customElements.define('ha-form', class extends w.HTMLElement {});

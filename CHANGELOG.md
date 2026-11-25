@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.42.0 (2026-11-25)
+
+- **Music row, when nothing plays:** it says what played last ("Last played: Harvest Moon · Neil Young") and has an on button, plus a play button that starts it again when it can (when it was one of your favourites, or has its own address). The card remembers the last song in the browser while it plays, and otherwise looks it up in the player's history of the last two days. The full size shows the song too, instead of only the source.
+- **Thermostat sentence:** says where the room is and where it's going: "It's 19.4° now, heating to 21°. Warm in about 50 minutes.", or on the compact card "19.4° now. Warm in ~50 min.". When the room is already at the setpoint: "Heating a little to hold 21°." instead of "Heating from 21°".
+- **Room card:** the extra button (a lava lamp, say) no longer replaces the room's status line; the button itself shows it's on.
+
 ## 2.41.1 (2026-11-25)
 
 - **Cranberry heading** now finds the cards under it in a sections view, where each card sits in a grid cell of its own. In 2.41.0 it looked for them one level too low, found none, and so stayed visible.

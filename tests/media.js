@@ -4,7 +4,7 @@ const fs = require('fs');
 const code = fs.readFileSync(__dirname + '/../dist/cranberry-cards.js', 'utf8');
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) pass++; else { fail++; console.log('FAIL', m); } };
-const dom = new JSDOM('<!doctype html><body></body>', { runScripts: 'outside-only', pretendToBeVisual: true });
+const dom = new JSDOM('<!doctype html><body></body>', { url: 'https://ha.local/', runScripts: 'outside-only', pretendToBeVisual: true });
 const w = dom.window; w.console.info = () => {}; w.eval(code);
 const calls = [];
 const F = 1 | 2 | 4 | 8 | 16 | 32 | 128 | 256 | 512 | 2048 | 16384 | 32768 | 65536 | 262144;
@@ -41,11 +41,42 @@ calls.length = 0;
 $('.controls [data-act="repeat"]').click(); $('.controls [data-act="shuffle"]').click(); $('.vbtn').click();
 ok(calls[0][1] === 'repeat_set' && calls[0][2].repeat === 'all' && calls[1][1] === 'shuffle_set' && calls[1][2].shuffle === true && calls[2][1] === 'volume_mute' && calls[2][2].is_volume_muted === true, 'repeat, shuffle, mute: ' + JSON.stringify(calls));
 
+// the row: what played last, and a way back in
+{
+  const r = w.document.createElement('cranberry-media-card'); w.document.body.appendChild(r);
+  r.setConfig({ entity: 'media_player.denon', favourites });
+  const q = (x) => r.shadowRoot.querySelector(x);
+  w.localStorage.clear();
+  r.hass = hass(player('playing', { media_title: 'Harvest Moon', media_artist: 'Neil Young', media_content_id: 'spotify:track:9', media_content_type: 'music', media_playlist: 'Sunday morning', source: 'Spotify' }));
+  r.hass = hass(player('off', {}));
+  ok(q('.state').textContent === 'Last played: Harvest Moon · Neil Young', 'row off: last played: ' + q('.state').textContent);
+  ok(q('[data-act="turn_on"]') && q('[data-act="again"].main'), 'row off: an on button and play-again');
+  ok(JSON.parse(w.localStorage.getItem('cranberry-media-last:media_player.denon')).title === 'Harvest Moon', 'remembered in this browser');
+  calls.length = 0;
+  q('[data-act="turn_on"]').click();
+  ok(calls[0][1] === 'turn_on', 'the on button turns it on');
+  // another browser: nothing stored, so it asks the history
+  const r2 = w.document.createElement('cranberry-media-card'); w.document.body.appendChild(r2);
+  r2.setConfig({ entity: 'media_player.denon' });
+  w.localStorage.clear();
+  let asked = '';
+  const h2 = hass(player('off', {}));
+  h2.callApi = (m, p) => { asked = p; return Promise.resolve([[{ state: 'playing', attributes: { media_title: 'Ocean', media_artist: 'Lorde' } }, { state: 'off', attributes: {} }]]); };
+  r2.hass = h2;
+  const q2 = (x) => r2.shadowRoot.querySelector(x);
+  ok(/^history\/period\/.+filter_entity_id=media_player\.denon/.test(asked), 'asks the history: ' + asked);
+  ok(q2('.state').textContent === 'Off' && q2('[data-act="turn_on"].main') && !q2('[data-act="again"]'), 'before the history answers: Off and an on button');
+  setTimeout(() => {
+    ok(q2('.state').textContent === 'Last played: Ocean · Lorde', 'from the history: ' + q2('.state').textContent);
+    ok(!q2('[data-act="again"]'), 'no play-again when it cannot be started again');
+  }, 20);
+}
+
 // a favourite while off: turn on, switch source, then play on the favourites player
 (async () => {
   calls.length = 0;
   el.hass = hass(player('off', { source: 'Spotify' }));
-  ok($('.off') && $('.off b').textContent === 'Off' && $('.off .state').textContent === 'Last played: Spotify' && $('button.on'), 'off: last played and Turn on');
+  ok($('.off') && $('.off b').textContent === 'Off' && $('.off .state').textContent === 'Last played: Harvest Moon · Neil Young' && $('button.on'), 'off: last played and Turn on');
   ok($('.favs') && !$('.cover') && !$('.chips'), 'off: favourites, no player');
   $$('.fav')[2].click();
   await new Promise((r) => setTimeout(r, 10));

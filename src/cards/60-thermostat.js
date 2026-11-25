@@ -200,6 +200,8 @@
       // one sentence about what is going on
       const eta = (to) => this._eta(action, cur, to);
       const preset = a.preset_mode && !['none', 'None', 'comfort', 'home'].includes(a.preset_mode) && !na && mode !== 'off' ? this._attr(st, 'preset_mode', a.preset_mode) : '';
+      // the room already shows the setpoint: it's only topping up to stay there
+      const held = room && target != null && room === deg(target);
       const T = (text, vars) => this.t(text, Object.assign({ room, target: target != null ? deg(target) : '', hum, humT }, vars || {}));
       let s;
       if (na) s = T('The thermostat isn’t responding. Check its power or connection.');
@@ -209,11 +211,11 @@
         : T('{room} now: comfortable, so it’s resting.');
       else if (mode === 'dry') s = T(hum == null ? 'Drying the air.' : humT != null ? 'Drying the air: {hum}% now, down to {humT}%.' : 'Drying the air: {hum}% now.');
       else if (mode === 'fan_only') s = T(room ? 'Just moving air. It’s {room} in the room.' : 'Just moving air.');
-      else if (action === 'heating') s = T(target != null && eta(target) ? 'Heating from {room}. Warm in about {eta}.' : 'Heating from {room}.', { eta: target != null && eta(target) });
-      else if (action === 'cooling') s = T(target != null && eta(target) ? 'Cooling from {room}. Cool in about {eta}.' : 'Cooling from {room}.', { eta: target != null && eta(target) });
+      else if ((action === 'heating' || action === 'cooling') && (target == null || !room)) s = T(action === 'heating' ? 'Heating.' : 'Cooling.');
+      else if (action === 'heating') s = T(held ? 'It’s {room}, so it’s heating a little to hold {target}.' : eta(target) ? 'It’s {room} now, heating to {target}. Warm in about {eta}.' : 'It’s {room} now, heating to {target}.', { eta: eta(target) });
+      else if (action === 'cooling') s = T(held ? 'It’s {room}, so it’s cooling a little to hold {target}.' : eta(target) ? 'It’s {room} now, cooling to {target}. Cool in about {eta}.' : 'It’s {room} now, cooling to {target}.', { eta: eta(target) });
       else if (target != null && mode !== 'auto') s = T(room ? 'Holding at {target}. It’s {room} now.' : 'Holding at {target}.');
       else s = T(!room ? 'Resting.' : mode === 'auto' ? 'It’s {room}. Auto is keeping it there.' : 'It’s {room}. Resting.');
-      if (mode === 'auto' && (action === 'heating' || action === 'cooling') && target != null) s = T('{s}; auto keeps it around {target}.', { s: s.replace(/\.$/, '') });
       if (preset) s = preset + ': ' + s.charAt(0).toLowerCase() + s.slice(1);
       m.say = say(s);
       // the compact sentence: shorter, at most two lines
@@ -224,8 +226,9 @@
       else if (dual) t = T(action === 'heating' ? '{room} now. Heating up.' : action === 'cooling' ? '{room} now. Cooling down.' : '{room} now. Comfortable.');
       else if (mode === 'dry') t = T(hum != null ? '{hum}% now. Drying the air.' : 'Drying the air.');
       else if (mode === 'fan_only') t = T(room ? 'Moving air. {room} in the room.' : 'Moving air.');
-      else if (action === 'heating') t = T(target != null && etaS(target) ? 'Heating from {room}. Warm in {eta}.' : 'Heating from {room}.', { eta: target != null && etaS(target) });
-      else if (action === 'cooling') t = T(target != null && etaS(target) ? 'Cooling from {room}. Cool in {eta}.' : 'Cooling from {room}.', { eta: target != null && etaS(target) });
+      else if ((action === 'heating' || action === 'cooling') && (target == null || !room)) t = T(action === 'heating' ? 'Heating.' : 'Cooling.');
+      else if (action === 'heating') t = T(held ? 'Heating a little to hold {target}.' : etaS(target) ? '{room} now. Warm in {eta}.' : '{room} now, heating to {target}.', { eta: etaS(target) });
+      else if (action === 'cooling') t = T(held ? 'Cooling a little to hold {target}.' : etaS(target) ? '{room} now. Cool in {eta}.' : '{room} now, cooling to {target}.', { eta: etaS(target) });
       else if (mode === 'auto') t = T(room ? '{room} now. Auto is on it.' : 'Auto is on it.');
       else t = T(room ? 'Holding. It’s {room} now.' : 'Holding.');
       m.short = t;

@@ -112,12 +112,65 @@
       if (want && !this._tick) this._tick = setInterval(() => { if (this._m && this._m.ticking) { this._last = ''; this._update(); } }, 1000);
       if (!want && this._tick) { clearInterval(this._tick); this._tick = null; }
     }
+    // What played last. Home Assistant forgets the song once the player stops, so the card keeps it:
+    // in this browser while it plays, and otherwise from the player's history of the last two days.
+    _lastKey() { return 'cranberry-media-last:' + this._config.entity; }
+    _remember(st) {
+      const a = st && st.attributes;
+      if (!a || st.state !== 'playing' || !a.media_title) return;
+      const item = { title: a.media_title, artist: a.media_artist || a.media_album_artist || a.media_channel || '', id: a.media_content_id || '', type: a.media_content_type || '', source: a.source || '', playlist: a.media_playlist || '' };
+      if (this._lastItem && this._lastItem.title === item.title && this._lastItem.id === item.id) return;
+      this._lastItem = item;
+      try { localStorage.setItem(this._lastKey(), JSON.stringify(item)); } catch (e) { /* private mode */ }
+    }
+    _recall() {
+      if (this._lastItem) return this._lastItem;
+      try { const s = localStorage.getItem(this._lastKey()); if (s) return (this._lastItem = JSON.parse(s)); } catch (e) { /* none */ }
+      if (!this._askedHistory && this._hass && this._hass.callApi) {
+        this._askedHistory = true;
+        const id = this._config.entity, from = new Date(Date.now() - 2 * 864e5).toISOString();
+        this._hass.callApi('GET', `history/period/${from}?filter_entity_id=${encodeURIComponent(id)}&significant_changes_only=0`).then((res) => {
+          const list = (res && res[0]) || [];
+          for (let i = list.length - 1; i >= 0; i--) {
+            const a = list[i].attributes || {};
+            if (a.media_title) {
+              this._lastItem = { title: a.media_title, artist: a.media_artist || a.media_album_artist || a.media_channel || '', id: a.media_content_id || '', type: a.media_content_type || '', source: a.source || '', playlist: a.media_playlist || '' };
+              this._last = ''; this._update();
+              return;
+            }
+          }
+        }).catch(() => {});
+      }
+      return null;
+    }
+    // how to start the last item again: the favourite it came from, or its own address
+    _resume(last) {
+      if (!last) return null;
+      const favs = [].concat(this._config.favourites || []).filter((f) => f && f.name);
+      const keys = [last.id, last.playlist, last.title].filter(Boolean).map(String);
+      const fav = favs.find((f) => keys.indexOf(String(f.media_content_id || '')) >= 0 || keys.indexOf(f.name) >= 0);
+      if (fav) return fav;
+      if (last.id && /^[a-z][a-z0-9+.-]*:/i.test(last.id)) return { media_content_id: last.id, media_content_type: last.type || 'music', source: last.source };
+      return null;
+    }
+    _lastText(last) { return last ? [last.title, last.artist].filter(Boolean).join(' · ') : ''; }
+
     model() {
       const c = this._config, st = this.st(c.entity);
       const room = c.name || (st ? this.nm(c.entity) : c.entity);
+      this._remember(st);
       if (c.size === 'full') return this._full(st, room);
       if (!st || OFF_STATES.indexOf(st.state) >= 0 || (!st.attributes.media_title && st.state === 'idle')) {
-        return { title: room, sub: this.t(this.isNa(st) ? 'Not responding' : 'Nothing playing'), na: this.isNa(st), playing: false, art: '', ctl: [] };
+        const na = this.isNa(st);
+        if (na || !st) return { title: room, sub: this.t(na ? 'Not responding' : 'Nothing playing'), na, playing: false, art: '', ctl: [] };
+        const sf = Number(st.attributes.supported_features) || 0, off = OFF_STATES.indexOf(st.state) >= 0;
+        const last = this._recall(), again = (sf & MP.PLAY_MEDIA) ? this._resume(last) : null;
+        const ctl = [];
+        if (off && (sf & MP.TURN_ON)) ctl.push({ act: 'turn_on', icon: MI.power, aria: this.t('Turn on'), main: !again, stroke: true });
+        if (again) ctl.push({ act: 'again', icon: MI.play, aria: this.t('Play {name}', { name: last.title }), main: true });
+        else if (!off && (sf & MP.PLAY)) ctl.push({ act: 'media_play', icon: MI.play, aria: this.t('Play'), main: true });
+        const sub = last ? this.t('Last played: {what}', { what: this._lastText(last) }) : this.t(off ? 'Off' : 'Nothing playing');
+        return { title: room, sub, na: false, playing: false, art: '', ctl };
       }
       const a = st.attributes, sf = a.supported_features || 0;
       const playing = st.state === 'playing';
@@ -151,7 +204,8 @@
       const a = st.attributes, sf = Number(a.supported_features) || 0;
       const favs = this._favs(a);
       if (OFF_STATES.indexOf(st.state) >= 0) {
-        return { full: true, off: true, room, last: a.source || a.app_name || '', canOn: !!(sf & MP.TURN_ON), favs, menu: null };
+        const last = this._recall();
+        return { full: true, off: true, room, last: this._lastText(last) || a.source || a.app_name || '', canOn: !!(sf & MP.TURN_ON), favs, menu: null };
       }
       const playing = st.state === 'playing';
       const art = c.show_artwork === false ? '' : (a.entity_picture_local || a.entity_picture || '');
@@ -190,7 +244,7 @@
         return `<ha-card class="${m.playing ? 'playing' : ''} ${m.na ? 'na' : ''}"><div class="row">
           <div class="art" style="${m.art ? `background-image:url('${esc(m.art)}')` : ''}">${m.art ? '' : mIcon(MI.music, 20)}</div>
           <div class="txt tap" role="button" tabindex="0" data-act="more"><span class="name">${esc(m.title)}</span><span class="state">${esc(m.sub)}</span></div>
-          ${m.ctl.map((b) => `<button type="button" class="ctl ${b.main ? 'main' : ''}" data-act="${b.act}" aria-label="${b.aria}">${mIcon(b.icon, 20, true)}</button>`).join('')}
+          ${m.ctl.map((b) => `<button type="button" class="ctl ${b.main ? 'main' : ''}" data-act="${b.act}" aria-label="${esc(b.aria)}">${mIcon(b.icon, 20, !b.stroke)}</button>`).join('')}
         </div></ha-card>`;
       }
       if (m.na) return `<ha-card class="full na"><div class="off"><span class="ic">${mIcon(MI.music, 24)}</span><span class="txt"><b>${esc(m.room)}</b><span class="state">${esc(m.text)}</span></span></div></ha-card>`;
@@ -280,6 +334,7 @@
         this._menu = null; this._last = ''; this._update();
         return a === 'source' ? this.call('media_player', 'select_source', { entity_id: id, source: arg }) : this.call('media_player', 'select_sound_mode', { entity_id: id, sound_mode: arg });
       }
+      if (a === 'again') { const f = this._resume(this._recall()); return f && this._play(f); }
       if (a === 'fav') { const f = [].concat(c.favourites || []).filter((x) => x && x.name)[Number(arg)]; return f && this._play(f); }
       if (a === 'shuffle') return this.call('media_player', 'shuffle_set', { entity_id: id, shuffle: !(st && st.attributes.shuffle) });
       if (a === 'repeat') { const order = ['off', 'all', 'one'], cur = (st && st.attributes.repeat) || 'off'; return this.call('media_player', 'repeat_set', { entity_id: id, repeat: order[(order.indexOf(cur) + 1) % 3] }); }
