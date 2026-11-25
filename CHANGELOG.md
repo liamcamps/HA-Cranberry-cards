@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.44.0 (2026-11-25)
+
+- **Scenes show what's really on.** A scene card (and the scene pills) now reads what each scene sets and shows it as on while the lights are still that way: on or off, brightness and colour temperature or colour, with a little room for rounding. So a scene stays on after a lamp reports late, turns off as soon as someone dims a lamp by hand, and lights up when the lights were set that way without it. When two scenes both fit (all off, say), the one picked last wins. An unavailable lamp doesn't count against a scene.
+- Reading a scene's settings needs a scene made in the scene editor (or in `scenes.yaml` with an `id`) and a user who is an admin. Otherwise, and for scripts, it works as before: the scene picked last, as long as nothing it sets changed since. `active_when: last` keeps the old way for a card.
+
 ## 2.43.1 (2026-11-25)
 
 - **Music card, row and medium:** the whole card opens the pop-up (or the details), the cover included; only the buttons that control the music or the player do something else.

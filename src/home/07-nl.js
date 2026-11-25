@@ -552,6 +552,10 @@
     'Last played': 'Laatst gespeeld',
     'Play again': 'Opnieuw afspelen',
     'Medium, with the cover': 'Middel, met de hoes',
+    'The lights still match the scene': 'De lampen staan nog zoals de scène ze zette',
+    'It was picked last, and nothing changed since': 'Hij is als laatste gekozen en er is sindsdien niets veranderd',
+    'Show as on when': 'Toon als aan wanneer',
+    'Matching reads the scene’s settings, which needs an admin and a scene made in the editor; otherwise it falls back to the last one picked.': 'Vergelijken leest de instellingen van de scène; daarvoor is een beheerder en een scène uit de editor nodig. Anders telt de laatst gekozen scène.',
   };
   window.CranberryI18n = { tr, isNl, trSchema, NL };
 

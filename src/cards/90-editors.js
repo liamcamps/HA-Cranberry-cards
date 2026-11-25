@@ -98,14 +98,16 @@
         { name: 'entity', required: true, selector: { entity: { domain: ['scene', 'script'] } } },
         { name: 'name', selector: { text: {} } }, { name: 'icon', selector: { icon: {} } },
         { type: 'expandable', name: 'advanced', flatten: true, title: 'When is it active?', icon: 'mdi:help-circle-outline', schema: [
+          { name: 'active_when', selector: { select: { mode: 'dropdown', options: [{ value: 'match', label: 'The lights still match the scene' }, { value: 'last', label: 'It was picked last, and nothing changed since' }] } } },
           { name: 'compare', selector: { entity: { multiple: true, domain: ['scene', 'script'] } } },
           { name: 'active_entity', selector: { entity: {} } },
           { name: 'active_state', selector: { text: {} } }
         ] }
       ],
-      labels: { entity: 'Scene', name: 'Name', icon: 'Icon', compare: 'Compare with', active_entity: 'Active when this entity…', active_state: '…has this state' },
+      labels: { entity: 'Scene', name: 'Name', icon: 'Icon', active_when: 'Show as on when', compare: 'Compare with', active_entity: 'Active when this entity…', active_state: '…has this state' },
       helpers: {
         entity: 'Active while it was the last scene you picked and none of its lights changed since.',
+        active_when: 'Matching reads the scene’s settings, which needs an admin and a scene made in the editor; otherwise it falls back to the last one picked.',
         compare: 'Optional. Only these scenes count as “the last one picked”. Empty means all scenes.',
         active_entity: 'Optional. Use a helper instead, for example an input_select with the scene name.',
         active_state: 'Defaults to on, or the scene name for a dropdown helper.'
