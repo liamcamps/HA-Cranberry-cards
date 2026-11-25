@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.45.0 (2026-11-25)
+
+- **Scene buttons no longer show an "active" scene.** Home Assistant doesn't know which scene is on, and every way of guessing went wrong sometimes, so the scene card and the scene pills are now plain buttons: tap and the scene runs, and the button turns cranberry for a moment so you see it went through. The options `compare`, `active_entity`, `active_state` and `active_when` are gone; they're ignored if still in your YAML.
+
 ## 2.44.0 (2026-11-25)
 
 - **Scenes show what's really on.** A scene card (and the scene pills) now reads what each scene sets and shows it as on while the lights are still that way: on or off, brightness and colour temperature or colour, with a little room for rounding. So a scene stays on after a lamp reports late, turns off as soon as someone dims a lamp by hand, and lights up when the lights were set that way without it. When two scenes both fit (all off, say), the one picked last wins. An unavailable lamp doesn't count against a scene.

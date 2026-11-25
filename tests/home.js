@@ -416,9 +416,10 @@ const wait = () => new Promise((r) => setTimeout(r, 10));
     el.hass = { states: { 'scene.soho': st('scene.soho', 60000), 'scene.bright': st('scene.bright', 3600000), 'scene.zen': st('scene.zen', 7200000) }, language: 'en', entities: {}, callService: (d, s2, data) => calls.push([d, s2, data]) };
     const pills = [...el.shadowRoot.querySelectorAll('.pill')];
     ok(pills.length === 3 && pills[1].textContent.trim() === 'Bright' && el.shadowRoot.querySelector('.row.scrollrow'), 'pills, one row that scrolls');
-    ok(pills[0].getAttribute('aria-pressed') === 'true' && pills[1].getAttribute('aria-pressed') === 'false', 'the one picked last is pressed');
+    ok(pills.every((p) => !p.hasAttribute('aria-pressed')), 'no "active scene" any more');
     pills[2].click();
     ok(calls.length === 1 && calls[0][0] === 'scene' && calls[0][2].entity_id === 'scene.zen', 'tap turns it on');
+    ok(el.shadowRoot.querySelectorAll('.pill')[2].classList.contains('ran'), 'cranberry for a moment after the tap');
     let err = null; try { w.document.createElement('cranberry-scenes-card').setConfig({}); } catch (e) { err = e; }
     ok(err, 'asks for scenes');
   }

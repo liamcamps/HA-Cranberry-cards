@@ -196,18 +196,10 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
   // scenes
   const ev = make('cranberry-scene-card', { entity: 'scene.evening' });
+  ok(!q(ev, 'button').hasAttribute('aria-pressed') && !q(ev, 'ha-card.active'), 'no "active scene" any more');
   const di = make('cranberry-scene-card', { entity: 'scene.dinner' });
-  const ni = make('cranberry-scene-card', { entity: 'scene.night' });
-  ok(q(ev, 'button').getAttribute('aria-pressed') === 'true', 'latest scene active');
-  ok(q(di, 'button').getAttribute('aria-pressed') === 'false' && q(ni, 'button').getAttribute('aria-pressed') === 'false', 'others inactive');
-  states['light.b'] = S('light.b', 'on', { brightness: 40 }, 60000); ev.hass = hass();
-  ok(q(ev, 'button').getAttribute('aria-pressed') === 'false', 'inactive after a light changed');
-  states['light.b'] = S('light.b', 'on', { brightness: 40 }, 20 * 60000 - 5000); ev.hass = hass();
-  ok(q(ev, 'button').getAttribute('aria-pressed') === 'true', 'settle window');
   q(di, 'button').click(); ok(calls.some((c) => c[0] === 'scene' && c[2].entity_id === 'scene.dinner'), 'scene turn_on');
-  states['input_select.mode'] = S('input_select.mode', 'Dinner', {});
-  const di2 = make('cranberry-scene-card', { entity: 'scene.dinner', active_entity: 'input_select.mode' });
-  ok(q(di2, 'button').getAttribute('aria-pressed') === 'true', 'helper override');
+  ok(q(di, 'ha-card.ran'), 'cranberry for a moment after the tap');
 
   // media
   el = make('cranberry-media-card', { entity: 'media_player.living_room', name: 'Living room' });
