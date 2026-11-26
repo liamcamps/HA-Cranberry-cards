@@ -20,7 +20,6 @@ so HACS can install and update it too.
 | People: a chip per person with photo and where they are; for admins, a chip when updates are waiting | `custom:cranberry-people-card` |
 | Scene pills: several scenes as one row that scrolls sideways, for phones | `custom:cranberry-scenes-card` |
 | Weather: out here, now and later. Hours (a sentence, wind, rain, sunset, 24 hours that scroll) and Days (the best day this week) | `custom:cranberry-weather-card` |
-| Calendar: the coming days from your calendars, with date blocks like the home card | `custom:cranberry-calendar-card` |
 | Thermostat: the card's colour, the setpoint and one sentence; every mode, heat/cool, presets, fan, swing; full or compact | `custom:cranberry-thermostat-card` |
 
 ## Install
@@ -85,21 +84,6 @@ type: custom:cranberry-thermostat-card
 entity: climate.living_room
 size: compact
 popup: '#living-room'      # optional: tapping the room name opens this pop-up
-```
-
-```yaml
-# the calendar, for example inside a Bubble pop-up #calendar
-type: custom:cranberry-calendar-card
-calendars:                 # colours follow this order
-  - calendar.family          # everyone sees it
-  - entity: calendar.liam    # only these people see it
-    people: [person.liam]
-days: 14
-show_empty: fold           # fold | hide
-view: agenda               # agenda | week: the view it opens on
-switcher: true             # the Agenda / Week switch
-week_layout: time          # time: events at their time, overlaps side by side | list
-add_events: true           # the New event button, for calendars that accept events
 ```
 
 ```yaml

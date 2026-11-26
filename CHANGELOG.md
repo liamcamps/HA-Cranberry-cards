@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.0 (2026-11-27)
+
+- **The Cranberry calendar card is gone.** [Calendar Card Pro](https://github.com/alexpfau/calendar-card-pro) (HACS) does everything it did and more (list, columns, a week on a time axis and a month, adding and changing events), and takes the Cranberry theme's colours. A dashboard that still has `custom:cranberry-calendar-card` shows Home Assistant's "custom element doesn't exist" message for it: swap it for Calendar Card Pro. The home card's Coming up, which reads the same calendars, is unchanged.
+
 ## 2.46.0 (2026-11-25)
 
 - **Scene buttons follow Stateful Scenes.** With the [Stateful Scenes](https://github.com/hugobloem/stateful_scenes) integration (HACS), every scene gets a switch that is on while the scene is. The scene card and the scene pills find that switch by themselves (`switch.<scene>_stateful_scene`, or by its name after a rename), are cranberry while it's on, and a tap turns it on. Name it yourself with `stateful: switch.…`, or turn this off with `stateful: false`. Without the integration they stay plain buttons.

@@ -230,44 +230,6 @@
       helpers: { updates: 'A chip when Home Assistant, an add-on or an integration can be updated. Only admins see it; tapping opens Settings › Updates.', title: 'Optional, for example Home. Shown on the left, the people on the right.', show_picture: 'The photo set for each person in Home Assistant. Without a photo it shows their initial.', popups: 'A Bubble pop-up hash per person, for example #liam. Leave empty to open the details instead.' }
     },
     {
-      tag: 'cranberry-calendar-card', cls: CranberryCalendarCard, name: 'Cranberry calendar',
-      description: 'The coming days from your calendars, with the same date blocks as the home card.',
-      stub: (ids) => ({ calendars: ids.filter((e) => e.startsWith('calendar.')).slice(0, 3) }),
-      // the form is flat; in YAML a calendar with people becomes { entity, people }
-      io: {
-        toForm: (cfg) => {
-          const f = Object.assign({}, cfg);
-          f.calendars = [].concat(cfg.calendars || []).map((x) => {
-            if (x && typeof x === 'object') { if (x.people && x.people.length) f['people:' + x.entity] = [].concat(x.people); return x.entity; }
-            return x;
-          }).filter(Boolean);
-          return f;
-        },
-        fromForm: (f) => {
-          const cfg = {};
-          Object.keys(f).forEach((k) => { if (k.indexOf('people:') !== 0) cfg[k] = f[k]; });
-          if (f.calendars) cfg.calendars = f.calendars.map((id) => (f['people:' + id] && f['people:' + id].length ? { entity: id, people: f['people:' + id] } : id));
-          return cfg;
-        }
-      },
-      schema: (f) => [
-        { name: 'calendars', selector: { entity: { multiple: true, domain: 'calendar' } } },
-        ...((f && f.calendars) || []).length ? [{
-          type: 'expandable', name: 'who', flatten: true, title: 'Who sees which calendar', icon: 'mdi:account-eye-outline',
-          schema: f.calendars.map((id) => ({ name: 'people:' + id, title: id.replace(/^calendar\./, '').replace(/_/g, ' ').replace(/^./, (ch) => ch.toUpperCase()), selector: { entity: { multiple: true, domain: 'person' } } }))
-        }] : [],
-        { name: 'title', selector: { text: {} } },
-        { name: 'days', selector: { number: { min: 7, max: 31, step: 1, mode: 'slider' } } },
-        { name: 'show_empty', selector: { select: { mode: 'dropdown', options: [{ value: 'fold', label: 'Fold into one line' }, { value: 'hide', label: 'Leave out' }] } } },
-        { name: 'view', selector: { select: { mode: 'box', options: [{ value: 'agenda', label: 'Agenda' }, { value: 'week', label: 'Week' }] } } },
-        { name: 'switcher', selector: { boolean: {} } },
-        { name: 'week_layout', selector: { select: { mode: 'box', options: [{ value: 'time', label: 'At their time' }, { value: 'list', label: 'As a list per day' }] } } },
-        { name: 'add_events', selector: { boolean: {} } }
-      ],
-      labels: { calendars: 'Calendars', title: 'Title', days: 'Days to show in the agenda', show_empty: 'Days without plans', view: 'Start with', switcher: 'Show the Agenda / Week switch', week_layout: 'Week', add_events: 'Add, change and delete events' },
-      helpers: { calendars: 'The colours follow this order: cranberry, olive, harbour, ochre, quail.', title: 'Optional. Leave empty inside a pop-up, which has its own title.', view: 'Week shows the next seven days side by side. On a narrow screen the card always shows the agenda.', add_events: 'New event, and Edit and Delete in an event’s details. Only for calendars that allow it, like Local calendar and Google Calendar.', who: 'Pick the people who see a calendar. Leave it empty and everyone sees it.' }
-    },
-    {
       tag: 'cranberry-weather-card', cls: CranberryWeatherCard, name: 'Cranberry weather',
       description: 'Out here, now and later: a sentence, the next 24 hours, and the week. For a balcony or garden pop-up.',
       stub: (ids) => ({ entity: ids.find((id) => id.indexOf('weather.') === 0) || 'weather.home' }),

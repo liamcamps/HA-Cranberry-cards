@@ -80,7 +80,6 @@ t = card('cranberry-room-card', { entity: 'light.room' }, 'en'); ok(t.includes('
 t = card('cranberry-media-card', { entity: 'media_player.x' }, 'nl'); ok(t.trim().endsWith('Uit'), 'music, Dutch: ' + t.trim().slice(-40));
 t = card('cranberry-thermostat-card', { entity: 'climate.living' }, 'nl'); ok(t.includes('Het is nu 19,5°, verwarmt naar 21°') && t.includes('Uit'), 'thermostat, Dutch: ' + t.trim());
 t = card('cranberry-people-card', { people: ['person.anna', 'person.bram'] }, 'nl'); ok(t.includes('Weg') && !t.includes('Away'), 'people, Dutch: ' + t.trim());
-t = card('cranberry-calendar-card', { entities: [] }, 'nl'); ok(t.includes('Kies een of meer agenda’s'), 'calendar, Dutch: ' + t.trim());
 t = card('cranberry-waste-card', {}, 'nl'); ok(t.includes('Geen Afvalwijzer-sensoren gevonden'), 'waste, Dutch: ' + t.trim());
 t = card('cranberry-car-card', { entity: 'input_select.none' }, 'nl'); ok(t.includes('Waar staat hij geparkeerd?'), 'car, Dutch: ' + t.trim());
 t = card('cranberry-home-card', { weather: 'weather.home', lights: ['light.a'] }, 'nl'); ok(t.includes('Alles rustig.') || t.includes('Lampen aan'), 'home, Dutch: ' + t.trim().slice(0, 160));
