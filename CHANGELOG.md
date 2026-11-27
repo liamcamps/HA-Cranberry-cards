@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.1 (2026-11-27)
+
+- **Music card:** without a cover, or with one it can't read, the playing card is night blue instead of olive, so it no longer matches the thermostat. `cover_colour: false` still keeps olive.
+
 ## 3.1.0 (2026-11-27)
 
 - **The music card takes the cover's colour.** While it plays, the card (row, medium and full) turns a deep tone of the album art's main colour instead of olive: night blue for a blue cover, deep red for a red one, a warm grey when the cover has hardly any colour. The tone is kept dark enough for the cream text (7:1 or more in practice) and not too loud, and fades when the song changes. No cover, or a picture from another site that the browser won't let it read, keeps olive. `cover_colour: false` keeps olive always.

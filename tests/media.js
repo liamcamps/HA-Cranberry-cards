@@ -100,6 +100,12 @@ ok(calls[0][1] === 'repeat_set' && calls[0][2].repeat === 'all' && calls[1][1] =
   ok(!went && calls.some((c) => c[1] === 'media_pause'), 'medium: the play button only plays');
   md.hass = hass(player('off', {}));
   ok(mq('ha-card.medium.idle') && mq('.what b').textContent === 'Harvest Moon' && mq('.what small').textContent === 'Off · Last played' && mq('button.on'), 'medium off: what played last and Turn on: ' + mq('.what').textContent);
+  // no cover: night blue rather than olive
+  md.hass = hass(player('playing', { media_title: 'Radio', app_name: 'Radio' }));
+  ok(/--cv-fill-o:#192f57/.test(mq('ha-card').getAttribute('style') || ''), 'no cover: night blue');
+  md.setConfig({ entity: 'media_player.denon', size: 'medium', cover_colour: false });
+  md.hass = hass(player('playing', { media_title: 'Radio', app_name: 'Radio' }));
+  ok(!mq('ha-card').getAttribute('style'), 'cover_colour: false: olive');
   // TV: no cover, a TV icon
   el.setConfig({ entity: 'media_player.denon', size: 'full' });
   el.hass = hass(player('on', { source: 'TV', volume_level: 0.3 }));
