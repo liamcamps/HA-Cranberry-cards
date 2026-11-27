@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.2 (2026-11-27)
+
+- **Music card:** without a cover colour it plays in the theme's harbour blue rather than night blue.
+
 ## 3.1.1 (2026-11-27)
 
 - **Music card:** without a cover, or with one it can't read, the playing card is night blue instead of olive, so it no longer matches the thermostat. `cover_colour: false` still keeps olive.

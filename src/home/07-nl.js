@@ -492,7 +492,7 @@
     'Stateful Scenes switch': 'Stateful Scenes-schakelaar',
     'Optional. With the Stateful Scenes integration the button is cranberry while this switch is on. Found by itself when it is named after the scene.': 'Optioneel. Met de Stateful Scenes-integratie is de knop cranberry zolang deze schakelaar aan is. Wordt vanzelf gevonden als hij naar de scène is genoemd.',
     'Colour from the cover': 'Kleur van de hoes',
-    'While it plays, the card takes a deep tone from the album art, night blue without one. Off: olive.': 'Tijdens het afspelen neemt de kaart een diepe tint van de hoes over, nachtblauw zonder hoes. Uit: olijf.',
+    'While it plays, the card takes a deep tone from the album art, harbour blue without one. Off: olive.': 'Tijdens het afspelen neemt de kaart een diepe tint van de hoes over, havenblauw zonder hoes. Uit: olijf.',
   };
   window.CranberryI18n = { tr, isNl, trSchema, NL };
 
