@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.0 (2026-11-27)
+
+- **The music card takes the cover's colour.** While it plays, the card (row, medium and full) turns a deep tone of the album art's main colour instead of olive: night blue for a blue cover, deep red for a red one, a warm grey when the cover has hardly any colour. The tone is kept dark enough for the cream text (7:1 or more in practice) and not too loud, and fades when the song changes. No cover, or a picture from another site that the browser won't let it read, keeps olive. `cover_colour: false` keeps olive always.
+
 ## 3.0.0 (2026-11-27)
 
 - **The Cranberry calendar card is gone.** [Calendar Card Pro](https://github.com/alexpfau/calendar-card-pro) (HACS) does everything it did and more (list, columns, a week on a time axis and a month, adding and changing events), and takes the Cranberry theme's colours. A dashboard that still has `custom:cranberry-calendar-card` shows Home Assistant's "custom element doesn't exist" message for it: swap it for Calendar Card Pro. The home card's Coming up, which reads the same calendars, is unchanged.

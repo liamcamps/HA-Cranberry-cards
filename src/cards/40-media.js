@@ -2,7 +2,8 @@
   // Two sizes. Row: what's playing with previous, play/pause and next, for the dashboard.
   // Full: for a pop-up. The cover large, what's playing, where it is in the song, the controls,
   // the volume, the receiver's source and sound mode, and your favourite playlists and radio stations.
-  // Olive while playing. Every icon is Lucide's shape, built in.
+  // While it plays the card takes a deep tone from the cover (olive when there is none, or with
+  // cover_colour: false). Every icon is Lucide's shape, built in.
   const MP = { PAUSE: 1, SEEK: 2, VOLUME_SET: 4, VOLUME_MUTE: 8, PREV: 16, NEXT: 32, TURN_ON: 128, TURN_OFF: 256, PLAY_MEDIA: 512, SELECT_SOURCE: 2048, STOP: 4096, PLAY: 16384, SHUFFLE: 32768, SOUND_MODE: 65536, REPEAT: 262144 };
   const MI = {
     play: 'M5 5a2 2 0 0 1 3-1.73l12 7a2 2 0 0 1 0 3.46l-12 7A2 2 0 0 1 5 19z',
@@ -28,6 +29,55 @@
   const mIcon = (d, size, filled) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${filled ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="${filled ? 0 : 1.8}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"></path></svg>`;
   // tiles without a picture: the cards' fills, in turn
   // not olive: the card itself turns olive while it plays
+  // A deep tone from a cover: the average hue of its coloured pixels, kept dark enough for cream
+  // text (at least 4.5:1, mostly far more) and not too loud. Worked out once per picture.
+  const TONES = new Map();
+  const toneOf = (data) => {
+    // twelve hue buckets; the one covering the most of the picture wins, darker and more
+    // colourful pixels counting a little more, since the tone ends up deep
+    const bins = Array.from({ length: 12 }, () => ({ w: 0, x: 0, y: 0, s: 0 }));
+    let n = 0, coloured = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] < 128) continue;
+      n++;
+      const r = data[i] / 255, g = data[i + 1] / 255, b = data[i + 2] / 255;
+      const mx = Math.max(r, g, b), mn = Math.min(r, g, b), c = mx - mn;
+      if (c < 0.1) continue;                        // greys and near-whites say nothing about the hue
+      coloured++;
+      let h = mx === r ? ((g - b) / c) % 6 : mx === g ? (b - r) / c + 2 : (r - g) / c + 4;
+      h = (h * 60 + 360) % 360;
+      const l = (mx + mn) / 2, s = c / (1 - Math.abs(2 * l - 1) || 1);
+      const w = (0.3 + c) * (1.2 - l), bin = bins[Math.floor(h / 30) % 12], rad = h * Math.PI / 180;
+      bin.w += w; bin.x += Math.cos(rad) * w; bin.y += Math.sin(rad) * w; bin.s += s * w;
+    }
+    let h = 20, s = 0.12;                           // little colour in it: a warm grey, like the theme
+    if (n && coloured / n >= 0.2) {
+      const best = bins.reduce((a, b) => (b.w > a.w ? b : a));
+      h = (Math.atan2(best.y, best.x) * 180 / Math.PI + 360) % 360;
+      s = Math.min(0.55, best.s / best.w);
+    }
+    const l = 0.22;
+    const f = (k0) => { const k = (k0 + h / 30) % 12, a = s * Math.min(l, 1 - l); return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))); };
+    return '#' + [f(0), f(8), f(4)].map((v) => v.toString(16).padStart(2, '0')).join('');
+  };
+  const coverTone = (url, done) => {
+    if (!url) return null;
+    if (TONES.has(url)) return TONES.get(url);
+    TONES.set(url, null);
+    if (typeof Image === 'undefined') return null;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const cv = document.createElement('canvas'); cv.width = cv.height = 24;
+        const g = cv.getContext('2d'); g.drawImage(img, 0, 0, 24, 24);
+        TONES.set(url, toneOf(g.getImageData(0, 0, 24, 24).data));
+        done();
+      } catch (e) { TONES.set(url, null); }     // a picture from another site without CORS: stay olive
+    };
+    img.src = url;
+    return null;
+  };
   const FAV_FILLS = ['var(--cv-fill-ochre)', 'var(--cv-fill-h)', 'var(--cv-fill-c)', 'var(--cv-fill-q)'];
   const OFF_STATES = ['off', 'unavailable', 'unknown', 'standby'];
   const mmss = (s) => { s = Math.max(0, Math.round(s || 0)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); };
@@ -36,7 +86,7 @@
     static get styles() {
       return `
       ha-card { border-radius: var(--cc-r-card, 24px); }
-      ha-card.playing { background: var(--cv-fill-o); color: var(--cc-on); }
+      ha-card.playing { background: var(--cv-fill-o); color: var(--cc-on); transition: background .5s ease; }
       ha-card.playing .state { color: color-mix(in srgb, var(--cc-on) 80%, var(--cc-o)); }
       .row { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 12px; min-height: 64px; box-sizing: border-box; }
       .art { width: 44px; height: 44px; flex-shrink: 0; border-radius: var(--cc-r-ctl, 12px); background: var(--cc-text) center / cover no-repeat; display: flex; align-items: center; justify-content: center; color: var(--cc-card); }
@@ -263,6 +313,12 @@
       };
     }
 
+    // the cover's tone on the card, through the olive it uses while playing
+    _tone(art) {
+      if (this._config.cover_colour === false || !art) return '';
+      const t = coverTone(art, () => { this._last = ''; this._update(); });
+      return t ? ` style="--cv-fill-o:${t}"` : '';
+    }
     // off: turn it on, or start what played last again
     _offButtons(m) {
       if (!m.canOn && !m.again) return '';
@@ -286,7 +342,7 @@
           ${m.pos ? `<span class="mtime">${m.pos.at} / ${m.pos.left.replace('−', '')}</span>` : '<span class="mtime"></span>'}
           ${m.canMute ? `<button type="button" class="soft" data-act="mute" aria-pressed="${m.muted}" aria-label="${esc(this.t(m.muted ? 'Unmute' : 'Mute'))}">${mIcon(m.muted ? MI.mute : MI.volume, 18)}</button>` : ''}
         </div>`;
-      return `<ha-card class="medium tap${on ? ' playing' : ''}" data-act="more"><div class="mrow">
+      return `<ha-card class="medium tap${on ? ' playing' : ''}" data-act="more"${on ? this._tone(m.art) : ''}><div class="mrow">
         <div class="mcover" style="${m.art ? `background-image:url('${esc(m.art)}')` : ''}" role="img" aria-label="${esc(m.title)}">${m.art ? '' : mIcon(m.tv ? MI.tv : MI.music, 40)}</div>
         <div class="mbody"><button type="button" class="what tap" data-act="more"><small>${esc(m.label)}</small><b>${esc(m.title)}</b>${m.artist ? `<span>${esc(m.artist)}</span>` : ''}</button>${pos}${ctl}</div>
       </div></ha-card>`;
@@ -295,7 +351,7 @@
     view(m) {
       if (m.medium) return this._medium(m);
       if (!m.full) {
-        return `<ha-card class="tap ${m.playing ? 'playing' : ''} ${m.na ? 'na' : ''}" data-act="more"><div class="row">
+        return `<ha-card class="tap ${m.playing ? 'playing' : ''} ${m.na ? 'na' : ''}" data-act="more"${m.playing ? this._tone(m.art) : ''}><div class="row">
           <div class="art" style="${m.art ? `background-image:url('${esc(m.art)}')` : ''}">${m.art ? '' : mIcon(MI.music, 20)}</div>
           <div class="txt tap" role="button" tabindex="0" data-act="more"><span class="name">${esc(m.title)}</span><span class="state">${esc(m.sub)}</span></div>
           ${m.ctl.map((b) => `<button type="button" class="ctl ${b.main ? 'main' : ''}" data-act="${b.act}" aria-label="${esc(b.aria)}">${mIcon(b.icon, 20, !b.stroke)}</button>`).join('')}
@@ -321,7 +377,7 @@
       const vol = m.vol != null ? `<div class="vol">${m.canMute ? `<button type="button" class="vbtn" data-act="mute" aria-pressed="${m.muted}" aria-label="${esc(this.t(m.muted ? 'Unmute' : 'Mute'))}">${mIcon(m.muted ? MI.mute : MI.volume, 18)}</button>` : ''}<div class="vslider" data-bar="volume" role="slider" aria-label="${esc(this.t('Volume'))}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${m.vol}" tabindex="0"><i style="width:${m.vol}%"></i><b style="left:${m.vol}%"></b></div><span class="pct">${m.vol}%</span></div>` : '';
       const chips = m.source || m.sound || m.canOff ? `<div class="chips">${m.source ? `<button type="button" class="chip" data-act="menu" data-arg="source" aria-haspopup="listbox" aria-label="${esc(this.t('Source'))}: ${esc(m.source)}">${mIcon(MI.speaker, 16)}<span>${esc(m.source)}</span>${mIcon(MI.chev, 16)}</button>` : ''}${m.sound ? `<button type="button" class="chip" data-act="menu" data-arg="sound" aria-haspopup="listbox" aria-label="${esc(this.t('Sound mode'))}: ${esc(m.sound)}">${mIcon(MI.sound, 16)}<span>${esc(m.sound)}</span>${mIcon(MI.chev, 16)}</button>` : ''}${m.canOff ? `<button type="button" class="pwr" data-act="turn_off" aria-label="${esc(this.t('Turn off'))}">${mIcon(MI.power, 18)}</button>` : ''}</div>` : '';
       const menu = m.menu ? `<div class="menu" role="listbox" aria-label="${esc(m.menu.title)}"><div class="mt">${esc(m.menu.title)}<button type="button" class="x" data-act="close" aria-label="${esc(this.t('Close'))}">${mIcon('M18 6 6 18M6 6l12 12', 16)}</button></div>${m.menu.opts.map((o) => `<button type="button" class="opt" role="option" data-act="${m.menu.act}" data-arg="${esc(o)}" aria-checked="${o === m.menu.cur}">${esc(o)}${o === m.menu.cur ? mIcon(MI.check, 16) : ''}</button>`).join('')}</div>` : '';
-      return `<ha-card class="full${m.playing || m.pos || m.title ? ' playing' : ''}">${cover}
+      return `<ha-card class="full${m.playing || m.pos || m.title ? ' playing' : ''}"${m.playing || m.pos || m.title ? this._tone(m.art) : ''}>${cover}
         <button type="button" class="what tap" data-act="details"><small>${esc(m.label)}</small><b>${esc(m.title)}</b>${m.artist ? `<span>${esc(m.artist)}</span>` : ''}</button>
         ${pos}${ctl}${vol}${chips}${favs}${menu}</ha-card>`;
     }
@@ -399,5 +455,5 @@
       this.call('media_player', a, { entity_id: id });
     }
   }
-  CranberryMediaCard.defaults = {};
+  CranberryMediaCard.defaults = { cover_colour: true };
 
