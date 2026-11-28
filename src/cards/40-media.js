@@ -135,7 +135,7 @@
       .chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .chip svg { flex-shrink: 0; }
       .chip svg:last-child { opacity: .7; }
-      .pwr { margin-left: auto; }
+      .chips .chip { flex: 1 1 0; min-width: 0; }
       .menu { position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 3; max-height: calc(100% - 24px); overflow-y: auto; background: var(--cc-on); color: var(--cv-on-cream); border-radius: 18px; padding: 6px; box-shadow: 0 12px 30px var(--cv-shadow-30, rgba(0,0,0,.3)); animation: cc-in .2s ease both; }
       .menu .mt { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px 4px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: color-mix(in srgb, var(--cv-on-cream) 65%, transparent); }
       .menu button.opt { width: 100%; height: 42px; padding: 0 10px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; font-size: 15px; font-weight: 500; text-align: left; }
@@ -155,6 +155,9 @@
       .mrow { display: flex; gap: 14px; align-items: stretch; }
       .mcover { width: 128px; height: 128px; flex-shrink: 0; border-radius: 16px; background: ${alpha('--cc-on', 14)} center / cover no-repeat; display: flex; align-items: center; justify-content: center; color: ${alpha('--cc-on', 70)}; }
       .mbody { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; padding: 2px 0; }
+      .mtop { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
+      .mtop .what { flex: 1; min-width: 0; }
+      .mpower { width: 36px; height: 36px; border-radius: 50%; background: ${alpha('--cc-on', 16)}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
       .medium .what b { font-size: 22px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .mpos { height: 4px; border-radius: 2px; background: ${alpha('--cc-on', 22)}; position: relative; overflow: hidden; }
       .mpos i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--cc-on); border-radius: 2px; }
@@ -346,7 +349,7 @@
         </div>`;
       return `<ha-card class="medium tap${on ? ' playing' : ''}" data-act="more"${on ? this._tone(m.art) : ''}><div class="mrow">
         <div class="mcover" style="${m.art ? `background-image:url('${esc(m.art)}')` : ''}" role="img" aria-label="${esc(m.title)}">${m.art ? '' : mIcon(m.tv ? MI.tv : MI.music, 40)}</div>
-        <div class="mbody"><button type="button" class="what tap" data-act="more"><small>${esc(m.label)}</small><b>${esc(m.title)}</b>${m.artist ? `<span>${esc(m.artist)}</span>` : ''}</button>${pos}${ctl}</div>
+        <div class="mbody"><div class="mtop"><button type="button" class="what tap" data-act="more"><small>${esc(m.label)}</small><b>${esc(m.title)}</b>${m.artist ? `<span>${esc(m.artist)}</span>` : ''}</button>${m.canOff ? `<button type="button" class="mpower" data-act="turn_off" aria-label="${esc(this.t('Turn off'))}">${mIcon(MI.power, 16)}</button>` : ''}</div>${pos}${ctl}</div>
       </div></ha-card>`;
     }
 

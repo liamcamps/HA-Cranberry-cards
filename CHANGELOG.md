@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.1.3 (2026-11-28)
+
+- **Music card:** the pop-up's receiver row keeps the power button at the end of the row; the source and sound mode chips share the rest and cut long names with an ellipsis, so the button no longer falls off the card.
+- **Music card:** the dashboard card has a power button in the top right of the title row while playing. Tapping the title still opens the pop-up.
+
 ## 3.1.2 (2026-11-27)
 
 - **Music card:** without a cover colour it plays in the theme's harbour blue rather than night blue.
