@@ -1,6 +1,6 @@
 {
   "name": "ha-cranberry-cards",
-  "version": "3.1.2",
+  "version": "3.1.3",
   "private": true,
   "description": "Cranberry Canvas: dashboard cards and theme for Home Assistant",
   "scripts": {
